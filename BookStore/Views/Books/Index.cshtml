@@ -1,0 +1,42 @@
+﻿@model BookStore.ViewModels.BookListVM
+@{
+    ViewData["Title"] = "Books";
+}
+
+<h2>Books</h2>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input name="search" class="form-control" value="@Model.Search" placeholder="Search title..." />
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary">Search</button>
+    </div>
+</form>
+
+<div class="row row-cols-1 row-cols-md-4 g-3">
+    @foreach (var b in Model.Books)
+    {
+        <div class="col">
+            <div class="card h-100">
+                @if (!string.IsNullOrEmpty(b.CoverUrl))
+                {
+                    <img class="card-img-top" src="@b.CoverUrl" alt="@b.Title" />
+                }
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">@b.Title</h5>
+                    <p class="text-muted mb-2">@b.Author</p>
+                    <div class="mt-auto">
+                        <div class="fw-bold">@b.Price.ToString("N0") ₫</div>
+                        <a asp-action="Details" asp-route-id="@b.Id" class="btn btn-sm btn-outline-secondary mt-2">Details</a>
+                        <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@b.Id" />
+                            <button class="btn btn-sm btn-primary mt-2">Add to Cart</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

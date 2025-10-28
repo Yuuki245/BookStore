@@ -1,0 +1,31 @@
+﻿@model BookStore.ViewModels.CheckoutVM
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<h2>Checkout</h2>
+
+@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+<form method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label class="form-label">Địa chỉ giao hàng</label>
+        <input asp-for="ShippingAddress" class="form-control" />
+        <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Số điện thoại</label>
+        <input asp-for="PhoneNumber" class="form-control" />
+        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    </div>
+
+    <button class="btn btn-primary">Đặt hàng (COD)</button>
+    <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary ms-2">Quay lại giỏ</a>
+</form>
+
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+ }

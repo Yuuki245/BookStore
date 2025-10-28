@@ -1,0 +1,9 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+<h2>Dashboard</h2>
+<div class="row g-3">
+    <div class="col-md-4"><div class="card p-3">Tổng đơn: <strong>@ViewBag.TotalOrders</strong></div></div>
+    <div class="col-md-4"><div class="card p-3">Doanh thu: <strong>@((decimal)ViewBag.Revenue).ToString("N0") ₫</strong></div></div>
+    <div class="col-md-4"><div class="card p-3">Tổng sách: <strong>@ViewBag.TotalBooks</strong></div></div>
+</div>

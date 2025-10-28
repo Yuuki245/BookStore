@@ -1,0 +1,35 @@
+﻿@model BookStore.Models.Order
+<h2>Order #@Model.Id</h2>
+<p><strong>CustomerId:</strong> @Model.UserId</p>
+<p><strong>Created:</strong> @Model.CreatedAt</p>
+<p><strong>Status:</strong> @Model.Status</p>
+<p><strong>Address:</strong> @Model.ShippingAddress</p>
+<p><strong>Phone:</strong> @Model.PhoneNumber</p>
+
+<table class="table">
+    <thead><tr><th>Book</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+    <tbody>
+        @foreach (var i in Model.Items)
+        {
+            <tr>
+                <td>@i.Book?.Title</td>
+                <td>@i.Quantity</td>
+                <td>@i.UnitPrice.ToString("N0") ₫</td>
+                <td>@(i.UnitPrice * i.Quantity).ToString("N0") ₫</td>
+            </tr>
+        }
+    </tbody>
+</table>
+<h4>Tổng cộng: @Model.TotalAmount.ToString("N0") ₫</h4>
+
+<form asp-action="UpdateStatus" method="post" class="d-flex gap-2">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" value="@Model.Id" />
+    <select name="status" class="form-select" style="max-width:200px">
+        @foreach (var s in new[] { "Pending", "Confirmed", "Shipped", "Completed", "Canceled" })
+        {
+            <option value="@s" selected="@(Model.Status==s)">@s</option>
+        }
+    </select>
+    <button class="btn btn-primary">Cập nhật</button>
+</form>
