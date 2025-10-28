@@ -36,6 +36,22 @@
 
                     </ul>
                     <partial name="_LoginPartial" />
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        // Chỉ hiện Admin khi có role Admin
+                        if (User.IsInRole("Admin"))
+                        {
+                            <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a>
+                            // KHÔNG hiện My Orders cho Admin
+                        }
+                        else
+                        {
+                            // Người dùng thường (Customer) mới thấy My Orders
+                            <a class="nav-link" asp-controller="Orders" asp-action="Index">My Orders</a>
+                        }
+                    }
+
+
                 </div>
             </div>
         </nav>

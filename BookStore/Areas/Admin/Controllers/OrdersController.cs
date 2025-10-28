@@ -34,7 +34,7 @@ public class OrdersController : Controller
     {
         var order = await _db.Orders.FindAsync(id);
         if (order == null) return NotFound();
-        order.Status = status; // "Pending/Confirmed/Shipped/Completed/Canceled"
+        order.Status = status;
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Details), new { id });
     }

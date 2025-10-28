@@ -1,4 +1,4 @@
-﻿@model BookStore.ViewModels.BookListVM
+﻿@model BookStore.Models.ViewModels.BookListVM
 @{
     ViewData["Title"] = "Books";
 }
@@ -7,10 +7,28 @@
 
 <form method="get" class="row g-2 mb-3">
     <div class="col-auto">
-        <input name="search" class="form-control" value="@Model.Search" placeholder="Search title..." />
+        <select name="categoryId" class="form-select" onchange="this.form.submit()">
+            <option value="">-- Tất cả thể loại --</option>
+            @foreach (var c in Model.Categories)
+            {
+                <option value="@c.Id" selected="@(Model.CategoryId==c.Id)">@c.Name</option>
+            }
+        </select>
     </div>
     <div class="col-auto">
-        <button class="btn btn-primary">Search</button>
+        <input name="search" value="@Model.Search" class="form-control" placeholder="Tìm sách / tác giả..." />
+    </div>
+    <div class="col-auto">
+        <select name="sort" class="form-select">
+            <option value="">Mới nhất</option>
+            <option value="price_asc" selected="@(Model.Sort=="price_asc")">Giá ↑</option>
+            <option value="price_desc" selected="@(Model.Sort=="price_desc")">Giá ↓</option>
+            <option value="title_asc" selected="@(Model.Sort=="title_asc")">A → Z</option>
+            <option value="title_desc" selected="@(Model.Sort=="title_desc")">Z → A</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-primary">Lọc</button>
     </div>
 </form>
 
@@ -19,10 +37,9 @@
     {
         <div class="col">
             <div class="card h-100">
-                @if (!string.IsNullOrEmpty(b.CoverUrl))
-                {
-                    <img class="card-img-top" src="@b.CoverUrl" alt="@b.Title" />
-                }
+                <img class="book-cover" src="@(b.CoverUrl ?? "/images/no-cover.png")" alt="@b.Title" width="300" height="400" loading="lazy"
+                     decoding="async"
+                     fetchpriority="low">
                 <div class="card-body d-flex flex-column">
                     <h5 class="card-title">@b.Title</h5>
                     <p class="text-muted mb-2">@b.Author</p>
@@ -40,3 +57,22 @@
         </div>
     }
 </div>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-3">
+        <ul class="pagination">
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i==Model.Page?"active":"")">
+                    <a class="page-link"
+                       asp-action="Index"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-search="@Model.Search"
+                       asp-route-sort="@Model.Sort"
+                       asp-route-page="@i">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

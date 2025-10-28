@@ -1,4 +1,4 @@
-html {
+﻿html {
   font-size: 14px;
 }
 
@@ -19,4 +19,11 @@ html {
 
 body {
   margin-bottom: 60px;
+}
+/* Áp cho ảnh bìa sách trong card */
+.book-cover {
+    width: 100%;
+    aspect-ratio: 3 / 4; /* giữ tỉ lệ 3:4 */
+    object-fit: cover; /* crop vừa khung, không méo */
+    border-radius: 8px;
 }

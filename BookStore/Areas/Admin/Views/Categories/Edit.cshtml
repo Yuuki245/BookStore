@@ -1,40 +1,25 @@
 ﻿@model BookStore.Models.Category
-
 @{
-    ViewData["Title"] = "Edit";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Edit Category";
 }
-
-<h1>Edit</h1>
-
-<h4>Category</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+<h2>Edit Category</h2>
+@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+<form asp-action="Edit" method="post" class="card p-3">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <input asp-for="Description" class="form-control" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <button class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-outline-secondary ms-2">Back</a>
+</form>
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
+<partial name="_ValidationScriptsPartial" />
+ }

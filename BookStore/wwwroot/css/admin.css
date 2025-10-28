@@ -1,0 +1,50 @@
+﻿:root {
+    --sidebar-w: 250px;
+}
+
+.admin-wrap {
+    min-height: 100vh;
+}
+
+.admin-sidebar {
+    width: var(--sidebar-w);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.admin-header {
+    height: 56px;
+}
+
+.admin-content {
+    min-height: calc(100vh - 56px);
+}
+
+.admin-link {
+    border-radius: 8px;
+    padding: .6rem .8rem;
+    margin: 2px 0;
+}
+
+    .admin-link.active, .admin-link:hover {
+        background: #0d6efd;
+        color: #fff !important;
+    }
+
+@media (max-width: 992px) {
+    .admin-sidebar {
+        position: fixed;
+        left: -260px;
+        transition: left .2s ease;
+        z-index: 1040;
+    }
+
+    body.sidebar-open .admin-sidebar {
+        left: 0;
+    }
+}
+
+.card {
+    border-radius: 12px;
+}

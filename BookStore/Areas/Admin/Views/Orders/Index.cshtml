@@ -1,5 +1,43 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+﻿@model IEnumerable<BookStore.Models.Order>
 @{
+    ViewData["Title"] = "Orders";
 }
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr><th>#</th><th>Ngày</th><th>Khách</th><th>Trạng thái</th><th>Tổng</th><th class="text-end"></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var o in Model)
+                {
+                    <tr>
+                        <td>@o.Id</td>
+                        <td>@o.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@o.UserId</td>
+                        <td>
+                            @{
+                                string cls = o.Status switch
+                                {
+                                    "Pending" => "secondary",
+                                    "Confirmed" => "primary",
+                                    "Shipped" => "info",
+                                    "Completed" => "success",
+                                    "Canceled" => "danger",
+                                    _ => "secondary"
+                                };
+                            }
+                            <span class="badge text-bg-@cls">@o.Status</span>
+                        </td>
+                        <td>@(o.TotalAmount.ToString("N0")) ₫</td>
+                        <td class="text-end">
+                            <a asp-action="Details" asp-route-id="@o.Id" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i> Details
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,30 +1,64 @@
-﻿@model BookStore.ViewModels.CheckoutVM
+﻿@model BookStore.Models.ViewModels.CheckoutVM
 @{
-    ViewData["Title"] = "Checkout";
+    ViewData["Title"] = "Thanh toán";
 }
 
-<h2>Checkout</h2>
+<h2>Thanh toán</h2>
 
-@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card p-3">
+            <h5 class="mb-3">Thông tin giao hàng</h5>
+            <form asp-action="Index" method="post">
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(false, "", new { @class = "text-danger" })
 
-<form method="post">
-    @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label asp-for="ShippingAddress" class="form-label"></label>
+                    <input asp-for="ShippingAddress" class="form-control" />
+                    <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+                </div>
 
-    <div class="mb-3">
-        <label class="form-label">Địa chỉ giao hàng</label>
-        <input asp-for="ShippingAddress" class="form-control" />
-        <span asp-validation-for="ShippingAddress" class="text-danger"></span>
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                </div>
+
+                <button class="btn btn-primary">Đặt hàng</button>
+            </form>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label class="form-label">Số điện thoại</label>
-        <input asp-for="PhoneNumber" class="form-control" />
-        <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+    <div class="col-lg-5">
+        <div class="card p-3">
+            <h5 class="mb-3">Đơn của bạn</h5>
+            @if (!Model.Items.Any())
+            {
+                <div class="text-muted">Giỏ hàng trống.</div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var it in Model.Items)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="fw-semibold">@it.Title</div>
+                                <div class="text-muted small">x @it.Quantity</div>
+                            </div>
+                            <div>@((it.UnitPrice * it.Quantity).ToString("N0")) ₫</div>
+                        </li>
+                    }
+                    <li class="list-group-item d-flex justify-content-between">
+                        <div class="fw-semibold">Tổng cộng</div>
+                        <div class="fw-bold">@Model.Subtotal.ToString("N0") ₫</div>
+                    </li>
+                </ul>
+            }
+        </div>
     </div>
-
-    <button class="btn btn-primary">Đặt hàng (COD)</button>
-    <a asp-controller="Cart" asp-action="Index" class="btn btn-outline-secondary ms-2">Quay lại giỏ</a>
-</form>
+</div>
 
 @section Scripts {
 <partial name="_ValidationScriptsPartial" />

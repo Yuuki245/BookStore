@@ -22,7 +22,7 @@ public class CategoriesController : Controller
     public async Task<IActionResult> Create(Category model)
     {
         if (!ModelState.IsValid) return View(model);
-        _db.Add(model);
+        _db.Categories.Add(model);
         await _db.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }
@@ -43,14 +43,8 @@ public class CategoriesController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
-    {
-        var item = await _db.Categories.FindAsync(id);
-        return item == null ? NotFound() : View(item);
-    }
-
-    [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
     {
         var item = await _db.Categories.FindAsync(id);
         if (item != null) { _db.Categories.Remove(item); await _db.SaveChangesAsync(); }

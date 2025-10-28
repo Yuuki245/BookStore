@@ -1,5 +1,6 @@
 ﻿using BookStore.Data;
 using BookStore.Models;
+using BookStore.Models.ViewModels;
 using BookStore.Services;
 using BookStore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -26,18 +27,30 @@ public class CheckoutController : Controller
     {
         var items = await _cart.GetItemsAsync();
         if (!items.Any()) return RedirectToAction("Index", "Cart");
-        return View(new CheckoutVM());
+
+        var vm = new CheckoutVM
+        {
+            Items = items,
+            ShippingAddress = "",
+            PhoneNumber = ""
+        };
+        return View(vm);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Index(CheckoutVM vm)
     {
-        if (!ModelState.IsValid) return View(vm);
+        if (!ModelState.IsValid)
+        {
+            vm.Items = await _cart.GetItemsAsync();
+            return View(vm);
+        }
 
         var items = await _cart.GetItemsAsync();
         if (!items.Any())
         {
             ModelState.AddModelError(string.Empty, "Giỏ hàng trống.");
+            vm.Items = items;
             return View(vm);
         }
 
@@ -53,6 +66,7 @@ public class CheckoutController : Controller
             if (b.Stock < it.Quantity)
             {
                 ModelState.AddModelError(string.Empty, $"Sách '{b.Title}' không đủ tồn kho.");
+                vm.Items = items;
                 return View(vm);
             }
         }
@@ -61,8 +75,8 @@ public class CheckoutController : Controller
         var order = new Order
         {
             UserId = user.Id,
-            ShippingAddress = vm.ShippingAddress,
-            PhoneNumber = vm.PhoneNumber,
+            ShippingAddress = vm.ShippingAddress.Trim(),
+            PhoneNumber = vm.PhoneNumber.Trim(),
             CreatedAt = DateTime.UtcNow,
             Status = "Pending"
         };
@@ -88,7 +102,8 @@ public class CheckoutController : Controller
         await _db.SaveChangesAsync();
 
         await _cart.ClearAsync();
-        TempData["CheckoutSuccess"] = $"Đặt hàng thành công! Mã đơn: #{order.Id}";
-        return RedirectToAction("Index", "Books");
+        TempData["Success"] = $"Đặt hàng thành công! Mã đơn: #{order.Id}";
+
+        return RedirectToAction("Details", "Orders", new { id = order.Id });
     }
 }

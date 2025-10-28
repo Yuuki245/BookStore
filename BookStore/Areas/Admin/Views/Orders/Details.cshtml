@@ -1,35 +1,55 @@
 ﻿@model BookStore.Models.Order
-<h2>Order #@Model.Id</h2>
-<p><strong>CustomerId:</strong> @Model.UserId</p>
-<p><strong>Created:</strong> @Model.CreatedAt</p>
-<p><strong>Status:</strong> @Model.Status</p>
-<p><strong>Address:</strong> @Model.ShippingAddress</p>
-<p><strong>Phone:</strong> @Model.PhoneNumber</p>
+@{
+    ViewData["Title"] = "Order #" + Model.Id;
+}
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card p-3">
+            <div class="fw-semibold mb-2">Sản phẩm</div>
+            <table class="table align-middle mb-0">
+                <thead class="table-light"><tr><th>Sách</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead>
+                <tbody>
+                    @foreach (var i in Model.Items)
+                    {
+                        <tr>
+                            <td>@i.Book?.Title</td>
+                            <td>@i.Quantity</td>
+                            <td>@(i.UnitPrice.ToString("N0")) ₫</td>
+                            <td>@((i.UnitPrice * i.Quantity).ToString("N0")) ₫</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card p-3">
+            <div class="fw-semibold mb-2">Thông tin</div>
+            <div class="small text-muted">Khách:</div><div class="mb-2">@Model.UserId</div>
+            <div class="small text-muted">Ngày tạo:</div><div class="mb-2">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+            <div class="small text-muted">Địa chỉ:</div><div class="mb-2">@Model.ShippingAddress</div>
+            <div class="small text-muted">SĐT:</div><div class="mb-2">@Model.PhoneNumber</div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div class="small text-muted">Tổng tiền:</div>
+                <div class="fs-5 fw-bold text-end text-success">
+                    @(Model.TotalAmount.ToString("N0")) ₫
+                </div>
 
-<table class="table">
-    <thead><tr><th>Book</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
-    <tbody>
-        @foreach (var i in Model.Items)
-        {
-            <tr>
-                <td>@i.Book?.Title</td>
-                <td>@i.Quantity</td>
-                <td>@i.UnitPrice.ToString("N0") ₫</td>
-                <td>@(i.UnitPrice * i.Quantity).ToString("N0") ₫</td>
-            </tr>
-        }
-    </tbody>
-</table>
-<h4>Tổng cộng: @Model.TotalAmount.ToString("N0") ₫</h4>
+            </div>
 
-<form asp-action="UpdateStatus" method="post" class="d-flex gap-2">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="id" value="@Model.Id" />
-    <select name="status" class="form-select" style="max-width:200px">
-        @foreach (var s in new[] { "Pending", "Confirmed", "Shipped", "Completed", "Canceled" })
-        {
-            <option value="@s" selected="@(Model.Status==s)">@s</option>
-        }
-    </select>
-    <button class="btn btn-primary">Cập nhật</button>
-</form>
+            <hr />
+            <div class="fw-semibold mb-2">Cập nhật trạng thái</div>
+            <form asp-action="UpdateStatus" method="post" class="d-flex gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.Id" />
+                <select name="status" class="form-select form-select-sm">
+                    @foreach (var s in new[] { "Pending", "Confirmed", "Shipped", "Completed", "Canceled" })
+                    {
+                        <option value="@s" selected="@(Model.Status==s)">@s</option>
+                    }
+                </select>
+                <button class="btn btn-sm btn-primary"><i class="bi bi-check2-circle me-1"></i>Lưu</button>
+            </form>
+        </div>
+    </div>
+</div>

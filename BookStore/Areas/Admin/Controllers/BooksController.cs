@@ -1,9 +1,12 @@
 ﻿using BookStore.Data;
 using BookStore.Models;
+using BookStore.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Hosting; // ✅ để dùng IWebHostEnvironment
+using System.IO;
 
 namespace BookStore.Areas.Admin.Controllers;
 
@@ -12,66 +15,115 @@ namespace BookStore.Areas.Admin.Controllers;
 public class BooksController : Controller
 {
     private readonly ApplicationDbContext _db;
-    public BooksController(ApplicationDbContext db) => _db = db;
+    private readonly IWebHostEnvironment _env;
 
+    // ✅ CHỈ 1 constructor duy nhất
+    public BooksController(ApplicationDbContext db, IWebHostEnvironment env)
+    {
+        _db = db;
+        _env = env;
+    }
+
+    // Lưu ảnh bìa
+    private string? SaveCover(IFormFile? file)
+    {
+        if (file == null || file.Length == 0) return null;
+
+        // đảm bảo thư mục tồn tại
+        var uploadRoot = Path.Combine(_env.WebRootPath, "uploads");
+        if (!Directory.Exists(uploadRoot))
+            Directory.CreateDirectory(uploadRoot);
+
+        var ext = Path.GetExtension(file.FileName);
+        var fileName = $"{Guid.NewGuid()}{ext}";
+        var savePath = Path.Combine(uploadRoot, fileName);
+
+        using var fs = new FileStream(savePath, FileMode.Create);
+        file.CopyTo(fs);
+
+        return $"/uploads/{fileName}";
+    }
+
+    // ====== Index ======
     public async Task<IActionResult> Index()
     {
         var data = await _db.Books.Include(b => b.Category).AsNoTracking().ToListAsync();
         return View(data);
     }
 
+    // ====== Create ======
     public async Task<IActionResult> Create()
     {
-        ViewBag.Categories = new SelectList(await _db.Categories.ToListAsync(), "Id", "Name");
-        return View(new Book());
+        ViewBag.CategoryId = new SelectList(await _db.Categories.ToListAsync(), "Id", "Name");
+        return View(new BookUpsertVM());
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Book model)
+    public async Task<IActionResult> Create(BookUpsertVM vm)
     {
         if (!ModelState.IsValid)
         {
-            ViewBag.Categories = new SelectList(await _db.Categories.ToListAsync(), "Id", "Name", model.CategoryId);
-            return View(model);
+            ViewBag.CategoryId = new SelectList(await _db.Categories.ToListAsync(), "Id", "Name", vm.Book.CategoryId);
+            return View(vm);
         }
-        _db.Books.Add(model);
+
+        var url = SaveCover(vm.CoverFile);
+        if (url != null) vm.Book.CoverUrl = url;
+
+        _db.Books.Add(vm.Book);
         await _db.SaveChangesAsync();
+        TempData["Success"] = "Đã thêm sách.";
         return RedirectToAction(nameof(Index));
     }
 
+    // ====== Edit ======
     public async Task<IActionResult> Edit(int id)
     {
         var book = await _db.Books.FindAsync(id);
         if (book == null) return NotFound();
-        ViewBag.Categories = new SelectList(await _db.Categories.ToListAsync(), "Id", "Name", book.CategoryId);
-        return View(book);
+        ViewBag.CategoryId = new SelectList(await _db.Categories.ToListAsync(), "Id", "Name", book.CategoryId);
+        return View(new BookUpsertVM { Book = book });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Book model)
+    public async Task<IActionResult> Edit(int id, BookUpsertVM vm)
     {
-        if (id != model.Id) return BadRequest();
+        if (id != vm.Book.Id) return BadRequest();
         if (!ModelState.IsValid)
         {
-            ViewBag.Categories = new SelectList(await _db.Categories.ToListAsync(), "Id", "Name", model.CategoryId);
-            return View(model);
+            ViewBag.CategoryId = new SelectList(await _db.Categories.ToListAsync(), "Id", "Name", vm.Book.CategoryId);
+            return View(vm);
         }
-        _db.Update(model);
+
+        var book = await _db.Books.FindAsync(id);
+        if (book == null) return NotFound();
+
+        book.Title = vm.Book.Title;
+        book.Author = vm.Book.Author;
+        book.Price = vm.Book.Price;
+        book.Stock = vm.Book.Stock;
+        book.Isbn = vm.Book.Isbn;
+        book.Description = vm.Book.Description;
+        book.CategoryId = vm.Book.CategoryId;
+
+        var url = SaveCover(vm.CoverFile);
+        if (url != null) book.CoverUrl = url;
+
         await _db.SaveChangesAsync();
+        TempData["Success"] = "Đã cập nhật sách.";
         return RedirectToAction(nameof(Index));
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var book = await _db.Books.Include(b => b.Category).FirstOrDefaultAsync(b => b.Id == id);
-        return book == null ? NotFound() : View(book);
-    }
-
-    [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
         var book = await _db.Books.FindAsync(id);
-        if (book != null) { _db.Books.Remove(book); await _db.SaveChangesAsync(); }
+        if (book != null)
+        {
+            _db.Books.Remove(book);
+            await _db.SaveChangesAsync();
+            TempData["Success"] = "Đã xoá sách.";
+        }
         return RedirectToAction(nameof(Index));
     }
 }

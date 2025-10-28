@@ -52,6 +52,9 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+var culture = new System.Globalization.CultureInfo("vi-VN");
+System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
@@ -62,11 +65,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
 
 app.MapRazorPages();
 
