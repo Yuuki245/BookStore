@@ -27,6 +27,9 @@
             </table>
         </div>
     </div>
+    <div class="mb-2">
+        @await Html.PartialAsync("_OrderStatusBadge", Model.Status)
+    </div>
 
     <div class="col-lg-4">
         <div class="card p-3">

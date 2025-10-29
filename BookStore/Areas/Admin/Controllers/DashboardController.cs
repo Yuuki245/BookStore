@@ -17,8 +17,16 @@ namespace BookStore.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            ViewBag.TotalOrders = await _db.Orders.CountAsync();
-            ViewBag.Revenue = await _db.Orders.SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+            // ✅ chỉ tính đơn không bị hủy
+            var revenueStatuses = new[] { "Confirmed", "Shipped", "Completed" };
+
+            ViewBag.TotalOrders = await _db.Orders
+                .CountAsync(o => !o.Status.Equals("Canceled"));
+
+            ViewBag.Revenue = await _db.Orders
+                .Where(o => revenueStatuses.Contains(o.Status))
+                .SumAsync(o => (decimal?)o.TotalAmount) ?? 0;
+
             ViewBag.TotalBooks = await _db.Books.CountAsync();
             return View();
         }
@@ -26,11 +34,11 @@ namespace BookStore.Areas.Admin.Controllers
         // =============================
         // API trả dữ liệu JSON cho Chart
         // =============================
-        // Areas/Admin/Controllers/DashboardController.cs
         [HttpGet]
         public async Task<IActionResult> GetRevenue(string range = "day")
         {
             var now = DateTime.Now;
+            var revenueStatuses = new[] { "Confirmed", "Shipped", "Completed" }; // ✅ lọc doanh thu thực
 
             if (range == "day")
             {
@@ -41,12 +49,12 @@ namespace BookStore.Areas.Admin.Controllers
 
                 var raw = await _db.Orders
                     .Where(o => o.CreatedAt >= start)
+                    .Where(o => revenueStatuses.Contains(o.Status))
                     .GroupBy(o => o.CreatedAt.Date)
                     .Select(g => new { Day = g.Key, Total = g.Sum(x => x.TotalAmount) })
                     .ToListAsync();
 
                 var map = raw.ToDictionary(x => x.Day, x => x.Total);
-
                 var labels = basePoints.Select(d => d.ToString("dd/MM")).ToArray();
                 var values = basePoints.Select(d => map.TryGetValue(d, out var v) ? v : 0m).ToArray();
 
@@ -55,7 +63,6 @@ namespace BookStore.Areas.Admin.Controllers
             else if (range == "week")
             {
                 var cal = System.Globalization.CultureInfo.CurrentCulture.Calendar;
-
                 int dayOfWeek = (int)now.Date.DayOfWeek;
                 if (dayOfWeek == 0) dayOfWeek = 7;
                 var startOfWeek = now.Date.AddDays(-(dayOfWeek - 1));
@@ -67,12 +74,15 @@ namespace BookStore.Areas.Admin.Controllers
 
                 var raw = await _db.Orders
                     .Where(o => o.CreatedAt >= start)
+                    .Where(o => revenueStatuses.Contains(o.Status))
                     .AsNoTracking()
                     .ToListAsync();
 
                 var byWeek = raw.GroupBy(o =>
                 {
-                    var week = cal.GetWeekOfYear(o.CreatedAt, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+                    var week = cal.GetWeekOfYear(o.CreatedAt,
+                        System.Globalization.CalendarWeekRule.FirstDay,
+                        DayOfWeek.Monday);
                     var year = o.CreatedAt.Year;
                     return (year, week);
                 })
@@ -80,20 +90,23 @@ namespace BookStore.Areas.Admin.Controllers
 
                 var labels = baseWeeks.Select(d =>
                 {
-                    var week = cal.GetWeekOfYear(d, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+                    var week = cal.GetWeekOfYear(d,
+                        System.Globalization.CalendarWeekRule.FirstDay,
+                        DayOfWeek.Monday);
                     return $"Tuần {week}";
                 }).ToArray();
 
                 var values = baseWeeks.Select(d =>
                 {
-                    var week = cal.GetWeekOfYear(d, System.Globalization.CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+                    var week = cal.GetWeekOfYear(d,
+                        System.Globalization.CalendarWeekRule.FirstDay,
+                        DayOfWeek.Monday);
                     var key = (d.Year, week);
                     return byWeek.TryGetValue(key, out var v) ? v : 0m;
                 }).ToArray();
 
                 return Json(new { labels, values });
             }
-
             else
             {
                 // 12 tháng trong năm hiện tại
@@ -102,18 +115,17 @@ namespace BookStore.Areas.Admin.Controllers
 
                 var raw = await _db.Orders
                     .Where(o => o.CreatedAt.Year == year)
+                    .Where(o => revenueStatuses.Contains(o.Status))
                     .GroupBy(o => o.CreatedAt.Month)
                     .Select(g => new { Month = g.Key, Total = g.Sum(x => x.TotalAmount) })
                     .ToListAsync();
 
                 var map = raw.ToDictionary(x => x.Month, x => x.Total);
-
                 var labels = baseMonths.Select(m => $"T{m}").ToArray();
                 var values = baseMonths.Select(m => map.TryGetValue(m, out var v) ? v : 0m).ToArray();
 
                 return Json(new { labels, values });
             }
         }
-
     }
 }

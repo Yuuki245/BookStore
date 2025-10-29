@@ -45,11 +45,52 @@ public class BooksController : Controller
     }
 
     // ====== Index ======
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? q, int? categoryId, string? sort = "new", int page = 1)
     {
-        var data = await _db.Books.Include(b => b.Category).AsNoTracking().ToListAsync();
-        return View(data);
+        const int PageSize = 10;
+
+        var query = _db.Books
+            .Include(b => b.Category)
+            .AsNoTracking();
+
+        // 🔸 Lọc theo từ khóa
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var keyword = q.Trim().ToLower();
+            query = query.Where(b => b.Title.ToLower().Contains(keyword) || b.Author.ToLower().Contains(keyword));
+        }
+
+        // 🔸 Lọc theo thể loại
+        if (categoryId.HasValue)
+            query = query.Where(b => b.CategoryId == categoryId.Value);
+
+        // 🔸 Sắp xếp
+        query = sort switch
+        {
+            "title_asc" => query.OrderBy(b => b.Title),
+            "title_desc" => query.OrderByDescending(b => b.Title),
+            "price_asc" => query.OrderBy(b => b.Price),
+            "price_desc" => query.OrderByDescending(b => b.Price),
+            _ => query.OrderByDescending(b => b.Id)
+        };
+
+        // 🔸 Phân trang
+        var total = await query.CountAsync();
+        var items = await query.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync();
+
+        // 🔸 Gửi dữ liệu ra View
+        ViewBag.Q = q;
+        ViewBag.Sort = sort;
+        ViewBag.Page = page;
+        ViewBag.TotalPages = (int)Math.Ceiling(total / (double)PageSize);
+        ViewBag.CategoryId = categoryId;
+
+        // 🔸 Danh sách thể loại để hiển thị dropdown
+        ViewBag.Categories = await _db.Categories.AsNoTracking().ToListAsync();
+
+        return View(items);
     }
+
 
     // ====== Create ======
     public async Task<IActionResult> Create()

@@ -22,6 +22,7 @@
             <tbody>
                 @foreach (var o in Model)
                 {
+
                     var badge = o.Status switch
                     {
                         "Pending" => "secondary",
@@ -30,6 +31,7 @@
                         "Completed" => "success",
                         "Canceled" => "danger",
                         _ => "secondary"
+
                     };
                     <tr>
                         <td>@o.Id</td>
@@ -40,6 +42,8 @@
                             <a asp-action="Details" asp-route-id="@o.Id" class="btn btn-sm btn-outline-secondary">Details</a>
                         </td>
                     </tr>
+                <td>@await Html.PartialAsync("_OrderStatusBadge", o.Status)</td>
+
                 }
             </tbody>
         </table>
