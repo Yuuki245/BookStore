@@ -134,7 +134,7 @@ a {
 
 /* ===== Pango-like header: big search & Sell button ===== */
 .navbar .search-lg {
-    max-width: 680px;
+    max-width: 600px;
     width: 100%;
 }
 
@@ -161,13 +161,6 @@ a {
     color: #9aa1ac;
 }
 
-.btn-sell {
-    border-radius: 999px;
-    padding: .55rem 1rem;
-    font-weight: 600;
-    background: var(--brand);
-    border-color: var(--brand);
-}
 
     .btn-sell:hover {
         background: var(--brand-ink);
@@ -263,3 +256,99 @@ a {
     box-shadow: 0 12px 34px rgba(0,0,0,.09);
     transition: all .15s ease;
 }
+/* =================================
+   MEGA MENU
+==================================== */
+.btn-mega-menu {
+    border: 1px solid #ced4da;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+}
+
+    .btn-mega-menu:hover {
+        background-color: #e9ecef;
+    }
+
+.mega-menu-overlay {
+    /* Vị trí tuyệt đối, ngay dưới header */
+    position: absolute;
+    top: 100%; /* 100% chiều cao của header cha (nếu header có position:relative) */
+    left: 0;
+    right: 0;
+    /* Giao diện */
+    background: #f8f9fa;
+    z-index: 1020; /* Dưới modal nhưng trên content */
+    padding: 1.5rem 0; /* Container bên trong đã có padding */
+    border-bottom: 1px solid #dee2e6;
+    box-shadow: 0 8px 12px rgba(0,0,0,.05);
+}
+
+.mega-menu-link {
+    text-decoration: none;
+    color: #212529;
+    font-size: 0.95rem;
+}
+
+    .mega-menu-link:hover {
+        color: #0d6efd; /* Màu link chính */
+        text-decoration: underline;
+    }
+
+/* =================================
+   Cart Badge
+==================================== */
+.cart-badge {
+    font-size: 0.65em; /* Làm font nhỏ lại */
+    padding: 0.3em 0.5em;
+    /* Điều chỉnh vị trí nếu cần */
+}
+/* =================================
+   Description Read More
+==================================== */
+.description-collapsed {
+    /* Đặt chiều cao tối đa. Ví dụ: 120px (khoảng 5-6 dòng) */
+    max-height: 120px;
+    overflow: hidden;
+    position: relative;
+    /* Hiệu ứng mờ dần ở cuối để báo hiệu còn nội dung */
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+
+    .description-collapsed.expanded {
+        /* Gỡ bỏ giới hạn chiều cao và hiệu ứng mờ */
+        max-height: none;
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+/* =================================
+   Rating Stars
+==================================== */
+.rating-stars {
+    display: inline-block;
+    direction: rtl; /* Đảo ngược để khi hover, sao bên phải sáng trước */
+}
+
+    .rating-stars input[type="radio"] {
+        display: none; /* Ẩn radio button */
+    }
+
+    .rating-stars label {
+        font-size: 1.5rem; /* Kích thước sao */
+        color: #ddd; /* Màu sao mặc định */
+        cursor: pointer;
+        padding: 0 0.1em;
+        transition: color 0.2s;
+    }
+
+    /* Khi hover vào 1 sao, tất cả sao bên phải nó (do đã đảo rtl) sẽ sáng */
+    .rating-stars:hover label,
+    .rating-stars:hover label ~ label {
+        color: #ffc107; /* Màu vàng (warning) */
+    }
+
+    /* Khi 1 sao được check, giữ màu cho nó và các sao bên phải */
+    .rating-stars input[type="radio"]:checked ~ label {
+        color: #ffc107;
+    }

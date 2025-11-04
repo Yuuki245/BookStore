@@ -8,6 +8,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - BookStore</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
@@ -17,69 +21,23 @@
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <style>
+        .logo-font {
+            /* Dùng font 'Merriweather' mới, nếu không có thì dùng font serif mặc định */
+            font-family: 'Merriweather', serif;
+            font-weight: 700;
+            font-size: 1.1rem; /* Hơi to hơn một chút */
+        }
+    </style>
 </head>
 <body>
 
     <!-- ===== Top Navbar (logo + search + actions) ===== -->
-    <header class="bg-white border-bottom">
-        <nav class="navbar navbar-expand-lg container py-2">
-            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
-                <i class="bi bi-book"></i> <span>pangobooks (clone)</span>
-            </a>
-
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="topNav">
-                <!-- Center: big search -->
-                <div class="mx-lg-auto my-2 my-lg-0 search-lg">
-                    <form asp-controller="Books" asp-action="Index" method="get" class="search-wrap">
-                        <i class="bi bi-search"></i>
-                        <input class="form-control search-input" name="search" placeholder="Search titles, authors, sellers, or series" value="@(Context.Request.Query["search"])" />
-                    </form>
-                </div>
-
-                <!-- Right actions -->
-                <ul class="navbar-nav ms-lg-3 align-items-lg-center gap-lg-2">
-                    <li class="nav-item">
-                        <a class="btn btn-sell" asp-area="Admin" asp-controller="Books" asp-action="Index">Sell Your Books</a>
-                    </li>
-
-                    @if (SignInManager.IsSignedIn(User))
-                    {
-                        if (User.IsInRole("Admin"))
-                        {
-                            <li class="nav-item"><a class="nav-link text-danger" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a></li>
-                        }
-                        else
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Orders" asp-action="Index"><i class="bi bi-bag"></i></a></li>
-                        }
-                    }
-                    <li class="nav-item"><a class="nav-link" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart3"></i></a></li>
-                    <li class="nav-item"><partial name="_LoginPartial" /></li>
-                </ul>
-            </div>
-        </nav>
+    <header class="bg-white border-bottom position-relative">
+        <partial name="_Header" />
 
         <!-- ===== Category bar ===== -->
-        <div class="catbar">
-            <div class="container">
-                <ul class="nav justify-content-start flex-nowrap overflow-auto">
-                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="1">Young Adult</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="2">Fantasy</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="3">Sci-Fi</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="4">Thrillers</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="5">Romance</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="6">Historical Fiction</a></li>
-                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index">More Categories <i class="bi bi-caret-down-fill"></i></a></li>
-                    <li class="nav-item ms-auto d-none d-lg-block"><a class="nav-link" href="#">Bookstores</a></li>
-                    <li class="nav-item d-none d-lg-block"><a class="nav-link" href="#">Blog</a></li>
-                    <li class="nav-item d-none d-lg-block"><a class="nav-link" href="#">Explore <i class="bi bi-caret-down-fill"></i></a></li>
-                </ul>
-            </div>
-        </div>
+        @await Component.InvokeAsync("MegaMenu")
     </header>
 
     <!-- ===== Hero chỉ cho Home/Index (banner + CTA) ===== -->
@@ -124,68 +82,48 @@
 
     <partial name="_Toast" />
 
-    <!-- ===== Footer xanh ===== -->
-    <footer class="footer-blue mt-5">
-        <div class="container py-5">
-            <div class="row g-4">
-                <div class="col-12 col-md-3">
-                    <h5 class="mb-3 text-white">pangobooks</h5>
-                    <div class="d-flex gap-2">
-                        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" height="40">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" height="40">
-                    </div>
-                </div>
-                <div class="col-6 col-md-2">
-                    <div class="title">Shop</div>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Bookstores</a></li>
-                        <li><a href="#">Collections</a></li>
-                        <li><a href="#">Categories</a></li>
-                        <li><a href="#">Authors</a></li>
-                        <li><a href="#">Shelves</a></li>
-                    </ul>
-                </div>
-                <div class="col-6 col-md-2">
-                    <div class="title">Sell & Explore</div>
-                    <ul class="list-unstyled">
-                        <li><a href="#">Sellers Hub</a></li>
-                        <li><a href="#">Market Guide</a></li>
-                        <li><a href="#">Pricing Hub</a></li>
-                        <li><a href="#">Feed</a></li>
-                    </ul>
-                </div>
-                <div class="col-6 col-md-2">
-                    <div class="title">Company</div>
-                    <ul class="list-unstyled">
-                        <li><a href="#">About Us</a></li>
-                        <li><a href="#">Trust and Safety</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Ambassador</a></li>
-                    </ul>
-                </div>
-                <div class="col-6 col-md-3">
-                    <div class="title">Help</div>
-                    <ul class="list-unstyled">
-                        <li><a asp-controller="Home" asp-action="Privacy">Privacy Policy</a></li>
-                        <li><a href="#">Contact Us</a></li>
-                        <li><a href="#">Feature Requests</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top border-light-subtle small">
-                <div>© @DateTime.Now.Year - BookStore</div>
-                <div class="d-flex gap-3">
-                    <a href="#"><i class="bi bi-facebook"></i></a>
-                    <a href="#"><i class="bi bi-instagram"></i></a>
-                    <a href="#"><i class="bi bi-twitter-x"></i></a>
-                    <a href="#"><i class="bi bi-tiktok"></i></a>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <partial name="_Footer" />
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggleBtn = document.getElementById("megaMenuToggle");
+            const closeBtn = document.getElementById("megaMenuClose");
+            const menu = document.getElementById("megaMenu");
+
+            if (toggleBtn && menu) {
+                toggleBtn.addEventListener("click", function (e) {
+                    e.stopPropagation(); // Ngăn click lan ra body
+                    // Chuyển đổi trạng thái hiển thị
+                    var isHidden = menu.style.display === "none" || menu.style.display === "";
+                    menu.style.display = isHidden ? "block" : "none";
+                });
+            }
+
+            if (closeBtn && menu) {
+                closeBtn.addEventListener("click", function () {
+                    menu.style.display = "none";
+                });
+            }
+
+            // Đóng menu khi click vào 1 link
+            if (menu) { // Thêm kiểm tra null an toàn
+                menu.querySelectorAll('.mega-menu-link').forEach(link => {
+                    link.addEventListener('click', () => {
+                        menu.style.display = 'none';
+                    });
+                });
+            }
+
+            // Tùy chọn: Đóng menu khi click ra ngoài
+            document.addEventListener("click", function (e) {
+                // 🟢 SỬA LỖI 1: Thêm điều kiện "&& !toggleBtn.contains(e.target)"
+                if (menu && menu.style.display === "block" && !menu.contains(e.target) && !toggleBtn.contains(e.target)) {
+                    menu.style.display = "none";
+                }
+            });
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

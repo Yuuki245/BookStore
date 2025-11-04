@@ -1,7 +1,8 @@
 ﻿@model BookStore.ViewModels.CartVM
 @{
     ViewData["Title"] = "Giỏ hàng";
-    Layout = "~/Views/Shared/_LayoutCart.cshtml"; // DÙNG LAYOUT CART (không header lớn)
+    // Đã xoá dòng: Layout = "~/Views/Shared/_LayoutCart.cshtml";
+
     decimal total = Model.Items.Sum(i => i.UnitPrice * i.Quantity);
 }
 
@@ -10,7 +11,7 @@
     <div class="text-center text-muted py-5">
         <div class="display-6 mb-2">🛒</div>
         <p class="mb-4">Giỏ hàng đang trống.</p>
-        <a asp-controller="Books" asp-action="Index" class="btn btn-primary">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
             <i class="bi bi-search"></i> Tiếp tục mua sắm
         </a>
     </div>
@@ -18,111 +19,141 @@
 else
 {
     <div class="row g-4">
-        <!-- Danh sách item -->
         <div class="col-lg-8">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0">Sản phẩm</h5>
+
                         <form asp-action="Clear" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
                             <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Xoá tất cả</button>
                         </form>
+
                     </div>
 
                     <div class="table-responsive">
                         <table class="table align-middle">
                             <thead class="table-light">
+
                                 <tr>
                                     <th style="width:72px"></th>
                                     <th>Sách</th>
+
                                     <th class="text-end">Đơn giá</th>
                                     <th style="width:140px" class="text-center">Số lượng</th>
+
                                     <th class="text-end">Thành tiền</th>
                                     <th style="width:60px"></th>
                                 </tr>
+
                             </thead>
                             <tbody>
                                 @foreach (var it in Model.Items)
+
                                 {
                                     var sub = it.UnitPrice * it.Quantity;
                                     <tr>
                                         <td>
                                             <img src="@(it.CoverUrl ?? "/images/no-cover.png")" class="rounded" style="width:56px;height:74px;object-fit:cover" />
+
                                         </td>
                                         <td>
+
                                             <div class="fw-semibold">@it.Title</div>
                                         </td>
 
                                         <td class="text-end">@it.UnitPrice.ToString("N0") ₫</td>
+
                                         <td>
                                             <div class="d-flex justify-content-center align-items-center gap-1">
+
                                                 <form asp-action="Update" method="post" class="d-inline">
                                                     @Html.AntiForgeryToken()
+
                                                     <input type="hidden" name="bookId" value="@it.BookId" />
                                                     <input type="hidden" name="qty" value="@(Math.Max(it.Quantity-1,1))" />
                                                     <button class="btn btn-sm btn-outline-secondary" title="Giảm">
+
                                                         <i class="bi bi-dash"></i>
                                                     </button>
+
                                                 </form>
 
                                                 <div class="px-2" style="min-width:2ch;text-align:center">@it.Quantity</div>
 
+
                                                 <form asp-action="Update" method="post" class="d-inline">
                                                     @Html.AntiForgeryToken()
+
                                                     <input type="hidden" name="bookId" value="@it.BookId" />
                                                     <input type="hidden" name="qty" value="@(it.Quantity+1)" />
+
                                                     <button class="btn btn-sm btn-outline-secondary" title="Tăng">
                                                         <i class="bi bi-plus"></i>
+
                                                     </button>
                                                 </form>
+
                                             </div>
                                         </td>
+
                                         <td class="text-end fw-semibold">@sub.ToString("N0") ₫</td>
                                         <td class="text-end">
+
                                             <form asp-action="Remove" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
+
                                                 <input type="hidden" name="bookId" value="@it.BookId" />
                                                 <button class="btn btn-sm btn-outline-danger" title="Xoá">
+
                                                     <i class="bi bi-x-lg"></i>
                                                 </button>
+
                                             </form>
                                         </td>
                                     </tr>
+
                                 }
                             </tbody>
                         </table>
                     </div>
 
+
                     <div class="mt-3">
-                        <a asp-controller="Books" asp-action="Index" class="btn btn-outline-secondary">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
                             <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm
                         </a>
+
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Tóm tắt -->
         <div class="col-lg-4">
             <div class="card">
                 <div class="card-body">
+
                     <h5 class="mb-3">Tóm tắt đơn hàng</h5>
                     <div class="d-flex justify-content-between mb-2">
                         <div class="text-muted">Tạm tính</div>
                         <div>@total.ToString("N0") ₫</div>
+
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <div class="text-muted">Phí vận chuyển</div>
                         <div>Miễn phí</div>
+
                     </div>
                     <hr />
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="fw-bold">Tổng</div>
+
                         <div class="fs-5 fw-bold text-success">@total.ToString("N0") ₫</div>
                     </div>
                     <div class="d-grid mt-3">
                         <a asp-controller="Checkout" asp-action="Index" class="btn btn-success">
+
                             <i class="bi bi-bag-check"></i> Thanh toán COD
                         </a>
                     </div>

@@ -1,80 +1,86 @@
-﻿@model BookStore.Models.ViewModels.BookListVM
+﻿@* 🟢 SỬA 1: Model phải là BookListVM, không phải IEnumerable<Book> *@
+@model BookStore.Models.ViewModels.BookListVM
 @{
-    ViewData["Title"] = "Books";
+    ViewData["Title"] = "Danh sách Sách";
+
+    @* 🟢 SỬA 2: Lấy dữ liệu từ Model, không dùng ViewBag *@
+    string q = Model.Search ?? "";
+    string sort = Model.Sort ?? "new";
+    int page = Model.Page;
+    int totalPages = Model.TotalPages;
 }
 
-<div class="container my-4">
+<h2 class="mb-3">Danh sách Sách</h2>
 
-    <!-- Filter bar -->
-    <form method="get" class="row g-2 align-items-center mb-3">
-        <div class="col-12 col-md-4">
-            <input name="search" value="@Model.Search" class="form-control" placeholder="Tìm tên sách, tác giả, ISBN..." />
-        </div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-auto">
+        <input name="search" value="@Model.Search" class="form-control" placeholder="Tìm tiêu đề / tác giả" />
+    </div>
 
-        <div class="col-6 col-md-3">
-            <select name="categoryId" class="form-select">
-                <option value="">Tất cả thể loại</option>
-                @foreach (var c in Model.Categories)
-                {
-                    <option value="@c.Id"
-                            selected="@(Model.CategoryId == c.Id ? "selected" : null)">
-                        @c.Name
-                    </option>
-                }
-            </select>
-        </div>
+    <div class="col-auto">
+        <select name="categoryId" class="form-select" onchange="this.form.submit()">
+            <option value="">-- Tất cả thể loại --</option>
+            @* 🟢 SỬA 3: Dùng Model.Categories *@
+            @foreach (var c in Model.Categories)
+            {
+                <option value="@c.Id" selected="@(Model.CategoryId == c.Id)">
+                    @c.Name
+                </option>
+            }
+        </select>
+    </div>
 
-        <div class="col-6 col-md-3">
-            <select name="sort" class="form-select">
-                <option value="">Mới nhất</option>
-                <option value="price_asc" selected="@(Model.Sort == "price_asc"  ? "selected" : null)">Giá ↑</option>
-                <option value="price_desc" selected="@(Model.Sort == "price_desc" ? "selected" : null)">Giá ↓</option>
-                <option value="title_asc" selected="@(Model.Sort == "title_asc"  ? "selected" : null)">Tên A→Z</option>
-                <option value="title_desc" selected="@(Model.Sort == "title_desc" ? "selected" : null)">Tên Z→A</option>
-            </select>
-        </div>
+    <div class="col-auto">
+        <select name="sort" class="form-select" onchange="this.form.submit()">
+            @* 🟢 SỬA 4: Dùng Model.Sort *@
+            <option value="new" selected="@(Model.Sort=="new")">Mới nhất</option>
+            <option value="title_asc" selected="@(Model.Sort=="title_asc")">A → Z</option>
+            <option value="title_desc" selected="@(Model.Sort=="title_desc")">Z → A</option>
+            <option value="price_asc" selected="@(Model.Sort=="price_asc")">Giá ↑</option>
+            <option value="price_desc" selected="@(Model.Sort=="price_desc")">Giá ↓</option>
+        </select>
+    </div>
 
-        <div class="col-12 col-md-2 d-grid">
-            <button class="btn btn-outline-primary"><i class="bi bi-funnel"></i> Lọc</button>
-        </div>
-    </form>
+    <div class="col-auto">
+        <button class="btn btn-primary">Lọc</button>
+    </div>
+</form>
 
-    @if (!Model.Books.Any())
+<hr />
+
+<div class="row g-3 row-cols-2 row-cols-md-3 row-cols-lg-4">
+    @if (Model.Books.Any())
     {
-        <div class="text-center text-muted py-5">
-            <i class="bi bi-emoji-frown" style="font-size:2rem"></i>
-            <div class="mt-2">Chưa có sách phù hợp bộ lọc.</div>
-        </div>
+        @* 🟢 SỬA 6: Lặp qua Model.Books *@
+        @foreach (var b in Model.Books)
+        {
+            <div class="col">
+                <partial name="~/Views/Shared/_BookCard.cshtml" model="b" />
+            </div>
+        }
     }
     else
     {
-        <div class="row g-3">
-            @foreach (var b in Model.Books)
-            {
-                <div class="col-6 col-md-4 col-lg-3">
-                    <partial name="~/Views/Shared/_BookCard.cshtml" model="b" />
-                </div>
-            }
+        <div class="col-12">
+            <div class="alert alert-info">Không tìm thấy sách nào phù hợp.</div>
         </div>
-
-        <!-- Pager -->
-        @if (Model.TotalPages > 1)
-        {
-            <nav class="mt-3">
-                <ul class="pagination">
-                    @for (int i = 1; i <= Model.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == Model.Page ? "active" : "")">
-                            <a class="page-link"
-                               asp-action="Index"
-                               asp-route-search="@Model.Search"
-                               asp-route-categoryId="@Model.CategoryId"
-                               asp-route-sort="@Model.Sort"
-                               asp-route-page="@i">@i</a>
-                        </li>
-                    }
-                </ul>
-            </nav>
-        }
     }
 </div>
+
+@if (totalPages > 1)
+{
+    <nav class="mt-4">
+        <ul class="pagination">
+            @for (int i = 1; i <= totalPages; i++)
+            {
+                <li class="page-item @(i==page?"active":"")">
+                    <a class="page-link"
+                       asp-route-q="@q"
+                       asp-route-sort="@sort"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-page="@i">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

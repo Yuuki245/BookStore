@@ -21,4 +21,8 @@ public class HomeController : Controller
     }
 
     public IActionResult Privacy() => View();
+    public IActionResult About() => View();
+    public IActionResult TrustAndSafety() => View();
+    public IActionResult Blog() => View();
+    public IActionResult Ambassador() => View();
 }
