@@ -1,0 +1,31 @@
+﻿@model List<List<BookStore.Models.Category>>
+
+<div id="megaMenu" class="mega-menu-overlay" style="display: none;">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Thể Loại Sách</h4>
+            <button id="megaMenuClose" class="btn-close fs-5" aria-label="Close"></button>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var col in Model)
+            {
+                @if (col.Any())
+                {
+                    <div class="col-12 col-md-3">
+                        <ul class="list-unstyled">
+                            @foreach (var cat in col)
+                            {
+                                <li class="mb-2">
+                                    <a asp-controller="Books" asp-action="Index" asp-route-categoryId="@cat.Id" class="mega-menu-link" asp-area="">
+                                        @cat.Name
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

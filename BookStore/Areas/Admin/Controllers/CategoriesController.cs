@@ -46,8 +46,20 @@ public class CategoriesController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var item = await _db.Categories.FindAsync(id);
-        if (item != null) { _db.Categories.Remove(item); await _db.SaveChangesAsync(); }
+        var cat = await _db.Categories.FindAsync(id);
+        if (cat == null) return NotFound();
+
+        var hasBooks = await _db.Books.AnyAsync(b => b.CategoryId == id);
+        if (hasBooks)
+        {
+            TempData["Warning"] = "Không thể xoá thể loại vì vẫn còn sách thuộc thể loại này. Hãy chuyển sách sang thể loại khác trước.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _db.Categories.Remove(cat);
+        await _db.SaveChangesAsync();
+        TempData["Success"] = "Đã xoá thể loại.";
         return RedirectToAction(nameof(Index));
     }
+
 }

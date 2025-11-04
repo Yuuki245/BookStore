@@ -1,0 +1,80 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - BookStore</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
+    <style>
+        .cart-shell {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cart-topbar {
+            border-bottom: 1px solid #eef2ff;
+        }
+
+            .cart-topbar .brand {
+                font-weight: 800;
+                letter-spacing: .2px;
+                color: #111;
+                text-decoration: none;
+            }
+
+            .cart-topbar .btn-back {
+                color: #4b5563;
+                text-decoration: none;
+            }
+
+        .cart-footer {
+            border-top: 1px solid #eef2ff;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="cart-shell">
+
+        <!-- Top bar tối giản (không dùng header lớn) -->
+        <div class="cart-topbar">
+            <div class="container d-flex align-items-center justify-content-between py-3">
+                <a class="brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-book"></i> <span>BookStore</span>
+                </a>
+                <div class="d-flex align-items-center gap-3">
+                    <a href="javascript:history.back()" class="btn-back"><i class="bi bi-arrow-left"></i> Quay lại</a>
+                    <partial name="_LoginPartial" />
+                </div>
+            </div>
+        </div>
+
+        <main class="container my-4 flex-fill">
+            @RenderBody()
+        </main>
+
+        <partial name="~/Views/Shared/_Toast.cshtml" />
+
+        <footer class="cart-footer">
+            <div class="container py-3 small d-flex justify-content-between">
+                <div>© @DateTime.Now.Year - BookStore</div>
+                <div class="text-muted">Giỏ hàng</div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

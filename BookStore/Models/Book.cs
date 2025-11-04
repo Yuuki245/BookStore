@@ -34,4 +34,5 @@ public class Book
     public Category? Category { get; set; }
 
     public string? Description { get; set; }
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
 }

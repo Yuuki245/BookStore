@@ -1,23 +1,167 @@
-﻿@model BookStore.Models.Book
+﻿@model BookStore.Models.ViewModels.BookDetailVM
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = Model.MainBook.Title;
 }
 
-<div class="row">
-    <div class="col-md-4">
-        <img class="img-fluid" src="@(Model.CoverUrl ?? "https://via.placeholder.com/300x400")" alt="@Model.Title" />
+<div class="row g-4">
+    <div class="col-lg-5">
+        <img src="@(Model.MainBook.CoverUrl ?? "/images/no-cover.png")" class="w-100 rounded shadow-sm" style="object-fit:cover;max-height:520px" />
     </div>
-    <div class="col-md-8">
-        <h2>@Model.Title</h2>
-        <p class="text-muted">@Model.Author</p>
-        <p>@Model.Description</p>
-        <div class="fs-4 fw-bold mb-3">@Model.Price.ToString("N0") ₫</div>
 
-        <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2">
+    <div class="col-lg-7">
+        <h1 class="mb-1">@Model.MainBook.Title</h1>
+
+        <div class="text-muted fs-5 mb-3">Tác giả: @Model.MainBook.Author</div>
+
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <span class="badge text-bg-light border shadow-sm p-2">
+                Thể loại: @Model.MainBook.Category?.Name
+            </span>
+            <span class="text-muted small">ISBN: @Model.MainBook.Isbn</span>
+        </div>
+
+        <div class="fs-2 fw-bold text-success mb-3">@($"{Model.MainBook.Price:N0} ₫")</div>
+
+        <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 mb-4">
             @Html.AntiForgeryToken()
-            <input type="hidden" name="id" value="@Model.Id" />
-            <input type="number" name="qty" value="1" min="1" class="form-control" style="max-width:120px" />
-            <button class="btn btn-primary">Add to Cart</button>
+            <input type="hidden" name="bookId" value="@Model.MainBook.Id" />
+            <button class="btn btn-primary btn-lg"><i class="bi bi-bag-plus"></i> Thêm vào giỏ</button>
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg">Quay lại</a>
         </form>
+
+        <h5 class="fw-bold">Mô tả</h5>
+        <div id="descriptionContainer" class="description-collapsed">
+            <p id="descriptionContent" style="white-space: pre-wrap; margin-bottom: 0;">@Model.MainBook.Description</p>
+        </div>
+        <button id="toggleDescription" class="btn btn-link p-0 mt-1" style="display: none;">Xem thêm</button>
     </div>
 </div>
+
+<hr class="my-4" />
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <h3 class="mb-3">Đánh giá từ khách hàng</h3>
+        @if (!Model.Reviews.Any())
+        {
+            <div class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</div>
+        }
+        else
+        {
+            @foreach (var r in Model.Reviews)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="card-title">@(r.User?.UserName ?? "Anonymous")</h6>
+                            <span class="text-muted small">@r.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                        </div>
+                        <div class="mb-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="bi @(i <= r.Rating ? "bi-star-fill text-warning" : "bi-star")"></i>
+                            }
+                        </div>
+                        <p class="card-text" style="white-space: pre-wrap;">@r.Comment</p>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="col-lg-5">
+        @switch (Model.UserReviewStatus)
+        {
+            case "CanReview":
+                <div class="card sticky-top" style="top: 20px;">
+                    <div class="card-body">
+                        <h5 class="card-title">Viết đánh giá của bạn</h5>
+                        <form asp-action="AddReview" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="NewReview.BookId" value="@Model.MainBook.Id" />
+                            <div class="mb-3">
+                                <label asp-for="NewReview.Rating" class="form-label">Chọn số sao</label>
+                                <div class="rating-stars">
+                                    <input type="radio" id="star5" asp-for="NewReview.Rating" value="5" /><label for="star5" title="5 sao"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star4" asp-for="NewReview.Rating" value="4" /><label for="star4" title="4 sao"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star3" asp-for="NewReview.Rating" value="3" /><label for="star3" title="3 sao"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star2" asp-for="NewReview.Rating" value="2" /><label for="star2" title="2 sao"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star1" asp-for="NewReview.Rating" value="1" /><label for="star1" title="1 sao"><i class="bi bi-star-fill"></i></label>
+                                </div>
+                                <span asp-validation-for="NewReview.Rating" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="NewReview.Comment" class="form-label">Bình luận (Tùy chọn)</label>
+                                <textarea asp-for="NewReview.Comment" class="form-control" rows="4"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Gửi đánh giá</button>
+                        </form>
+                    </div>
+                </div>
+                break;
+            case "AlreadyReviewed":
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i> Bạn đã đánh giá sách này. Cảm ơn bạn!
+                </div>
+                break;
+            case "NotPurchased":
+                <div class="alert alert-info">
+                    Bạn phải mua sách này (và đơn hàng đã được giao thành công) để có thể viết đánh giá.
+                </div>
+                break;
+            case "IsAdmin":
+                <div class="alert alert-secondary">
+                    Tài khoản Admin không thể để lại đánh giá.
+                </div>
+                break;
+            case "NotLoggedIn":
+            default:
+                <div class="alert alert-info">
+                    Vui lòng <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Context.Request.Path">đăng nhập</a> để để lại đánh giá.
+                </div>
+                break;
+        }
+    </div>
+</div>
+
+@if (Model.RelatedBooks.Any())
+{
+    <hr class="my-4" />
+    <h3 class="mb-3">Sách cùng thể loại</h3>
+    <div class="row g-3 row-cols-2 row-cols-md-4">
+        @foreach (var b in Model.RelatedBooks)
+        {
+            <div class="col">
+                <partial name="~/Views/Shared/_BookCard.cshtml" model="b" />
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('descriptionContainer');
+            const content = document.getElementById('descriptionContent');
+            const button = document.getElementById('toggleDescription');
+
+            const maxHeight = 120;
+
+            if (content.scrollHeight > maxHeight) {
+                button.style.display = 'block';
+            }
+
+            button.addEventListener('click', function() {
+                if (container.classList.contains('description-collapsed')) {
+                    container.classList.remove('description-collapsed');
+                    container.classList.add('expanded');
+                    button.textContent = 'Thu gọn';
+                } else {
+                    container.classList.remove('expanded');
+                    container.classList.add('description-collapsed');
+                    button.textContent = 'Xem thêm';
+                }
+            });
+        });
+    </script>
+}

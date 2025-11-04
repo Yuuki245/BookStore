@@ -1,0 +1,354 @@
+﻿:root {
+    /* Brand */
+    --brand: #3B61EB; /* Royal Blue – PangoBooks primary */
+    --brand-ink: #2E4DCC; /* hover */
+    --accent: #22c55e; /* success */
+    --danger: #dc3545;
+    --bg: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    /* Type & scale */
+    --font-sans: "Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,"Noto Sans","Helvetica Neue",sans-serif;
+    --fs-h1: clamp(1.75rem,1.2rem + 1.8vw,2.5rem);
+    --fs-h2: 1.5rem;
+    --fs-h3: 1.125rem;
+    --fs-body: .98rem;
+    /* Shape */
+    --radius: .9rem;
+    --shadow: 0 10px 30px rgba(0,0,0,.07);
+}
+
+html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body); /* <-- thêm ; */
+}
+
+h1 {
+    font-size: var(--fs-h1);
+}
+/* <-- thêm ; */
+h2 {
+    font-size: var(--fs-h2);
+}
+
+h3 {
+    font-size: var(--fs-h3);
+}
+
+a {
+    text-underline-offset: 2px;
+}
+
+.card {
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.card-img-top {
+    border-top-left-radius: var(--radius);
+    border-top-right-radius: var(--radius);
+}
+
+.btn-primary {
+    background: var(--brand);
+    border-color: var(--brand);
+}
+
+    .btn-primary:hover {
+        background: var(--brand-ink);
+        border-color: var(--brand-ink);
+    }
+
+.btn-outline-primary {
+    color: var(--brand);
+    border-color: var(--brand);
+}
+
+.text-muted {
+    color: var(--muted) !important;
+}
+
+.table td, .table th {
+    vertical-align: middle;
+}
+
+/* ===== Hero stripe ===== */
+.hero {
+    background: radial-gradient(1200px 400px at 10% -10%, rgba(59,97,235,.08), transparent 60%), radial-gradient(800px 300px at 90% 0%, rgba(59,97,235,.06), transparent 70%), #fff;
+    border-bottom: 1px solid #eef2ff;
+}
+
+    .hero h1 {
+        letter-spacing: .2px;
+    }
+
+    .hero .lead {
+        color: #4b5563;
+    }
+
+/* ===== Category chips ===== */
+.chips .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .45rem .75rem;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    transition: all .15s ease;
+}
+
+    .chips .chip:hover {
+        border-color: #d1d5db;
+        transform: translateY(-1px);
+    }
+
+/* ===== Book card ===== */
+.book-card .title {
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.8em;
+}
+
+.book-price {
+    font-weight: 700;
+    color: #16a34a;
+}
+
+.book-meta {
+    font-size: .85rem;
+    color: #6b7280;
+}
+
+.condition-badge {
+    border-radius: 6px;
+    padding: .15rem .4rem;
+    font-size: .75rem;
+    background: #eef2ff;
+    color: #374151;
+}
+
+/* ===== Pango-like header: big search & Sell button ===== */
+.navbar .search-lg {
+    max-width: 600px;
+    width: 100%;
+}
+
+.search-wrap {
+    position: relative;
+}
+
+.search-input {
+    height: 46px;
+    border-radius: 999px;
+    padding-left: 2.75rem;
+}
+
+    .search-input::placeholder {
+        color: #9aa1ac;
+    }
+
+.search-wrap .bi-search {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    color: #9aa1ac;
+}
+
+
+    .btn-sell:hover {
+        background: var(--brand-ink);
+        border-color: var(--brand-ink);
+    }
+
+/* ===== Category bar (menu dưới navbar) ===== */
+.catbar {
+    border-top: 1px solid #eef2ff;
+    border-bottom: 1px solid #eef2ff;
+    background: #fff;
+}
+
+    .catbar .nav-link {
+        color: #4b5563;
+        padding: .85rem 1rem;
+        border-radius: .6rem;
+        white-space: nowrap;
+    }
+
+        .catbar .nav-link:hover {
+            background: #f7f8ff;
+            color: #111827;
+        }
+
+/* ===== Horizontal scroller sections (carousel-like) ===== */
+.scroll-x {
+    display: flex;
+    gap: .75rem;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    padding-bottom: .25rem;
+}
+
+    .scroll-x > * {
+        scroll-snap-align: start;
+        flex: 0 0 auto;
+    }
+
+@media (min-width:992px) {
+    .scroll-x > * {
+        width: 240px;
+    }
+}
+
+@media (max-width:991.98px) {
+    .scroll-x > * {
+        width: 48%;
+    }
+}
+
+@media (max-width:575.98px) {
+    .scroll-x > * {
+        width: 80%;
+    }
+}
+
+/* ===== Blue footer ===== */
+.footer-blue {
+    background: var(--brand);
+    color: #eaf0ff;
+}
+
+    .footer-blue a {
+        color: #eaf0ff;
+        text-decoration: none;
+    }
+
+        .footer-blue a:hover {
+            text-decoration: underline;
+        }
+
+    .footer-blue .title {
+        font-weight: 700;
+        margin-bottom: .75rem;
+        color: #fff;
+    }
+
+/* Utilities */
+.section-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: .2px;
+}
+
+.badge-pill {
+    border-radius: 999px;
+}
+
+/* Optional: small hover on book cards */
+.book-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 34px rgba(0,0,0,.09);
+    transition: all .15s ease;
+}
+/* =================================
+   MEGA MENU
+==================================== */
+.btn-mega-menu {
+    border: 1px solid #ced4da;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 0.375rem 0.75rem;
+}
+
+    .btn-mega-menu:hover {
+        background-color: #e9ecef;
+    }
+
+.mega-menu-overlay {
+    /* Vị trí tuyệt đối, ngay dưới header */
+    position: absolute;
+    top: 100%; /* 100% chiều cao của header cha (nếu header có position:relative) */
+    left: 0;
+    right: 0;
+    /* Giao diện */
+    background: #f8f9fa;
+    z-index: 1020; /* Dưới modal nhưng trên content */
+    padding: 1.5rem 0; /* Container bên trong đã có padding */
+    border-bottom: 1px solid #dee2e6;
+    box-shadow: 0 8px 12px rgba(0,0,0,.05);
+}
+
+.mega-menu-link {
+    text-decoration: none;
+    color: #212529;
+    font-size: 0.95rem;
+}
+
+    .mega-menu-link:hover {
+        color: #0d6efd; /* Màu link chính */
+        text-decoration: underline;
+    }
+
+/* =================================
+   Cart Badge
+==================================== */
+.cart-badge {
+    font-size: 0.65em; /* Làm font nhỏ lại */
+    padding: 0.3em 0.5em;
+    /* Điều chỉnh vị trí nếu cần */
+}
+/* =================================
+   Description Read More
+==================================== */
+.description-collapsed {
+    /* Đặt chiều cao tối đa. Ví dụ: 120px (khoảng 5-6 dòng) */
+    max-height: 120px;
+    overflow: hidden;
+    position: relative;
+    /* Hiệu ứng mờ dần ở cuối để báo hiệu còn nội dung */
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+}
+
+    .description-collapsed.expanded {
+        /* Gỡ bỏ giới hạn chiều cao và hiệu ứng mờ */
+        max-height: none;
+        -webkit-mask-image: none;
+        mask-image: none;
+    }
+/* =================================
+   Rating Stars
+==================================== */
+.rating-stars {
+    display: inline-block;
+    direction: rtl; /* Đảo ngược để khi hover, sao bên phải sáng trước */
+}
+
+    .rating-stars input[type="radio"] {
+        display: none; /* Ẩn radio button */
+    }
+
+    .rating-stars label {
+        font-size: 1.5rem; /* Kích thước sao */
+        color: #ddd; /* Màu sao mặc định */
+        cursor: pointer;
+        padding: 0 0.1em;
+        transition: color 0.2s;
+    }
+
+    /* Khi hover vào 1 sao, tất cả sao bên phải nó (do đã đảo rtl) sẽ sáng */
+    .rating-stars:hover label,
+    .rating-stars:hover label ~ label {
+        color: #ffc107; /* Màu vàng (warning) */
+    }
+
+    /* Khi 1 sao được check, giữ màu cho nó và các sao bên phải */
+    .rating-stars input[type="radio"]:checked ~ label {
+        color: #ffc107;
+    }
