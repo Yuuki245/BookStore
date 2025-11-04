@@ -1,0 +1,77 @@
+﻿@{
+    string? ok = TempData["Success"] as string;
+    string? warn = TempData["Warning"] as string;
+    string? err = TempData["Error"] as string;
+    // Nếu muốn gom lỗi ModelState hiển thị chung:
+    var modelErrors = ViewData.ModelState?
+        .Where(kv => kv.Value?.Errors?.Count > 0)
+        .SelectMany(kv => kv.Value!.Errors.Select(e => e.ErrorMessage))
+        .ToList() ?? new List<string>();
+}
+
+@if (!string.IsNullOrEmpty(ok) || !string.IsNullOrEmpty(warn) || !string.IsNullOrEmpty(err) || modelErrors.Count > 0)
+{
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080">
+        @* Success *@
+        @if (!string.IsNullOrEmpty(ok))
+        {
+            <div class="toast text-bg-success show mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">@ok</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+
+        @* Warning *@
+        @if (!string.IsNullOrEmpty(warn))
+        {
+            <div class="toast text-bg-warning show mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">@warn</div>
+                    <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+
+        @* Error *@
+        @if (!string.IsNullOrEmpty(err))
+        {
+            <div class="toast text-bg-danger show mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">@err</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+
+        @* ModelState errors (tuỳ chọn) *@
+        @if (modelErrors.Count > 0)
+        {
+            <div class="toast text-bg-danger show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <strong>Lỗi:</strong>
+                        <ul class="mb-0 ps-3">
+                            @foreach (var e in modelErrors)
+                            {
+                                <li>@e</li>
+                            }
+                        </ul>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Tự ẩn toast sau 4 giây (có thể xoá nếu không muốn)
+        document.querySelectorAll('.toast.show').forEach(t => {
+          const toast = new bootstrap.Toast(t, { delay: 4000 });
+          toast.show();
+        });
+    </script>
+}

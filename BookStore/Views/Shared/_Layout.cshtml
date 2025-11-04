@@ -1,75 +1,191 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+<!DOCTYPE html>
+<html lang="vi">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@ViewData["Title"] - BookStore</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/BookStore.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/theme.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">BookStore</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item"><a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a></li>
-                        <li class="nav-item"><a class="nav-link text-dark" asp-controller="Books" asp-action="Index">Books</a></li>
-                        <li class="nav-item"><a class="nav-link text-dark" asp-controller="Cart" asp-action="Index">Cart</a></li>
 
-                        @if (TempData["CheckoutSuccess"] is string msg)
-                        {
-                            <div class="alert alert-success text-center my-2 w-100">@msg</div>
-                        }
+    <!-- ===== Top Navbar (logo + search + actions) ===== -->
+    <header class="bg-white border-bottom">
+        <nav class="navbar navbar-expand-lg container py-2">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-book"></i> <span>pangobooks (clone)</span>
+            </a>
 
-                    </ul>
-                    <partial name="_LoginPartial" />
-                    @if (User.Identity?.IsAuthenticated == true)
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="topNav">
+                <!-- Center: big search -->
+                <div class="mx-lg-auto my-2 my-lg-0 search-lg">
+                    <form asp-controller="Books" asp-action="Index" method="get" class="search-wrap">
+                        <i class="bi bi-search"></i>
+                        <input class="form-control search-input" name="search" placeholder="Search titles, authors, sellers, or series" value="@(Context.Request.Query["search"])" />
+                    </form>
+                </div>
+
+                <!-- Right actions -->
+                <ul class="navbar-nav ms-lg-3 align-items-lg-center gap-lg-2">
+                    <li class="nav-item">
+                        <a class="btn btn-sell" asp-area="Admin" asp-controller="Books" asp-action="Index">Sell Your Books</a>
+                    </li>
+
+                    @if (SignInManager.IsSignedIn(User))
                     {
-                        // Chỉ hiện Admin khi có role Admin
                         if (User.IsInRole("Admin"))
                         {
-                            <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a>
-                            // KHÔNG hiện My Orders cho Admin
+                            <li class="nav-item"><a class="nav-link text-danger" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a></li>
                         }
                         else
                         {
-                            // Người dùng thường (Customer) mới thấy My Orders
-                            <a class="nav-link" asp-controller="Orders" asp-action="Index">My Orders</a>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Orders" asp-action="Index"><i class="bi bi-bag"></i></a></li>
                         }
                     }
-
-
-                </div>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Cart" asp-action="Index"><i class="bi bi-cart3"></i></a></li>
+                    <li class="nav-item"><partial name="_LoginPartial" /></li>
+                </ul>
             </div>
         </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - BookStore - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        <!-- ===== Category bar ===== -->
+        <div class="catbar">
+            <div class="container">
+                <ul class="nav justify-content-start flex-nowrap overflow-auto">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="1">Young Adult</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="2">Fantasy</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="3">Sci-Fi</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="4">Thrillers</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="5">Romance</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="6">Historical Fiction</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Books" asp-action="Index">More Categories <i class="bi bi-caret-down-fill"></i></a></li>
+                    <li class="nav-item ms-auto d-none d-lg-block"><a class="nav-link" href="#">Bookstores</a></li>
+                    <li class="nav-item d-none d-lg-block"><a class="nav-link" href="#">Blog</a></li>
+                    <li class="nav-item d-none d-lg-block"><a class="nav-link" href="#">Explore <i class="bi bi-caret-down-fill"></i></a></li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== Hero chỉ cho Home/Index (banner + CTA) ===== -->
+    @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Home" &&
+    ViewContext.RouteData.Values["action"]?.ToString() == "Index")
+    {
+        <section class="hero">
+            <div class="container py-4">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-8">
+                        <div class="p-4 rounded-4" style="background:linear-gradient(135deg,#f97316,#fb923c); color:#111;">
+                            <h2 class="mb-2 fw-bold">The ultimate fall reading list</h2>
+                            <a asp-controller="Books" asp-action="Index" class="btn btn-light badge-pill px-4">See the books</a>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="p-3 rounded-4" style="background:#fff7ed; border:1px solid #fde7c7">
+                            <div class="d-flex gap-3 align-items-center">
+                                <div class="display-6">📚</div>
+                                <div>
+                                    <div class="fw-bold">Pango AI</div>
+                                    <div class="text-muted small">Your personal book shopper is here to help you find the perfect book!</div>
+                                </div>
+                            </div>
+                            <div class="text-end mt-3">
+                                <a href="#" class="btn btn-outline-primary btn-sm">Chat with Pango</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+
+    <main class="container my-4">
+        @if (TempData["CheckoutSuccess"] is string msg)
+        {
+            <div class="alert alert-success text-center">@msg</div>
+        }
+        @RenderBody()
+    </main>
+
+    <partial name="_Toast" />
+
+    <!-- ===== Footer xanh ===== -->
+    <footer class="footer-blue mt-5">
+        <div class="container py-5">
+            <div class="row g-4">
+                <div class="col-12 col-md-3">
+                    <h5 class="mb-3 text-white">pangobooks</h5>
+                    <div class="d-flex gap-2">
+                        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="App Store" height="40">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Google Play" height="40">
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="title">Shop</div>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Bookstores</a></li>
+                        <li><a href="#">Collections</a></li>
+                        <li><a href="#">Categories</a></li>
+                        <li><a href="#">Authors</a></li>
+                        <li><a href="#">Shelves</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="title">Sell & Explore</div>
+                    <ul class="list-unstyled">
+                        <li><a href="#">Sellers Hub</a></li>
+                        <li><a href="#">Market Guide</a></li>
+                        <li><a href="#">Pricing Hub</a></li>
+                        <li><a href="#">Feed</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="title">Company</div>
+                    <ul class="list-unstyled">
+                        <li><a href="#">About Us</a></li>
+                        <li><a href="#">Trust and Safety</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Ambassador</a></li>
+                    </ul>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="title">Help</div>
+                    <ul class="list-unstyled">
+                        <li><a asp-controller="Home" asp-action="Privacy">Privacy Policy</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="#">Feature Requests</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top border-light-subtle small">
+                <div>© @DateTime.Now.Year - BookStore</div>
+                <div class="d-flex gap-3">
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+                    <a href="#"><i class="bi bi-instagram"></i></a>
+                    <a href="#"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#"><i class="bi bi-tiktok"></i></a>
+                </div>
+            </div>
         </div>
     </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

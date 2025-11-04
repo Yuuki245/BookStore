@@ -1,20 +1,24 @@
-﻿using System.Diagnostics;
+﻿using BookStore.Data;
+using BookStore.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using BookStore.Models;
-
-namespace BookStore.Controllers;
+using Microsoft.EntityFrameworkCore;
 
 public class HomeController : Controller
 {
+    private readonly ApplicationDbContext _db;
     private readonly ILogger<HomeController> _logger;
-    public HomeController(ILogger<HomeController> logger) => _logger = logger;
+    public HomeController(ILogger<HomeController> logger, ApplicationDbContext db)
+    { _logger = logger; _db = db; }
 
-    // Trang chủ: chuyển thẳng tới danh sách sách
-    public IActionResult Index() => RedirectToAction("Index", "Books");
+    public async Task<IActionResult> Index()
+    {
+        var vm = new HomeVM
+        {
+            Bestsellers = await _db.Books.AsNoTracking().OrderByDescending(b => b.Price).Take(12).ToListAsync(),
+            NewReleases = await _db.Books.AsNoTracking().OrderByDescending(b => b.Id).Take(12).ToListAsync()
+        };
+        return View(vm);
+    }
 
     public IActionResult Privacy() => View();
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error() =>
-        View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
 }

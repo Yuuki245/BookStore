@@ -1,51 +1,57 @@
 ﻿using BookStore.Data;
+using BookStore.Models;
 using BookStore.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-public class BooksController : Controller
+namespace BookStore.Controllers
 {
-    private readonly ApplicationDbContext _db;
-    private const int PageSize = 8;
-
-    public BooksController(ApplicationDbContext db) => _db = db;
-
-    public async Task<IActionResult> Index(int? categoryId, string? search, string? sort, int page = 1)
+    public class BooksController : Controller
     {
-        var q = _db.Books.Include(b => b.Category).AsQueryable();
+        private readonly ApplicationDbContext _db;
+        public BooksController(ApplicationDbContext db) => _db = db;
 
-        if (categoryId.HasValue) q = q.Where(b => b.CategoryId == categoryId.Value);
-        if (!string.IsNullOrWhiteSpace(search))
-            q = q.Where(b => b.Title.Contains(search) || b.Author.Contains(search));
-
-        q = sort switch
+        // GET: /Books
+        public async Task<IActionResult> Index()
         {
-            "price_asc" => q.OrderBy(b => b.Price),
-            "price_desc" => q.OrderByDescending(b => b.Price),
-            "title_asc" => q.OrderBy(b => b.Title),
-            "title_desc" => q.OrderByDescending(b => b.Title),
-            _ => q.OrderByDescending(b => b.Id)
-        };
+            // 🟢 Lấy top 12 sách bán chạy (theo tổng Quantity trong các đơn KHÔNG bị hủy)
+            var bestsellers = await _db.Books
+                .AsNoTracking()
+                .Select(b => new {
+                    Book = b,
+                    Sold = _db.OrderItems
+                        .Where(oi => oi.BookId == b.Id && oi.Order.Status != "Canceled")
+                        .Sum(oi => (int?)oi.Quantity) ?? 0
+                })
+                .OrderByDescending(x => x.Sold)
+                .Take(12)
+                .Select(x => x.Book)
+                .ToListAsync();
 
-        var total = await q.CountAsync();
-        var items = await q.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync();
+            // 🟢 Lấy 12 sách mới thêm (theo Id mới nhất)
+            var newReleases = await _db.Books
+                .AsNoTracking()
+                .OrderByDescending(b => b.Id)
+                .Take(12)
+                .ToListAsync();
 
-        var vm = new BookListVM
+            var vm = new HomeVM
+            {
+                Bestsellers = bestsellers,
+                NewReleases = newReleases
+            };
+
+            return View(vm);
+        }
+
+
+        // GET: /Books/Details/5
+        public async Task<IActionResult> Details(int id)
         {
-            Books = items,
-            Categories = await _db.Categories.AsNoTracking().ToListAsync(),
-            CategoryId = categoryId,
-            Search = search,
-            Sort = sort,
-            Page = page,
-            TotalPages = (int)Math.Ceiling(total / (double)PageSize)
-        };
-        return View(vm);
-    }
-
-    public async Task<IActionResult> Details(int id)
-    {
-        var book = await _db.Books.Include(b => b.Category).FirstOrDefaultAsync(b => b.Id == id);
-        return book == null ? NotFound() : View(book);
+            var book = await _db.Books.AsNoTracking()
+                                      .Include(b => b.Category)
+                                      .FirstOrDefaultAsync(b => b.Id == id);
+            return book == null ? NotFound() : View(book);
+        }
     }
 }
