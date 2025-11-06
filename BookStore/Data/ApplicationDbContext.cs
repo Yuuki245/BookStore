@@ -14,6 +14,7 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -59,5 +60,11 @@ public class ApplicationDbContext : IdentityDbContext
         builder.Entity<Order>()
             .Property(o => o.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
+        // 🟢 THÊM CẤU HÌNH CHO BLOGPOST
+        builder.Entity<BlogPost>()
+            .HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Restrict); // Không xóa bài post nếu user bị xóa
     }
 }

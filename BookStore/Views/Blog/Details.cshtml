@@ -1,0 +1,25 @@
+﻿@model BookStore.Models.BlogPost
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container" style="max-width: 800px;">
+    <h1 class="mb-2">@Model.Title</h1>
+    <div class="text-muted mb-3">
+        Đăng bởi @(Model.User?.UserName ?? "Admin") vào @Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.HeaderImageUrl))
+    {
+        <img src="@Model.HeaderImageUrl" class="img-fluid rounded mb-4" alt="@Model.Title">
+    }
+
+    <div classs="blog-content" style="white-space: pre-wrap;">
+        @Model.Content
+    </div>
+
+    <hr class="my-4">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Quay lại Blog
+    </a>
+</div>
