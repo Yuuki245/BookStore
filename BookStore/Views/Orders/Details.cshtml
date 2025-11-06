@@ -27,9 +27,6 @@
             </table>
         </div>
     </div>
-    <div class="mb-2">
-        @await Html.PartialAsync("_OrderStatusBadge", Model.Status)
-    </div>
 
     <div class="col-lg-4">
         <div class="card p-3">
@@ -65,7 +62,12 @@
             </div>
 
             <hr />
-
+            @if (Model.Status == "Completed")
+            {
+                <button id="printInvoiceBtn" class="btn btn-info w-100 mb-2">
+                    <i class="bi bi-printer"></i> In Hóa Đơn (PDF)
+                </button>
+            }
             @if (Model.Status == "Pending")
             {
                 <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-flex gap-2">
@@ -76,3 +78,15 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+             // Chỉ thêm sự kiện click nếu nút đó tồn tại
+             const printButton = document.getElementById('printInvoiceBtn');
+             if (printButton) {
+                 printButton.addEventListener('click', function() {
+                     window.print(); // Kích hoạt chức năng in của trình duyệt
+                 });
+             }
+    </script>
+}

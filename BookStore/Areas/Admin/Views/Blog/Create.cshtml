@@ -1,0 +1,64 @@
+﻿@model BookStore.Models.BlogPost
+@{
+    ViewData["Title"] = "Bài viết mới";
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Create" method="post">
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+    <div class="card p-3">
+        <div class="mb-3">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+
+            <label asp-for="HeaderImageUrl" class="form-label">Link Ảnh bìa (Tùy chọn)</label>
+            <input asp-for="HeaderImageUrl" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label asp-for="Excerpt" class="form-label">Tóm tắt (Tùy chọn)</label>
+            <textarea asp-for="Excerpt" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Content" class="form-label">Nội dung</label>
+            <textarea id="Content" asp-for="Content" class="form-control" rows="10"></textarea>
+            <span asp-validation-for="Content" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Đăng bài</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            tinymce.init({
+                selector: 'textarea#Content',
+                plugins: [
+                    'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
+                    'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'advtemplate', 'ai', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown', 'importword', 'exportword', 'exportpdf',
+                    'image'
+                ],
+                toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+                images_upload_url: '/Admin/Blog/UploadImage',
+                automatic_uploads: true,
+                file_picker_types: 'image',
+                tinycomments_mode: 'embedded',
+                tinycomments_author: 'Author name',
+                mergetags_list: [
+                    { value: 'First.Name', title: 'First Name' },
+                    { value: 'Email', title: 'Email' },
+                ],
+                ai_request: (request, respondWith) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
+            });
+        });
+    </script>
+}

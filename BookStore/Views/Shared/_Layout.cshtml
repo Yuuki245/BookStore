@@ -28,6 +28,31 @@
             font-weight: 700;
             font-size: 1.1rem; /* Hơi to hơn một chút */
         }
+
+        @@media print {
+            /* Ẩn Header, Footer, và Mega Menu */
+            body > header,
+            body > footer,
+            #megaMenu {
+                display: none !important;
+            }
+            /* Ẩn các nút bấm trên trang Details */
+            #printInvoiceBtn,
+            #cancelForm {
+                display: none !important;
+            }
+            /* Đảm bảo nội dung chính (hóa đơn) chiếm toàn bộ trang */
+            body > main {
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            /* Xóa box-shadow của card để tiết kiệm mực */
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #dee2e6 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -44,6 +69,33 @@
     @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Home" &&
     ViewContext.RouteData.Values["action"]?.ToString() == "Index")
     {
+        <div class="container my-4">
+        <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            </div>
+
+            <div class="carousel-inner">
+                <div class="carousel-item active" data-bs-interval="5000">
+                        <img src="~/image/banner1.png" class="d-block w-100" alt="Banner 1">
+                </div>
+                <div class="carousel-item" data-bs-interval="5000">
+                        <img src="~/image/banner1.png" class="d-block w-100 " alt="Banner 2">
+                </div>
+            </div>
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+        </div>
+
         <section class="hero">
             <div class="container py-4">
                 <div class="row align-items-center g-4">
@@ -56,14 +108,14 @@
                     <div class="col-lg-4">
                         <div class="p-3 rounded-4" style="background:#fff7ed; border:1px solid #fde7c7">
                             <div class="d-flex gap-3 align-items-center">
-                                <div class="display-6">📚</div>
+                                <div class="display-6"><i class="bi bi-pencil-square"></i></div>
                                 <div>
-                                    <div class="fw-bold">Pango AI</div>
-                                    <div class="text-muted small">Your personal book shopper is here to help you find the perfect book!</div>
+                                    <div class="fw-bold">Blog sách</div>
+                                    <div class="text-muted small">Khám phá các bài viết, đánh giá và tin tức mới nhất từ chúng tôi!</div>
                                 </div>
                             </div>
                             <div class="text-end mt-3">
-                                <a href="#" class="btn btn-outline-primary btn-sm">Chat with Pango</a>
+                                <a asp-controller="Blog" asp-action="Index" asp-area="" class="btn btn-outline-primary btn-sm">Xem Blog</a>
                             </div>
                         </div>
                     </div>
