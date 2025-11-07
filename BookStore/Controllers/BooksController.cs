@@ -2,6 +2,11 @@
 using BookStore.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+<<<<<<< Updated upstream
+=======
+using System.Security.Claims; // 🟢 THÊM
+using System.Linq;
+>>>>>>> Stashed changes
 
 public class BooksController : Controller
 {
@@ -32,6 +37,7 @@ public class BooksController : Controller
 
         var vm = new BookListVM
         {
+<<<<<<< Updated upstream
             Books = items,
             Categories = await _db.Categories.AsNoTracking().ToListAsync(),
             CategoryId = categoryId,
@@ -41,6 +47,168 @@ public class BooksController : Controller
             TotalPages = (int)Math.Ceiling(total / (double)PageSize)
         };
         return View(vm);
+=======
+            const int PageSize = 12; // Hiển thị 12 sách mỗi trang
+
+            var query = _db.Books
+                .Include(b => b.Category)
+                .AsNoTracking();
+
+            // 🔸 Lọc theo từ khóa (dựa theo check/Views/Books/Index.cshtml name="search")
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var keyword = search.Trim().ToLower();
+                query = query.Where(b => b.Title.ToLower().Contains(keyword) ||
+                                         (b.Author != null && b.Author.ToLower().Contains(keyword)) ||
+                                         (b.Isbn != null && b.Isbn.Contains(keyword)));
+            }
+
+            // 🔸 Lọc theo thể loại
+            if (categoryId.HasValue)
+                query = query.Where(b => b.CategoryId == categoryId.Value);
+
+            // 🔸 Sắp xếp (dựa theo check/Views/Books/Index.cshtml name="sort")
+            query = sort switch
+            {
+                "price_asc" => query.OrderBy(b => b.Price),
+                "price_desc" => query.OrderByDescending(b => b.Price),
+                "title_asc" => query.OrderBy(b => b.Title),
+                "title_desc" => query.OrderByDescending(b => b.Title),
+                _ => query.OrderByDescending(b => b.Id) // Mới nhất
+            };
+
+            // 🔸 Phân trang
+            var total = await query.CountAsync();
+            var items = await query.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync();
+
+            // 🔸 Gửi dữ liệu ra View
+            var vm = new BookListVM
+            {
+                Books = items,
+                Categories = await _db.Categories.AsNoTracking().OrderBy(c => c.Name).ToListAsync(),
+                Search = search,
+                CategoryId = categoryId,
+                Sort = sort,
+                Page = page,
+                TotalPages = (int)Math.Ceiling(total / (double)PageSize)
+            };
+
+            return View(vm); // <-- Trả về BookListVM
+        }
+
+
+        // GET: /Books/Details/5
+        public async Task<IActionResult> Details(int id)
+        {
+            var book = await _db.Books.AsNoTracking()
+                                      .Include(b => b.Category)
+                                      .Include(b => b.Reviews)
+                                          .ThenInclude(r => r.User)
+                                      .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (book == null) return NotFound();
+
+            var related = await _db.Books.AsNoTracking()
+                .Where(b => b.CategoryId == book.CategoryId && b.Id != id)
+                .OrderByDescending(b => b.Id)
+                .Take(4)
+                .ToListAsync();
+
+            // 🟢 2. BẮT ĐẦU: Logic tính tổng đã bán
+            int totalSold = await _db.OrderItems
+                .Where(oi => oi.BookId == id &&
+                             oi.Order != null &&
+                             oi.Order.Status == "Completed") // Chỉ tính đơn đã hoàn thành
+                .SumAsync(oi => (int?)oi.Quantity) ?? 0; // Dùng (int?) để xử lý Sum() trên tập rỗng
+            // 🟢 KẾT THÚC: Logic tính tổng đã bán
+
+            var vm = new BookDetailVM
+            {
+                MainBook = book,
+                RelatedBooks = related,
+                Reviews = book.Reviews.OrderByDescending(r => r.CreatedAt),
+                TotalSold = totalSold // 🟢 3. GÁN GIÁ TRỊ MỚI
+            };
+
+            // ... (Logic kiểm tra trạng thái review giữ nguyên) ...
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId != null)
+            {
+                if (User.IsInRole("Admin"))
+                {
+                    vm.UserReviewStatus = "IsAdmin";
+                }
+                else if (book.Reviews.Any(r => r.UserId == userId))
+                {
+                    vm.UserReviewStatus = "AlreadyReviewed";
+                }
+                else
+                {
+                    bool hasPurchased = await _db.Orders
+                        .AnyAsync(o => o.UserId == userId &&
+                                       o.Status == "Completed" &&
+                                       o.Items.Any(i => i.BookId == id));
+
+                    vm.UserReviewStatus = hasPurchased ? "CanReview" : "NotPurchased";
+                }
+            }
+            else
+            {
+                vm.UserReviewStatus = "NotLoggedIn";
+            }
+
+            return View(vm);
+        }
+        // 🟢 KẾT THÚC: Logic kiểm tra quyền review
+
+        [HttpPost]
+        [Authorize] // Bắt buộc đăng nhập
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddReview(BookDetailVM vm)
+        {
+            // 1. Kiểm tra Admin (Admin không được review)
+            if (User.IsInRole("Admin"))
+            {
+                TempData["Error"] = "Tài khoản Admin không thể gửi đánh giá.";
+                return RedirectToAction("Details", new { id = vm.NewReview.BookId });
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var bookId = vm.NewReview.BookId;
+
+            // 2. Kiểm tra đã mua
+            bool hasPurchased = await _db.Orders
+                .AnyAsync(o => o.UserId == userId &&
+                               o.Status == "Completed" &&
+                               o.Items.Any(i => i.BookId == bookId));
+
+            if (!hasPurchased)
+            {
+                TempData["Error"] = "Bạn chỉ có thể đánh giá sách bạn đã mua.";
+                return RedirectToAction("Details", new { id = bookId });
+            }
+
+            // 3. Kiểm tra đã review (tránh spam)
+            bool hasReviewed = await _db.Reviews
+                .AnyAsync(r => r.BookId == bookId && r.UserId == userId);
+
+            if (hasReviewed)
+            {
+                TempData["Error"] = "Bạn đã đánh giá sách này rồi.";
+                return RedirectToAction("Details", new { id = bookId });
+            }
+
+            // Gán thông tin và lưu
+            vm.NewReview.UserId = userId;
+            vm.NewReview.CreatedAt = DateTime.UtcNow;
+
+            _db.Reviews.Add(vm.NewReview);
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = "Cảm ơn đánh giá của bạn!";
+            return RedirectToAction("Details", new { id = bookId });
+        }
+>>>>>>> Stashed changes
     }
 
     public async Task<IActionResult> Details(int id)

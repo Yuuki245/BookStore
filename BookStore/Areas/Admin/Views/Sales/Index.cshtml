@@ -1,0 +1,94 @@
+﻿@model IEnumerable<BookStore.Models.Book>
+@{
+    ViewData["Title"] = "Quản lý Sale";
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<div class="card p-3 mb-3">
+    <h5>Thêm sách vào Sale (Thủ công)</h5>
+    <form asp-action="AddBookToSale" method="post" class="row g-3">
+        @Html.AntiForgeryToken()
+        <div class="col-md-6">
+            <label class="form-label">Chọn sách (Chỉ hiển thị sách chưa sale)</label>
+            <select name="bookId" class="form-select" asp-items="ViewBag.BooksList">
+                <option value="">-- Chọn một sách --</option>
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label class="form-label">Giá Sale Mới (VNĐ)</label>
+            <input type="number" name="newSalePrice" class="form-control" min="1" placeholder="Ví dụ: 89000" required />
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Thêm Sale</button>
+        </div>
+    </form>
+</div>
+
+<div class="card p-3 mb-3">
+    <h5>Công cụ Sale (Ngẫu nhiên)</h5>
+    <p class="text-muted small">
+        Hành động "Tạo Sale ngẫu nhiên" sẽ xóa tất cả sale cũ và tạo một đợt sale ngẫu nhiên mới cho 12 sản phẩm (tối đa 50%).
+    </p>
+    <div class="d-flex gap-2">
+        <form asp-action="GenerateNewSale" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-warning"
+                    onclick="return confirm('Bạn có chắc muốn xóa sale cũ và tạo sale mới?')">
+                <i class="bi bi-shuffle"></i> Tạo Sale ngẫu nhiên
+            </button>
+        </form>
+
+        <form asp-action="ResetAllSales" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-danger"
+                    onclick="return confirm('Bạn có chắc muốn GỠ BỎ toàn bộ sale?')">
+                <i class="bi bi-x-lg"></i> Reset Tất cả Sale
+            </button>
+        </form>
+    </div>
+</div>
+
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Các sản phẩm đang Sale</h5>
+        @if (!Model.Any())
+        {
+            <p class="text-muted">Không có sản phẩm nào đang sale.</p>
+        }
+        else
+        {
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sách</th>
+                        <th class="text-end">Giá gốc</th>
+                        <th class="text-end">Giá Sale</th>
+                        <th class="text-end">% Giảm</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model)
+                    {
+                        var discount = (int)Math.Round((1 - (b.Price / b.OriginalPrice.Value)) * 100);
+                        <tr>
+                            <td>@b.Title</td>
+                            <td class="text-end">@b.OriginalPrice.Value.ToString("N0") ₫</td>
+                            <td class="text-end fw-bold text-danger">@b.Price.ToString("N0") ₫</td>
+                            <td class="text-end">@discount%</td>
+                            <td class="text-end">
+                                <form asp-action="RemoveSale" asp-route-id="@b.Id" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Gỡ</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

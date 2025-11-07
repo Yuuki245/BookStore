@@ -1,0 +1,60 @@
+﻿@model BookStore.Models.Book
+<div class="card h-100 book-card">
+    <div class="position-relative">
+        <img src="@(Model.CoverUrl ?? "/images/no-cover.png")"
+             class="card-img-top" style="height:230px;object-fit:cover" alt="@Model.Title" />
+
+        @{
+            var tagType = ViewData["TagType"] as string;
+        }
+        @if (tagType == "Bestseller")
+        {
+            <div class="position-absolute top-0 start-0 m-2 condition-badge bestseller-badge">
+                <i class="bi bi-star-fill"></i> Bestseller
+            </div>
+        }
+        else if (tagType == "New")
+        {
+            <div class="position-absolute top-0 start-0 m-2 condition-badge new-badge">
+                Mới
+            </div>
+        }
+        else if (Model.OriginalPrice != null && Model.OriginalPrice > 0)
+        {
+            var discount = (int)Math.Round((1 - (Model.Price / Model.OriginalPrice.Value)) * 100);
+            <div class="position-absolute top-0 start-0 m-2 condition-badge sale-badge">
+                -@discount%
+            </div>
+        }
+    </div>
+    <div class="card-body d-flex flex-column">
+        <h6 class="mt-1 mb-2 title">@Model.Title</h6>
+        <div class="book-meta mb-2">Tác giả: @Model.Author</div>
+
+        <div class="mt-auto d-flex justify-content-between align-items-center">
+            <div class="book-price">
+                @if (Model.OriginalPrice != null && Model.OriginalPrice > 0)
+                {
+                    <span class="text-danger fw-bold">@($"{Model.Price:N0} ₫")</span>
+                    <span class="text-muted text-decoration-line-through small ms-1">
+                        @($"{Model.OriginalPrice.Value:N0} ₫")
+                    </span>
+                }
+                else
+                {
+                    <span>@($"{Model.Price:N0} ₫")</span>
+                }
+            </div>
+
+            <div class="btn-group">
+                <a asp-controller="Books" asp-action="Details" asp-route-id="@Model.Id"
+                   class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="bookId" value="@Model.Id" />
+                    <button class="btn btn-sm btn-primary"><i class="bi bi-bag-plus"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

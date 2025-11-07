@@ -24,6 +24,9 @@ public class Book
     [Column(TypeName = "decimal(18,2)")]
     [Range(0, 1_000_000)]
     public decimal Price { get; set; }
+    [Column(TypeName = "decimal(18,2)")]
+    [Range(0, 1_000_000)]
+    public decimal? OriginalPrice { get; set; }
 
     [Range(0, int.MaxValue)]
     public int Stock { get; set; }
