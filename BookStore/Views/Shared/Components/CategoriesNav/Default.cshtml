@@ -1,0 +1,36 @@
+﻿@model BookStore.ViewComponents.CategoriesNavVM
+
+@* 1. Hiển thị 6 thể loại chính *@
+@foreach (var c in Model.FeaturedCategories)
+{
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="Books" asp-action="Index" asp-route-categoryId="@c.Id">
+            @c.Name
+        </a>
+    </li>
+}
+
+@* 2. Nếu còn thể loại khác, hiển thị dropdown "More" *@
+@if (Model.MoreCategories.Any())
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            More Categories
+        </a>
+        <ul class="dropdown-menu">
+            @foreach (var c in Model.MoreCategories)
+            {
+                <li>
+                    <a class="dropdown-item" asp-controller="Books" asp-action="Index" asp-route-categoryId="@c.Id">
+                        @c.Name
+                    </a>
+                </li>
+            }
+        </ul>
+    </li>
+}
+
+@* 3. Các link tĩnh còn lại (Blog, Explore...) *@
+<li class="nav-item ms-auto d-none d-lg-block"><a class="nav-link" href="#">Bookstores</a></li>
+<li class="nav-item d-none d-lg-block"><a class="nav-link" href="#">Blog</a></li>
+<li class="nav-item d-none d-lg-block"><a class="nav-link" href="#">Explore <i class="bi bi-caret-down-fill"></i></a></li>

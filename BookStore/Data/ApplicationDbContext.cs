@@ -13,7 +13,8 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<Book> Books => Set<Book>();
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
-
+    public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -36,7 +37,20 @@ public class ApplicationDbContext : IdentityDbContext
             .HasOne(oi => oi.Book)
             .WithMany()
             .HasForeignKey(oi => oi.BookId);
+        // 🟢 THÊM CẤU HÌNH CHO REVIEW
+        // Review - Book (n-1)
+        builder.Entity<Review>()
+            .HasOne(r => r.Book)
+            .WithMany(b => b.Reviews) // 🟢 Thêm ICollection<Review> vào Book.cs (xem Bước 2.5)
+            .HasForeignKey(r => r.BookId)
+            .OnDelete(DeleteBehavior.Cascade); // Xóa review nếu sách bị xóa
 
+        // Review - User (n-1)
+        builder.Entity<Review>()
+            .HasOne(r => r.User)
+            .WithMany()
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.ClientSetNull); // Không xóa review nếu user bị xóa
         // Indexes gợi ý (tìm kiếm nhanh)
         builder.Entity<Book>().HasIndex(b => b.Title);
         builder.Entity<Book>().HasIndex(b => b.CategoryId);
@@ -46,5 +60,11 @@ public class ApplicationDbContext : IdentityDbContext
         builder.Entity<Order>()
             .Property(o => o.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
+        // 🟢 THÊM CẤU HÌNH CHO BLOGPOST
+        builder.Entity<BlogPost>()
+            .HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Restrict); // Không xóa bài post nếu user bị xóa
     }
 }

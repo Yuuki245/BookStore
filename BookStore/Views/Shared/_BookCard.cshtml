@@ -24,7 +24,7 @@
             var discount = (int)Math.Round((1 - (Model.Price / Model.OriginalPrice.Value)) * 100);
             <div class="position-absolute top-0 start-0 m-2 condition-badge sale-badge">
                 -@discount%
-            </div>
+        </div>
         }
     </div>
     <div class="card-body d-flex flex-column">
@@ -54,6 +54,8 @@
                     <input type="hidden" name="bookId" value="@Model.Id" />
                     <button class="btn btn-sm btn-primary"><i class="bi bi-bag-plus"></i></button>
                 </form>
+
+
             </div>
         </div>
     </div>

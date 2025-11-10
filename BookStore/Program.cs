@@ -74,14 +74,23 @@ app.Use(async (ctx, next) =>
 
     var csp = string.Join("; ",
     "default-src 'self'",
-    "img-src 'self' data:",
-    "font-src 'self' data: fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net",
-    "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com cdn.jsdelivr.net",
-    "script-src 'self' 'unsafe-inline' cdn.jsdelivr.net cdnjs.cloudflare.com", // ⬅ thêm 'unsafe-inline'
-    "connect-src 'self' cdn.jsdelivr.net", // ⬅ cho phép jsDelivr (source map)
+
+    // 🟢 SỬA: Thêm 'blob:' (cho phép ảnh upload)
+    "img-src 'self' data: blob: https:",
+
+    "font-src 'self' data: fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net *.tiny.cloud",
+
+    // 🟢 SỬA: Thêm *.tiny.cloud
+    "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com cdn.jsdelivr.net *.tiny.cloud",
+
+    // 🟢 SỬA: Thêm 'unsafe-eval' và *.tiny.cloud
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com *.tiny.cloud",
+
+    // 🟢 SỬA: Thêm *.tiny.cloud
+    "connect-src 'self' cdn.jsdelivr.net *.tiny.cloud",
+
     "frame-ancestors 'self'"
 );
-
 
     ctx.Response.Headers["Content-Security-Policy"] = csp;
 

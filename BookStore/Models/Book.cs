@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 
 namespace BookStore.Models;
 
@@ -37,4 +38,10 @@ public class Book
     public Category? Category { get; set; }
 
     public string? Description { get; set; }
+    public ICollection<Review> Reviews { get; set; } = new List<Review>();
+    [NotMapped]
+    public int RatingCount => Reviews.Count;
+
+    [NotMapped]
+    public double AverageRating => Reviews.Any() ? Reviews.Average(r => r.Rating) : 0;
 }

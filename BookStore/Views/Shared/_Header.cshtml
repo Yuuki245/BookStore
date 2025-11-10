@@ -1,0 +1,46 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<nav class="navbar navbar-expand-lg container py-2">
+    <a class="navbar-brand d-flex align-items-center gap-2" asp-controller="Home" asp-action="Index" asp-area="">
+        <i class="bi bi-book"></i>
+        <span class="logo-font">qkt book.</span>
+    </a>
+    <button id="megaMenuToggle" class="btn btn-mega-menu d-none d-lg-inline-flex ms-3 align-items-center">
+        <i class="bi bi-list me-1 fs-5"></i>
+        <span class="fw-semibold">Thể Loại</span>
+    </button>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="topNav">
+        <!-- Center: big search -->
+        <div class="mx-lg-auto my-2 my-lg-0 search-lg">
+            <form asp-controller="Books" asp-action="Index" method="get" class="search-wrap" asp-area="">
+                <i class="bi bi-search"></i>
+                <input class="form-control search-input" name="search" placeholder="Search titles, authors, sellers, or series" value="@(Context.Request.Query["search"])" />
+            </form>
+        </div>
+
+        <!-- Right actions -->
+        <ul class="navbar-nav ms-lg-3 align-items-lg-center gap-lg-2">
+            @if (SignInManager.IsSignedIn(User))
+            {
+                if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-item"><a class="nav-link text-danger" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Admin</a></li>
+                }
+                else
+                {
+                    <li class="nav-item"><a class="nav-link" asp-controller="Orders" asp-action="Index" asp-area=""><i class="bi bi-bag"></i></a></li>
+                }
+            }
+            <li class="nav-item">
+                @await Component.InvokeAsync("CartWidget")
+            </li>
+            <li class="nav-item"><partial name="_LoginPartial" /></li>
+        </ul>
+    </div>
+</nav>
