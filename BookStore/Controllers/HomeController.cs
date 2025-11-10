@@ -1,8 +1,10 @@
 ﻿using BookStore.Data;
+using BookStore.Models; // 🟢 THÊM USING NÀY
 using BookStore.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq; // 🟢 1. THÊM USING NÀY
+using System.Linq;
+using System.Diagnostics; // 🟢 THÊM USING NÀY
 
 public class HomeController : Controller
 {
@@ -13,79 +15,34 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
-        // 🟢 2. LOGIC MỚI CHO BESTSELLER
-        // Lấy 12 ID sách bán chạy nhất (chỉ tính đơn "Completed")
         var topSellingBookIds = await _db.OrderItems
-            .Where(oi => oi.Order != null && oi.Order.Status == "Completed") // Chỉ tính đơn đã hoàn thành
-            .GroupBy(oi => oi.BookId) // Nhóm theo Sách
+            .Where(oi => oi.Order != null && oi.Order.Status == "Completed")
+            .GroupBy(oi => oi.BookId)
             .Select(g => new {
                 BookId = g.Key,
-                TotalSold = g.Sum(oi => oi.Quantity) // Tính tổng số lượng bán
+                TotalSold = g.Sum(oi => oi.Quantity)
             })
-            .OrderByDescending(x => x.TotalSold) // Sắp xếp theo tổng số lượng
+            .OrderByDescending(x => x.TotalSold)
             .Take(12)
-            .Select(x => x.BookId) // Chỉ lấy ID
+            .Select(x => x.BookId)
             .ToListAsync();
 
-        // Lấy thông tin 12 cuốn sách đó
         var bestsellers = await _db.Books
             .AsNoTracking()
             .Where(b => topSellingBookIds.Contains(b.Id))
             .ToListAsync();
 
-        // Sắp xếp lại danh sách 'bestsellers' theo đúng thứ tự bán chạy (vì Where.Contains không đảm bảo thứ tự)
         var orderedBestsellers = topSellingBookIds
             .Select(id => bestsellers.First(b => b.Id == id))
             .ToList();
 
-<<<<<<< Updated upstream
-    // Trang chủ: chuyển thẳng tới danh sách sách
-    public IActionResult Index() => RedirectToAction("Index", "Books");
-
-    public IActionResult Privacy() => View();
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error() =>
-        View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-}
-=======
-    public async Task<IActionResult> Index()
-    {
-        // 🟢 2. LOGIC MỚI CHO BESTSELLER
-        // Lấy 12 ID sách bán chạy nhất (chỉ tính đơn "Completed")
-        var topSellingBookIds = await _db.OrderItems
-            .Where(oi => oi.Order != null && oi.Order.Status == "Completed") // Chỉ tính đơn đã hoàn thành
-            .GroupBy(oi => oi.BookId) // Nhóm theo Sách
-            .Select(g => new {
-                BookId = g.Key,
-                TotalSold = g.Sum(oi => oi.Quantity) // Tính tổng số lượng bán
-            })
-            .OrderByDescending(x => x.TotalSold) // Sắp xếp theo tổng số lượng
-            .Take(12)
-            .Select(x => x.BookId) // Chỉ lấy ID
-            .ToListAsync();
-
-        // Lấy thông tin 12 cuốn sách đó
-        var bestsellers = await _db.Books
-            .AsNoTracking()
-            .Where(b => topSellingBookIds.Contains(b.Id))
-            .ToListAsync();
-
-        // Sắp xếp lại danh sách 'bestsellers' theo đúng thứ tự bán chạy (vì Where.Contains không đảm bảo thứ tự)
-        var orderedBestsellers = topSellingBookIds
-            .Select(id => bestsellers.First(b => b.Id == id))
-            .ToList();
-
-        // 🟢 3. CẬP NHẬT VIEW MODEL
         var vm = new HomeVM
         {
-            Bestsellers = orderedBestsellers, // Logic Bestseller từ lượt trước
+            Bestsellers = orderedBestsellers,
             NewReleases = await _db.Books.AsNoTracking().OrderByDescending(b => b.Id).Take(12).ToListAsync(),
-
-            // 🟢 THÊM LOGIC LẤY SÁCH SALE
             DailySales = await _db.Books.AsNoTracking()
-                .Where(b => b.OriginalPrice != null) // Chỉ lấy sách có giá gốc (đang sale)
-                .OrderBy(b => b.Title) // Sắp xếp theo tên
+                .Where(b => b.OriginalPrice != null)
+                .OrderBy(b => b.Title)
                 .ToListAsync()
         };
         return View(vm);
@@ -93,7 +50,6 @@ public class HomeController : Controller
 
     public IActionResult Privacy() => View();
 
-    // 🟢 (Các Action cho trang tĩnh bạn đã tạo)
     public IActionResult About()
     {
         ViewData["Title"] = "About Us";
@@ -118,5 +74,10 @@ public class HomeController : Controller
         return View();
     }
 
+    // 🟢 THÊM LẠI ACTION ERROR ĐÃ BỊ MẤT
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
 }
->>>>>>> Stashed changes
