@@ -27,7 +27,7 @@ builder.Services.AddSession(opt =>
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICartService, SessionCartService>();
-
+builder.Services.AddScoped<IVnPayService, VnPayService>();
 // ✅ Bật nén Gzip/Brotli
 builder.Services.AddResponseCompression(opt =>
 {

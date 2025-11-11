@@ -2,8 +2,8 @@
 @{
     ViewData["Title"] = Model.MainBook.Title;
 
-    var avgRating = Model.MainBook.AverageRating; // Ví dụ: 4.333
-    var avgRatingRounded = Math.Round(avgRating, 1); // Làm tròn thành 4.3
+    var avgRating = Model.MainBook.AverageRating;
+    var avgRatingRounded = Math.Round(avgRating, 1);
     var ratingCount = Model.MainBook.RatingCount;
 }
 
@@ -50,12 +50,29 @@
             </span>
             <span class="text-muted small">ISBN: @Model.MainBook.Isbn</span>
         </div>
+        <div class="d-flex align-items-center mb-3">
+            <i class="bi bi-cart-check-fill text-success me-2"></i>
+            <span class="fw-semibold">Đã bán: @Model.TotalSold</span>
+        </div>
 
-        <div class="fs-2 fw-bold text-success mb-3">@($"{Model.MainBook.Price:N0} ₫")</div>
+        <div class="book-price-detail mb-3">
+            @if (Model.MainBook.OriginalPrice != null && Model.MainBook.OriginalPrice > 0)
+            {
+                <span class="fs-2 fw-bold text-danger">@($"{Model.MainBook.Price:N0} ₫")</span>
+                <span class="fs-4 text-muted text-decoration-line-through ms-2">
+                    @($"{Model.MainBook.OriginalPrice.Value:N0} ₫")
+                </span>
+            }
+            else
+            {
+                <span class="fs-2 fw-bold text-success">@($"{Model.MainBook.Price:N0} ₫")</span>
+            }
+        </div>
 
         <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 mb-4">
             @Html.AntiForgeryToken()
             <input type="hidden" name="bookId" value="@Model.MainBook.Id" />
+            <input type="number" name="qty" value="1" min="1" class="form-control" style="max-width:80px;" />
             <button class="btn btn-primary btn-lg"><i class="bi bi-bag-plus"></i> Thêm vào giỏ</button>
             <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg">Quay lại</a>
         </form>
@@ -100,75 +117,52 @@
         }
     </div>
 
-<<<<<<< Updated upstream
-        <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2">
-=======
-    <div class="col-lg-7">
-        <h1 class="mb-1">@Model.MainBook.Title</h1>
-
-        <div class="text-muted fs-5 mb-3">Tác giả: @Model.MainBook.Author</div>
-        @if (ratingCount > 0)
+    <div class="col-lg-5">
+        @switch (Model.UserReviewStatus)
         {
-            <div class="d-flex align-items-center mb-3">
-                <div class="fs-5 fw-bold me-2">@avgRatingRounded.ToString("F1")</div>
-                <div class="text-warning">
-                    @for (int i = 1; i <= 5; i++)
-                    {
-                        if (i <= avgRatingRounded)
-                        {
-                            <i class="bi bi-star-fill"></i>
-                        }
-                        else if (i - avgRatingRounded < 1)
-                        {
-                            <i class="bi bi-star-half"></i>
-                        }
-                        else
-                        {
-                            <i class="bi bi-star"></i>
-                        }
-                    }
-                </div>
-                <div class="text-muted ms-2">(@ratingCount đánh giá)</div>
-            </div>
+            // ... (Tất cả các case: CanReview, AlreadyReviewed, NotPurchased...)
         }
-        else
-        {
-            <div class="text-muted mb-3">(Chưa có đánh giá)</div>
-        }
-        <div class="d-flex align-items-center gap-3 mb-3">
-            <span class="badge text-bg-light border shadow-sm p-2">
-                Thể loại: @Model.MainBook.Category?.Name
-            </span>
-            <span class="text-muted small">ISBN: @Model.MainBook.Isbn</span>
-        </div>
-        <div class="d-flex align-items-center mb-3">
-            <i class="bi bi-cart-check-fill text-success me-2"></i>
-            <span class="fw-semibold">Đã bán: @Model.TotalSold</span>
-        </div>
-        <div class="row g-4">
-            <div class="col-lg-7">
-                <div class="book-price-detail mb-3">
-                    @if (Model.MainBook.OriginalPrice != null && Model.MainBook.OriginalPrice > 0)
-                    {
-                        <span class="fs-2 fw-bold text-danger">@($"{Model.MainBook.Price:N0} ₫")</span>
-                        <span class="fs-4 text-muted text-decoration-line-through ms-2">
-                            @($"{Model.MainBook.OriginalPrice.Value:N0} ₫")
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="fs-2 fw-bold text-success">@($"{Model.MainBook.Price:N0} ₫")</span>
-                    }
-                </div>
-
-            </div>
-        </div>
-        <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 mb-4">
->>>>>>> Stashed changes
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="id" value="@Model.Id" />
-            <input type="number" name="qty" value="1" min="1" class="form-control" style="max-width:120px" />
-            <button class="btn btn-primary">Add to Cart</button>
-        </form>
     </div>
 </div>
+
+@if (Model.RelatedBooks.Any())
+{
+    <hr class="my-4" />
+    <h3 class="mb-3">Sách cùng thể loại</h3>
+    <div class="row g-3 row-cols-2 row-cols-md-4">
+        @foreach (var b in Model.RelatedBooks)
+        {
+            <div class="col">
+                <partial name="~/Views/Shared/_BookCard.cshtml" model="b" />
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('descriptionContainer');
+            const content = document.getElementById('descriptionContent');
+            const button = document.getElementById('toggleDescription');
+
+            const maxHeight = 120;
+
+            if (content.scrollHeight > maxHeight) {
+                button.style.display = 'block';
+            }
+
+            button.addEventListener('click', function() {
+                if (container.classList.contains('description-collapsed')) {
+                    container.classList.remove('description-collapsed');
+                    container.classList.add('expanded');
+                    button.textContent = 'Thu gọn';
+                } else {
+                    container.classList.remove('expanded');
+                    container.classList.add('description-collapsed');
+                    button.textContent = 'Xem thêm';
+                }
+            });
+        });
+    </script>
+}

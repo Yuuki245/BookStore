@@ -73,6 +73,17 @@ public class HomeController : Controller
         ViewData["Title"] = "Ambassador";
         return View();
     }
+    public IActionResult Contact()
+    {
+        ViewData["Title"] = "Liên hệ";
+        return View();
+    }
+
+    public IActionResult FeatureRequests()
+    {
+        ViewData["Title"] = "Góp ý Tính năng";
+        return View();
+    }
 
     // 🟢 THÊM LẠI ACTION ERROR ĐÃ BỊ MẤT
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

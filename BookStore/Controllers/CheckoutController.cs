@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace BookStore.Controllers;
 
@@ -16,10 +17,12 @@ public class CheckoutController : Controller
     private readonly ICartService _cart;
     private readonly ApplicationDbContext _db;
     private readonly UserManager<IdentityUser> _userMgr;
-
-    public CheckoutController(ICartService cart, ApplicationDbContext db, UserManager<IdentityUser> userMgr)
+    private readonly IVnPayService _vnPay;
+    public CheckoutController(ICartService cart, ApplicationDbContext db,
+                              UserManager<IdentityUser> userMgr, IVnPayService vnPay) // 🟢 2. SỬA HÀM KHỞI TẠO
     {
         _cart = cart; _db = db; _userMgr = userMgr;
+        _vnPay = vnPay; // 🟢 3. GÁN DỊCH VỤ
     }
 
     [HttpGet]
@@ -36,28 +39,24 @@ public class CheckoutController : Controller
         };
         return View(vm);
     }
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Index(CheckoutVM vm)
+    private async Task<Order?> CreateOrderAsync(CheckoutVM vm)
     {
         if (!ModelState.IsValid)
         {
-            vm.Items = await _cart.GetItemsAsync();
-            return View(vm);
+            return null;
         }
 
         var items = await _cart.GetItemsAsync();
         if (!items.Any())
         {
             ModelState.AddModelError(string.Empty, "Giỏ hàng trống.");
-            vm.Items = items;
-            return View(vm);
+            return null;
         }
 
         var user = await _userMgr.GetUserAsync(User);
-        if (user == null) return Challenge();
+        if (user == null) return null;
 
-        // kiểm tra tồn kho
+        // Kiểm tra tồn kho
         var ids = items.Select(i => i.BookId).ToList();
         var books = await _db.Books.Where(b => ids.Contains(b.Id)).ToListAsync();
         foreach (var it in items)
@@ -65,25 +64,24 @@ public class CheckoutController : Controller
             var b = books.First(x => x.Id == it.BookId);
             if (b.Stock < it.Quantity)
             {
-                ModelState.AddModelError(string.Empty, $"Sách '{b.Title}' không đủ tồn kho.");
-                vm.Items = items;
-                return View(vm);
+                ModelState.AddModelError(string.Empty, $"Sách '{b.Title}' không đủ tồn kho (chỉ còn {b.Stock}).");
+                return null;
             }
         }
 
-        // tạo order
+        // Tạo order
         var order = new Order
         {
             UserId = user.Id,
             ShippingAddress = vm.ShippingAddress.Trim(),
             PhoneNumber = vm.PhoneNumber.Trim(),
             CreatedAt = DateTime.UtcNow,
-            Status = "Pending"
+            Status = "Pending" // 🟢 LUÔN LÀ PENDING
         };
         _db.Orders.Add(order);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(); // 🟢 Lưu để lấy OrderId
 
-        // tạo order items + trừ tồn
+        // Tạo order items
         decimal total = 0;
         foreach (var it in items)
         {
@@ -95,15 +93,60 @@ public class CheckoutController : Controller
                 UnitPrice = b.Price,
                 Quantity = it.Quantity
             });
-            b.Stock -= it.Quantity;
             total += b.Price * it.Quantity;
         }
         order.TotalAmount = total;
+        await _db.SaveChangesAsync(); // 🟢 Lưu tổng tiền
+
+        return order;
+    }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Index(CheckoutVM vm)
+    {
+        // 1. Tạo đơn hàng "Pending"
+        var order = await CreateOrderAsync(vm);
+        if (order == null)
+        {
+            vm.Items = await _cart.GetItemsAsync();
+            return View(vm);
+        }
+
+        // 2. Xử lý logic cho COD (Trừ kho, Xóa giỏ)
+        var orderItems = await _db.OrderItems.Where(oi => oi.OrderId == order.Id).ToListAsync();
+        foreach (var item in orderItems)
+        {
+            var book = await _db.Books.FindAsync(item.BookId);
+            if (book != null)
+            {
+                book.Stock -= item.Quantity; // Trừ kho
+            }
+        }
+
+        order.Status = "Confirmed"; // 🟢 COD thì xác nhận luôn
         await _db.SaveChangesAsync();
 
+        // 3. Xóa giỏ hàng
         await _cart.ClearAsync();
-        TempData["Success"] = $"Đặt hàng thành công! Mã đơn: #{order.Id}";
-
+        TempData["Success"] = $"Đặt hàng COD thành công! Mã đơn: #{order.Id}";
         return RedirectToAction("Details", "Orders", new { id = order.Id });
+    }
+
+    // 🟢 6. THÊM ACTION MỚI CHO VNPAY
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateVnPayPayment(CheckoutVM vm)
+    {
+        // 1. Tạo đơn hàng "Pending" (Không trừ kho, không xóa giỏ)
+        var order = await CreateOrderAsync(vm);
+        if (order == null)
+        {
+            vm.Items = await _cart.GetItemsAsync();
+            return View("Index", vm); // Quay lại trang Index nếu lỗi
+        }
+
+        // 2. Tạo URL VNPay
+        var paymentUrl = _vnPay.CreatePaymentUrl(order, HttpContext);
+
+        // 3. Chuyển hướng người dùng
+        return Redirect(paymentUrl);
     }
 }
