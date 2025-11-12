@@ -1,0 +1,48 @@
+﻿@model List<BookStore.Models.ViewModels.UserVM>
+@{
+    ViewData["Title"] = "Quản lý Người dùng";
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Email / Tên đăng nhập</th>
+                    <th>Quyền (Roles)</th>
+                    <th class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.Email</td>
+                        <td>
+                            @foreach (var role in user.Roles)
+                            {
+                                // Đặt logic chọn màu ở đây
+                                var badgeClass = role switch {
+                                    "Admin" => "text-bg-danger",  // Màu đỏ
+                                    "Customer" => "text-bg-primary", // Màu xanh
+                                    _ => "text-bg-secondary" // Màu xám cho các role khác
+                                };
+                                
+                                <span class="badge @badgeClass">
+                                    @role
+                                </span>
+                            }
+                            </td>
+                        <td class="text-end">
+                            <a asp-action="ManageRoles" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> Quản lý Quyền
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

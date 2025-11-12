@@ -26,6 +26,12 @@
 
         <!-- Right actions -->
         <ul class="navbar-nav ms-lg-3 align-items-lg-center gap-lg-2">
+            <li class="nav-item d-lg-none">
+                <a id="megaMenuToggleMobile" class="nav-link" href="#" style="cursor: pointer;">
+                    <i class="bi bi-list me-1"></i>
+                    Danh mục Thể loại
+                </a>
+            </li>
             @if (SignInManager.IsSignedIn(User))
             {
                 if (User.IsInRole("Admin"))

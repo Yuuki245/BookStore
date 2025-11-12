@@ -81,7 +81,7 @@
                         <img src="~/image/banner1.png" class="d-block w-100" alt="Banner 1">
                 </div>
                 <div class="carousel-item" data-bs-interval="5000">
-                        <img src="~/image/banner1.png" class="d-block w-100 " alt="Banner 2">
+                        <img src="~/image/banner2.png" class="d-block w-100 " alt="Banner 2">
                 </div>
             </div>
 
@@ -137,19 +137,32 @@
     <partial name="_Footer" />
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const toggleBtn = document.getElementById("megaMenuToggle");
+            // Lấy nút mới cho mobile
+            const toggleBtnMobile = document.getElementById("megaMenuToggleMobile");
             const closeBtn = document.getElementById("megaMenuClose");
             const menu = document.getElementById("megaMenu");
 
-            if (toggleBtn && menu) {
-                toggleBtn.addEventListener("click", function (e) {
+            // Hàm để bật/tắt menu
+            function toggleMenu(e) {
+                if (menu) {
                     e.stopPropagation(); // Ngăn click lan ra body
-                    // Chuyển đổi trạng thái hiển thị
                     var isHidden = menu.style.display === "none" || menu.style.display === "";
                     menu.style.display = isHidden ? "block" : "none";
-                });
+                }
+            }
+
+            if (toggleBtn) {
+                // Gán sự kiện cho nút desktop
+                toggleBtn.addEventListener("click", toggleMenu);
+            }
+
+            if (toggleBtnMobile) {
+                // Gán sự kiện cho nút mobile
+                toggleBtnMobile.addEventListener("click", toggleMenu);
             }
 
             if (closeBtn && menu) {
@@ -159,7 +172,7 @@
             }
 
             // Đóng menu khi click vào 1 link
-            if (menu) { // Thêm kiểm tra null an toàn
+            if (menu) {
                 menu.querySelectorAll('.mega-menu-link').forEach(link => {
                     link.addEventListener('click', () => {
                         menu.style.display = 'none';
@@ -169,8 +182,11 @@
 
             // Tùy chọn: Đóng menu khi click ra ngoài
             document.addEventListener("click", function (e) {
-                // 🟢 SỬA LỖI 1: Thêm điều kiện "&& !toggleBtn.contains(e.target)"
-                if (menu && menu.style.display === "block" && !menu.contains(e.target) && !toggleBtn.contains(e.target)) {
+                // Thêm kiểm tra cho cả 2 nút
+                let clickedToggle = (toggleBtn && toggleBtn.contains(e.target));
+                let clickedToggleMobile = (toggleBtnMobile && toggleBtnMobile.contains(e.target));
+
+                if (menu && menu.style.display === "block" && !menu.contains(e.target) && !clickedToggle && !clickedToggleMobile) {
                     menu.style.display = "none";
                 }
             });
