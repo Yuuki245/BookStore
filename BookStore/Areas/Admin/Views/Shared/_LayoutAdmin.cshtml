@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="~/css/admin.css" />
     <script src="https://cdn.tiny.cloud/1/jm9wxk3197ldj2uw6zi5krclkwhcxljroctyp3tak3vk3ixn/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>
-<body>
+<body class="min-vh-100">
     <div class="admin-wrap d-flex">
         <!-- Sidebar -->
         <aside class="admin-sidebar border-end bg-white">
@@ -56,7 +56,7 @@
                 </div>
             </header>
 
-            <main class="admin-content container-fluid py-3">
+            <main class="admin-content container-fluid py-3 flex-grow-1">
                 @await Html.PartialAsync("~/Views/Shared/_Toast.cshtml")
                 @RenderBody()
             </main>

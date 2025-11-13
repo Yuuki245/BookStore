@@ -55,7 +55,7 @@
         }
     </style>
 </head>
-<body>
+<body class="position-relative d-flex flex-column min-vh-100">
 
     <!-- ===== Top Navbar (logo + search + actions) ===== -->
     <header class="bg-white border-bottom position-relative">
@@ -101,8 +101,8 @@
                 <div class="row align-items-center g-4">
                     <div class="col-lg-8">
                         <div class="p-4 rounded-4" style="background:linear-gradient(135deg,#f97316,#fb923c); color:#111;">
-                            <h2 class="mb-2 fw-bold">The ultimate fall reading list</h2>
-                            <a asp-controller="Books" asp-action="Index" class="btn btn-light badge-pill px-4">See the books</a>
+                            <h2 class="mb-2 fw-bold">Đọc sách để thành công</h2>
+                            <a asp-controller="Books" asp-action="Index" class="btn btn-light badge-pill px-4">Xem sách tại đây</a>
                         </div>
                     </div>
                     <div class="col-lg-4">
@@ -124,7 +124,7 @@
         </section>
     }
 
-    <main class="container my-4">
+    <main class="container my-4 flex-grow-1" >
         @if (TempData["CheckoutSuccess"] is string msg)
         {
             <div class="alert alert-success text-center">@msg</div>
@@ -191,7 +191,21 @@
                 }
             });
         });
+
     </script>
     @await RenderSectionAsync("Scripts", required: false)
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6915f1bd6ca233195dc74d7e/1j9urgjeh';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
 </body>
 </html>

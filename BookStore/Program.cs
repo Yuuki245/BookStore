@@ -75,19 +75,23 @@ app.Use(async (ctx, next) =>
     var csp = string.Join("; ",
     "default-src 'self'",
 
-    // 🟢 SỬA: Thêm 'blob:' (cho phép ảnh upload)
-    "img-src 'self' data: blob: https:",
+    // 🟢 SỬA 1: Thêm *.tawk.to (cho phép ảnh/icon của Tawk.to)
+    "img-src 'self' data: blob: https: *.tawk.to",
 
-    "font-src 'self' data: fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net *.tiny.cloud",
+    // 🟢 SỬA 2: Thêm *.tawk.to (cho phép font của Tawk.to)
+    "font-src 'self' data: fonts.gstatic.com cdnjs.cloudflare.com cdn.jsdelivr.net *.tiny.cloud *.tawk.to",
 
-    // 🟢 SỬA: Thêm *.tiny.cloud
-    "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com cdn.jsdelivr.net *.tiny.cloud",
+    // 🟢 SỬA 3: Thêm *.tawk.to (cho phép CSS của Tawk.to)
+    "style-src 'self' 'unsafe-inline' fonts.googleapis.com cdnjs.cloudflare.com cdn.jsdelivr.net *.tiny.cloud *.tawk.to",
 
-    // 🟢 SỬA: Thêm 'unsafe-eval' và *.tiny.cloud
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com *.tiny.cloud",
+    // 🟢 SỬA 4: Thêm *.tawk.to (cho phép SCRIPT của Tawk.to)
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' cdn.jsdelivr.net cdnjs.cloudflare.com *.tiny.cloud *.tawk.to",
 
-    // 🟢 SỬA: Thêm *.tiny.cloud
-    "connect-src 'self' cdn.jsdelivr.net *.tiny.cloud",
+    // 🟢 SỬA 5: Thêm *.tawk.to (cho phép Tawk.to kết nối server)
+    "connect-src 'self' cdn.jsdelivr.net *.tiny.cloud *.tawk.to wss://*.tawk.to",
+
+    // 🟢 SỬA 6: Thêm *.tawk.to (cho phép Tawk.to chạy trong frame)
+    "frame-src 'self' *.tawk.to",
 
     "frame-ancestors 'self'"
 );

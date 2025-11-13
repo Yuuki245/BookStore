@@ -1,15 +1,52 @@
 ﻿@model BookStore.Models.ViewModels.CheckoutVM
 @{
     ViewData["Title"] = "Thanh toán";
+
+    // 1. Tính toán logic giảm giá
+    decimal subtotal = Model.Subtotal;
+    decimal discountAmount = 0;
+    string discountMessage = "";
+
+    if (subtotal >= 5000000)
+    {
+        discountAmount = 500000;
+        discountMessage = "Giảm giá (Đơn hàng > 5Tr)";
+    }
+    else if (subtotal >= 2000000)
+    {
+        discountAmount = 100000;
+        discountMessage = "Giảm giá (Đơn hàng > 2Tr)";
+    }
+    else if (subtotal >= 1000000)
+    {
+        discountAmount = 70000;
+        discountMessage = "Giảm giá (Đơn hàng > 1Tr)";
+    }
+    else if (subtotal >= 500000)
+    {
+        discountAmount = 50000;
+        discountMessage = "Giảm giá (Đơn hàng > 500k)";
+    }
+    else if (subtotal >= 200000)
+    {
+        discountAmount = 10000;
+        discountMessage = "Giảm giá (Đơn hàng > 200k)";
+    }
+
+    decimal finalTotal = subtotal - discountAmount;
+
+
 }
 
 <h2>Thanh toán</h2>
 
 <div class="row g-3">
+    <!-- Cột trái: Form thông tin -->
     <div class="col-lg-7">
         <div class="card p-3">
             <h5 class="mb-3">Thông tin giao hàng</h5>
 
+            <!-- Form chứa cả 2 nút thanh toán -->
             <form method="post">
                 @Html.AntiForgeryToken()
                 @Html.ValidationSummary(false, "", new { @class = "text-danger" })
@@ -26,11 +63,14 @@
                     <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                 </div>
 
+                <!-- 2 Nút thanh toán -->
                 <div class="d-grid gap-2">
+                    <!-- Nút 1: COD (Trỏ về Action 'Index') -->
                     <button type="submit" asp-action="Index" class="btn btn-primary">
                         <i class="bi bi-truck"></i> Đặt hàng (Thanh toán khi nhận hàng - COD)
                     </button>
 
+                    <!-- Nút 2: VNPay (Trỏ về Action 'CreateVnPayPayment') -->
                     <button type="submit" asp-action="CreateVnPayPayment" class="btn btn-success">
                         <i class="bi bi-credit-card"></i> Thanh toán bằng VNPay
                     </button>
@@ -39,6 +79,7 @@
         </div>
     </div>
 
+    <!-- Cột phải: Tóm tắt đơn hàng -->
     <div class="col-lg-5">
         <div class="card p-3">
             <h5 class="mb-3">Đơn của bạn</h5>
@@ -59,17 +100,35 @@
                             <div>@((it.UnitPrice * it.Quantity).ToString("N0")) ₫</div>
                         </li>
                     }
+
+                    <!-- Hiển thị Tạm tính -->
+                    <li class="list-group-item d-flex justify-content-between">
+                        <div class="text-muted">Tạm tính</div>
+                        <div>@subtotal.ToString("N0") ₫</div>
+                    </li>
+
+                    <!-- Hiển thị Giảm giá (nếu có) -->
+                    @if (discountAmount > 0)
+                    {
+                        <li class="list-group-item d-flex justify-content-between text-success">
+                            <div class="fw-semibold">@discountMessage</div>
+                            <div class="fw-semibold">- @discountAmount.ToString("N0") ₫</div>
+                        </li>
+                    }
+
+                    <!-- Hiển thị Tổng cộng -->
                     <li class="list-group-item d-flex justify-content-between">
                         <div class="fw-semibold">Tổng cộng</div>
-                        <div class="fw-bold">@Model.Subtotal.ToString("N0") ₫</div>
+                        <div class="fw-bold">@finalTotal.ToString("N0") ₫</div>
                     </li>
                 </ul>
             }
         </div>
     </div>
+
+
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    a
 }

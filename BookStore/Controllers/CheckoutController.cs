@@ -31,12 +31,12 @@ public class CheckoutController : Controller
         var items = await _cart.GetItemsAsync();
         if (!items.Any()) return RedirectToAction("Index", "Cart");
 
-        var vm = new CheckoutVM
+        // 🟢 SỬA: Xóa dòng "Subtotal = ..." ra khỏi đây.
+        var vm = new CheckoutVM
         {
-            Items = items,
-            ShippingAddress = "",
-            PhoneNumber = ""
-        };
+            Items = items
+            // (Bạn có thể giữ lại ShippingAddress = "" và PhoneNumber = "" nếu muốn)
+        };
         return View(vm);
     }
     private async Task<Order?> CreateOrderAsync(CheckoutVM vm)
@@ -81,8 +81,7 @@ public class CheckoutController : Controller
         _db.Orders.Add(order);
         await _db.SaveChangesAsync(); // 🟢 Lưu để lấy OrderId
 
-        // Tạo order items
-        decimal total = 0;
+        decimal subtotal = 0;
         foreach (var it in items)
         {
             var b = books.First(x => x.Id == it.BookId);
@@ -93,10 +92,37 @@ public class CheckoutController : Controller
                 UnitPrice = b.Price,
                 Quantity = it.Quantity
             });
-            total += b.Price * it.Quantity;
+            subtotal += b.Price * it.Quantity;
         }
-        order.TotalAmount = total;
-        await _db.SaveChangesAsync(); // 🟢 Lưu tổng tiền
+
+        // 🟢 BẮT ĐẦU: Áp dụng logic giảm giá (Phải giống hệt logic ở View)
+        decimal discountAmount = 0;
+        if (subtotal >= 5000000)
+        {
+            discountAmount = 500000;
+        }
+        else if (subtotal >= 2000000)
+        {
+            discountAmount = 100000;
+        }
+        else if (subtotal >= 1000000)
+        {
+            discountAmount = 70000;
+        }
+        else if (subtotal >= 500000)
+        {
+            discountAmount = 50000;
+        }
+        else if (subtotal >= 200000)
+        {
+            discountAmount = 10000;
+        }
+
+        decimal finalTotal = subtotal - discountAmount;
+        // 🟢 KẾT THÚC: Áp dụng logic giảm giá
+
+        order.TotalAmount = finalTotal; // 🟢 Gán tổng tiền cuối cùng (đã giảm)
+        await _db.SaveChangesAsync(); // Lưu tổng tiền
 
         return order;
     }

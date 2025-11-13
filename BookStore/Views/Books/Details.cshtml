@@ -1,4 +1,6 @@
 ﻿@model BookStore.Models.ViewModels.BookDetailVM
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
 @{
     ViewData["Title"] = Model.MainBook.Title;
 
@@ -16,6 +18,7 @@
         <h1 class="mb-1">@Model.MainBook.Title</h1>
 
         <div class="text-muted fs-5 mb-3">Tác giả: @Model.MainBook.Author</div>
+
         @if (ratingCount > 0)
         {
             <div class="d-flex align-items-center mb-3">
@@ -29,10 +32,12 @@
                         }
                         else if (i - avgRatingRounded < 1)
                         {
+
                             <i class="bi bi-star-half"></i>
                         }
                         else
                         {
+
                             <i class="bi bi-star"></i>
                         }
                     }
@@ -44,12 +49,14 @@
         {
             <div class="text-muted mb-3">(Chưa có đánh giá)</div>
         }
+
         <div class="d-flex align-items-center gap-3 mb-3">
             <span class="badge text-bg-light border shadow-sm p-2">
                 Thể loại: @Model.MainBook.Category?.Name
             </span>
             <span class="text-muted small">ISBN: @Model.MainBook.Isbn</span>
         </div>
+
         <div class="d-flex align-items-center mb-3">
             <i class="bi bi-cart-check-fill text-success me-2"></i>
             <span class="fw-semibold">Đã bán: @Model.TotalSold</span>
@@ -120,7 +127,59 @@
     <div class="col-lg-5">
         @switch (Model.UserReviewStatus)
         {
-            // ... (Tất cả các case: CanReview, AlreadyReviewed, NotPurchased...)
+            case "CanReview":
+                <div class="card sticky-top" style="top: 20px;">
+                    <div class="card-body">
+                        <h5 class="card-title">Viết đánh giá của bạn</h5>
+                        <form asp-action="AddReview" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" asp-for="NewReview.BookId" value="@Model.MainBook.Id" />
+
+                            <div class="mb-3">
+                                <label asp-for="NewReview.Rating" class="form-label">Chọn số sao</label>
+                                <div class="rating-stars">
+                                    <input type="radio" id="star5" asp-for="NewReview.Rating" value="5" /><label for="star5" title="5 sao"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star4" asp-for="NewReview.Rating" value="4" /><label for="star4" title="4 sao"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star3" asp-for="NewReview.Rating" value="3" /><label for="star3" title="3 sao"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star2" asp-for="NewReview.Rating" value="2" /><label for="star2" title="2 sao"><i class="bi bi-star-fill"></i></label>
+                                    <input type="radio" id="star1" asp-for="NewReview.Rating" value="1" /><label for="star1" title="1 sao"><i class="bi bi-star-fill"></i></label>
+                                </div>
+                                <span asp-validation-for="NewReview.Rating" class="text-danger"></span>
+                            </div>
+                            <div class="mb-3">
+                                <label asp-for="NewReview.Comment" class="form-label">Bình luận (Tùy chọn)</label>
+                                <textarea asp-for="NewReview.Comment" class="form-control" rows="4"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Gửi đánh giá</button>
+                        </form>
+                    </div>
+                </div>
+                break;
+
+            case "AlreadyReviewed":
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i> Bạn đã đánh giá sách này. Cảm ơn bạn!
+                </div>
+                break;
+
+            case "NotPurchased":
+                <div class="alert alert-info">
+                    Bạn phải mua sách này (và đơn hàng đã được giao thành công) để có thể viết đánh giá.
+                </div>
+                break;
+
+            case "IsAdmin":
+                <div class="alert alert-secondary">
+                    Tài khoản Admin không thể để lại đánh giá.
+                </div>
+                break;
+
+            case "NotLoggedIn":
+            default:
+                <div class="alert alert-info">
+                    Vui lòng <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@Context.Request.Path">đăng nhập</a> để để lại đánh giá.
+                </div>
+                break;
         }
     </div>
 </div>
