@@ -42,10 +42,15 @@ namespace BookStore.Services
                 }
             }
             var queryString = data.ToString();
+            // Loại bỏ dấu & cuối cùng nếu có
+            if (queryString.EndsWith("&"))
+            {
+                queryString = queryString.Remove(queryString.Length - 1, 1);
+            }
             baseUrl += "?" + queryString;
-            var signData = queryString.Remove(data.Length - 1, 1);
+            var signData = queryString; // signData là queryString đã loại bỏ & cuối
             var vnpSecureHash = HmacSha512(vnpHashSecret, signData);
-            baseUrl += "vnp_SecureHash=" + vnpSecureHash;
+            baseUrl += "&vnp_SecureHash=" + vnpSecureHash;
             return baseUrl;
         }
 
@@ -74,7 +79,13 @@ namespace BookStore.Services
                     data.Append(WebUtility.UrlEncode(key) + "=" + WebUtility.UrlEncode(value) + "&");
                 }
             }
-            return data.ToString().Remove(data.Length - 1, 1);
+            var result = data.ToString();
+            // Loại bỏ dấu & cuối cùng nếu có
+            if (result.EndsWith("&"))
+            {
+                result = result.Remove(result.Length - 1, 1);
+            }
+            return result;
         }
 
         public static string HmacSha512(string key, string inputData)

@@ -39,11 +39,12 @@
 
 @if (!Model.Items.Any())
 {
-    <div class="text-center text-muted py-5">
-        <div class="display-6 mb-2">🛒</div>
-        <p class="mb-4">Giỏ hàng đang trống.</p>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
-            <i class="bi bi-search"></i> Tiếp tục mua sắm
+    <div class="empty-state fade-in">
+        <div class="empty-state-icon">🛒</div>
+        <h3 class="mb-3">Giỏ hàng đang trống</h3>
+        <p class="text-muted mb-4">Hãy thêm sách vào giỏ hàng để tiếp tục mua sắm!</p>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg">
+            <i class="bi bi-search me-2"></i> Tiếp tục mua sắm
         </a>
     </div>
 }
@@ -51,15 +52,17 @@ else
 {
     <div class="row g-4">
         <div class="col-lg-8">
-            <div class="card">
+            <div class="card fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-cart3 me-2"></i>Sản phẩm</h5>
+                    <form asp-action="Clear" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa tất cả sản phẩm?');">
+                            <i class="bi bi-trash me-1"></i> Xoá tất cả
+                        </button>
+                    </form>
+                </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Sản phẩm</h5>
-                        <form asp-action="Clear" method="post" class="d-inline">
-                            @Html.AntiForgeryToken()
-                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Xoá tất cả</button>
-                        </form>
-                    </div>
 
                     <div class="table-responsive">
                         <table class="table align-middle">
@@ -132,9 +135,11 @@ else
         </div>
 
         <div class="col-lg-4">
-            <div class="card">
+            <div class="card fade-in" style="position: sticky; top: 100px;">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-receipt me-2"></i>Tóm tắt đơn hàng</h5>
+                </div>
                 <div class="card-body">
-                    <h5 class="mb-3">Tóm tắt đơn hàng</h5>
                     <div class="d-flex justify-content-between mb-2">
                         <div class="text-muted">Tạm tính</div>
                         <div>@subtotal.ToString("N0") ₫</div>
@@ -158,11 +163,18 @@ else
                         <div class="fs-5 fw-bold text-success">@finalTotal.ToString("N0") ₫</div>
                     </div>
 
-                    <div class="d-grid mt-3">
-                        <a asp-controller="Checkout" asp-action="Index" class="btn btn-success">
-                            <i class="bi bi-bag-check"></i> Thanh toán
+                    <div class="d-grid mt-4">
+                        <a asp-controller="Checkout" asp-action="Index" class="btn btn-success btn-lg">
+                            <i class="bi bi-bag-check me-2"></i> Thanh toán
                         </a>
                     </div>
+                    
+                    @if (discountAmount > 0)
+                    {
+                        <div class="alert alert-info mt-3 mb-0">
+                            <small><i class="bi bi-info-circle me-1"></i>Bạn đã tiết kiệm được <strong>@discountAmount.ToString("N0") ₫</strong>!</small>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

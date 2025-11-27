@@ -58,7 +58,7 @@
 <body class="position-relative d-flex flex-column min-vh-100">
 
     <!-- ===== Top Navbar (logo + search + actions) ===== -->
-    <header class="bg-white border-bottom position-relative">
+    <header class="bg-white border-bottom position-relative" id="mainHeader">
         <partial name="_Header" />
 
         <!-- ===== Category bar ===== -->
@@ -140,6 +140,18 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            // Sticky header effect
+            const header = document.getElementById("mainHeader");
+            if (header) {
+                window.addEventListener("scroll", function() {
+                    if (window.scrollY > 50) {
+                        header.classList.add("scrolled");
+                    } else {
+                        header.classList.remove("scrolled");
+                    }
+                });
+            }
+            
             const toggleBtn = document.getElementById("megaMenuToggle");
             // Lấy nút mới cho mobile
             const toggleBtnMobile = document.getElementById("megaMenuToggleMobile");

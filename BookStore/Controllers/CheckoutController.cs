@@ -1,13 +1,13 @@
 ﻿using BookStore.Data;
 using BookStore.Models;
 using BookStore.Models.ViewModels;
-using BookStore.Services;
 using BookStore.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using BookStore.Services;
 
 namespace BookStore.Controllers;
 
@@ -17,12 +17,11 @@ public class CheckoutController : Controller
     private readonly ICartService _cart;
     private readonly ApplicationDbContext _db;
     private readonly UserManager<IdentityUser> _userMgr;
-    private readonly IVnPayService _vnPay;
+    
     public CheckoutController(ICartService cart, ApplicationDbContext db,
-                              UserManager<IdentityUser> userMgr, IVnPayService vnPay) // 🟢 2. SỬA HÀM KHỞI TẠO
+                              UserManager<IdentityUser> userMgr)
     {
         _cart = cart; _db = db; _userMgr = userMgr;
-        _vnPay = vnPay; // 🟢 3. GÁN DỊCH VỤ
     }
 
     [HttpGet]
@@ -157,22 +156,4 @@ public class CheckoutController : Controller
         return RedirectToAction("Details", "Orders", new { id = order.Id });
     }
 
-    // 🟢 6. THÊM ACTION MỚI CHO VNPAY
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateVnPayPayment(CheckoutVM vm)
-    {
-        // 1. Tạo đơn hàng "Pending" (Không trừ kho, không xóa giỏ)
-        var order = await CreateOrderAsync(vm);
-        if (order == null)
-        {
-            vm.Items = await _cart.GetItemsAsync();
-            return View("Index", vm); // Quay lại trang Index nếu lỗi
-        }
-
-        // 2. Tạo URL VNPay
-        var paymentUrl = _vnPay.CreatePaymentUrl(order, HttpContext);
-
-        // 3. Chuyển hướng người dùng
-        return Redirect(paymentUrl);
-    }
 }

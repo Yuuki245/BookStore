@@ -1,61 +1,70 @@
 ﻿@model BookStore.Models.Book
+
 <div class="card h-100 book-card">
     <div class="position-relative">
         <img src="@(Model.CoverUrl ?? "/images/no-cover.png")"
-             class="card-img-top" style="height:230px;object-fit:cover" alt="@Model.Title" />
+             class="card-img-top" alt="@Model.Title" />
 
         @{
             var tagType = ViewData["TagType"] as string;
         }
         @if (tagType == "Bestseller")
         {
-            <div class="position-absolute top-0 start-0 m-2 condition-badge bestseller-badge">
+            <div class="position-absolute top-0 start-0 condition-badge bestseller-badge">
                 <i class="bi bi-star-fill"></i> Bestseller
             </div>
         }
         else if (tagType == "New")
         {
-            <div class="position-absolute top-0 start-0 m-2 condition-badge new-badge">
+            <div class="position-absolute top-0 start-0 condition-badge new-badge">
                 Mới
             </div>
         }
         else if (Model.OriginalPrice != null && Model.OriginalPrice > 0)
         {
             var discount = (int)Math.Round((1 - (Model.Price / Model.OriginalPrice.Value)) * 100);
-            <div class="position-absolute top-0 start-0 m-2 condition-badge sale-badge">
+            <div class="position-absolute top-0 start-0 condition-badge sale-badge">
                 -@discount%
-        </div>
+            </div>
         }
     </div>
-    <div class="card-body d-flex flex-column">
-        <h6 class="mt-1 mb-2 title">@Model.Title</h6>
-        <div class="book-meta mb-2">Tác giả: @Model.Author</div>
 
-        <div class="mt-auto d-flex justify-content-between align-items-center">
+    <div class="card-body d-flex flex-column">
+        <h6 class="title" title="@Model.Title">@Model.Title</h6>
+
+        <div class="book-meta mb-2">@Model.Author</div>
+
+        <div class="mt-auto d-flex justify-content-between align-items-end">
             <div class="book-price">
-                @if (Model.OriginalPrice != null && Model.OriginalPrice > 0)
+                @if (Model.OriginalPrice != null)
                 {
-                    <span class="text-danger fw-bold">@($"{Model.Price:N0} ₫")</span>
-                    <span class="text-muted text-decoration-line-through small ms-1">
-                        @($"{Model.OriginalPrice.Value:N0} ₫")
-                    </span>
+                    <div class="text-danger">@($"{Model.Price:N0}đ")</div>
+                    <div class="text-muted text-decoration-line-through small" style="font-size: 0.85rem; font-weight: normal;">
+                        @($"{Model.OriginalPrice.Value:N0}đ")
+                    </div>
                 }
                 else
                 {
-                    <span>@($"{Model.Price:N0} ₫")</span>
+                    <div>@($"{Model.Price:N0}đ")</div>
                 }
             </div>
 
-            <div class="btn-group">
+            <div class="btn-group" role="group">
                 <a asp-controller="Books" asp-action="Details" asp-route-id="@Model.Id"
-                   class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
-                <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline">
+                   class="btn btn-sm btn-light text-secondary rounded-circle" 
+                   style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                   title="Xem chi tiết">
+                    <i class="bi bi-eye"></i>
+                </a>
+                <form asp-controller="Cart" asp-action="Add" method="post" class="d-inline ms-1">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="bookId" value="@Model.Id" />
-                    <button class="btn btn-sm btn-primary"><i class="bi bi-bag-plus"></i></button>
+                    <button type="submit" class="btn btn-sm btn-primary rounded-circle" 
+                            style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                            title="Thêm vào giỏ">
+                        <i class="bi bi-bag-plus"></i>
+                    </button>
                 </form>
-
-
             </div>
         </div>
     </div>
