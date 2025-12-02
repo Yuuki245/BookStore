@@ -1,11 +1,10 @@
 ﻿@model BookStore.Models.Order
 @{
-    ViewData["Title"] = "Order #" + Model.Id;
+    ViewData["Title"] = "Đơn hàng #" + Model.Id;
     var subtotal = Model.Items.Sum(i => i.UnitPrice * i.Quantity);
     var discountAmount = Model.DiscountAmount;
     var finalTotal = Model.TotalAmount;
 }
-<div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
             <i class="bi bi-receipt-cutoff me-2"></i>Chi tiết đơn hàng #@Model.Id
@@ -97,28 +96,8 @@
                         <div class="small text-muted mb-1">
                             <i class="bi bi-info-circle me-1"></i>Trạng thái
                         </div>
-                        @{
-                            var cls = Model.Status switch
-                            {
-                                "Pending" => "secondary",
-                                "Confirmed" => "primary",
-                                "Shipped" => "info",
-                                "Completed" => "success",
-                                "Canceled" => "danger",
-                                _ => "secondary"
-                            };
-                            var statusText = Model.Status switch
-                            {
-                                "Pending" => "Chờ xử lý",
-                                "Confirmed" => "Đã xác nhận",
-                                "Shipped" => "Đang giao hàng",
-                                "Completed" => "Hoàn thành",
-                                "Canceled" => "Đã hủy",
-                                _ => Model.Status
-                            };
-                        }
                         <div>
-                            <span class="badge text-bg-@cls fs-6">@statusText</span>
+                            @await Html.PartialAsync("_OrderStatusBadge", Model.Status)
                         </div>
                     </div>
 

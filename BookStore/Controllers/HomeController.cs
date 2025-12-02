@@ -61,12 +61,21 @@ public class HomeController : Controller
 
         var flashSaleBooks = activeFlashSale?.Books?.Take(12).ToList() ?? new List<Book>();
 
+        // Đề xuất sách ngẫu nhiên cho bạn
+        var allBooks = await _db.Books.AsNoTracking()
+            .Include(b => b.FlashSale)
+            .ToListAsync();
+        
+        var random = new Random();
+        var recommendedBooks = allBooks
+            .OrderBy(x => random.Next())
+            .Take(12)
+            .ToList();
+
         var vm = new HomeVM
         {
             Bestsellers = orderedBestsellers,
-            NewReleases = await _db.Books.AsNoTracking()
-                .Include(b => b.FlashSale)
-                .OrderByDescending(b => b.Id).Take(12).ToListAsync(),
+            NewReleases = recommendedBooks, // Đổi thành đề xuất ngẫu nhiên
             DailySales = await _db.Books.AsNoTracking()
                 .Include(b => b.FlashSale)
                 .Where(b => b.OriginalPrice != null)

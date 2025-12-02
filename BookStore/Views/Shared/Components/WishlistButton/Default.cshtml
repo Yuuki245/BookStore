@@ -6,11 +6,10 @@
 
 @if (isAuthenticated)
 {
-    <form asp-controller="Wishlist" asp-action="Toggle" method="post" class="wishlist-form d-inline" data-book-id="@bookId" onclick="event.stopPropagation();">
+    <form asp-controller="Wishlist" asp-action="Toggle" method="post" class="wishlist-form d-inline-block" data-book-id="@bookId">
         @Html.AntiForgeryToken()
         <input type="hidden" name="bookId" value="@bookId" />
-        <button type="submit" class="btn btn-sm wishlist-btn rounded-circle @(isInWishlist ? "btn-danger" : "btn-outline-danger")" 
-                style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;"
+        <button type="submit" class="btn wishlist-btn rounded-circle @(isInWishlist ? "btn-danger" : "btn-outline-danger")" 
                 title="@(isInWishlist ? "Xóa khỏi danh sách yêu thích" : "Thêm vào danh sách yêu thích")">
             <i class="bi @(isInWishlist ? "bi-heart-fill" : "bi-heart")"></i>
         </button>
@@ -18,25 +17,86 @@
 }
 else
 {
-    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-sm btn-outline-danger rounded-circle" 
-       style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;"
-       title="Đăng nhập để thêm vào danh sách yêu thích"
-       onclick="event.stopPropagation();">
+    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-danger rounded-circle wishlist-btn" 
+       title="Đăng nhập để thêm vào danh sách yêu thích">
         <i class="bi bi-heart"></i>
     </a>
 }
 
+<style>
+    .wishlist-btn {
+        width: 44px !important;
+        height: 44px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        position: relative !important;
+        z-index: 10 !important;
+        transition: all 0.2s ease !important;
+        border-width: 2px !important;
+        font-size: 1.1rem !important;
+    }
+    
+    .wishlist-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .wishlist-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .wishlist-btn.btn-outline-danger:hover {
+        background-color: var(--bs-danger);
+        border-color: var(--bs-danger);
+        color: white;
+    }
+    
+    .wishlist-btn.btn-danger:hover {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .wishlist-form {
+        position: relative;
+        z-index: 10;
+    }
+    
+    /* Tăng vùng click cho mobile */
+    @@media (max-width: 768px) {
+        .wishlist-btn {
+            width: 48px !important;
+            height: 48px !important;
+            font-size: 1.2rem !important;
+        }
+    }
+</style>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Ngăn event bubbling khi click vào wishlist button
+        document.querySelectorAll('.wishlist-form, .wishlist-btn').forEach(element => {
+            element.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
+        
         // Xử lý AJAX cho wishlist button
         document.querySelectorAll('.wishlist-form').forEach(form => {
             form.addEventListener('submit', async function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 
                 const form = this;
                 const button = form.querySelector('.wishlist-btn');
                 const icon = button.querySelector('i');
                 const bookId = form.dataset.bookId;
+                
+                // Disable button trong khi xử lý
+                button.disabled = true;
+                button.style.opacity = '0.6';
                 
                 try {
                     const formData = new FormData(form);
@@ -51,6 +111,12 @@ else
                     const data = await response.json();
                     
                     if (data.success) {
+                        // Animation khi toggle
+                        button.style.transform = 'scale(1.2)';
+                        setTimeout(() => {
+                            button.style.transform = '';
+                        }, 200);
+                        
                         // Cập nhật UI
                         if (data.isInWishlist) {
                             button.classList.remove('btn-outline-danger');
@@ -76,6 +142,9 @@ else
                     if (window.showToast) {
                         showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
                     }
+                } finally {
+                    button.disabled = false;
+                    button.style.opacity = '';
                 }
             });
         });

@@ -1,13 +1,13 @@
 ﻿@model string
 @{
-    var (bg, text) = Model switch
+    var (bg, statusText) = Model switch
     {
-        "Pending" => ("secondary", "text-dark"),
-        "Confirmed" => ("primary", "text-white"),
-        "Shipped" => ("info", "text-dark"),
-        "Completed" => ("success", "text-white"),
-        "Canceled" => ("danger", "text-white"),
-        _ => ("secondary", "text-dark")
+        "Pending" => ("secondary", "Chờ xử lý"),
+        "Confirmed" => ("primary", "Đã xác nhận"),
+        "Shipped" => ("info", "Đang giao hàng"),
+        "Completed" => ("success", "Hoàn thành"),
+        "Canceled" => ("danger", "Đã hủy"),
+        _ => ("secondary", Model)
     };
 }
-<span class="badge bg-@bg @text">@Model</span>
+<span class="badge text-bg-@bg">@statusText</span>

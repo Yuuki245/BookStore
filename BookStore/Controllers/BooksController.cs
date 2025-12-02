@@ -21,31 +21,80 @@ namespace BookStore.Controllers
         }
 
         // GET: /Books
-        public async Task<IActionResult> Index(string? search, int? categoryId, string? sort = "", int page = 1)
+        public async Task<IActionResult> Index(
+            string? search, 
+            int? categoryId, 
+            string? sort = "", 
+            int page = 1,
+            decimal? minPrice = null,
+            decimal? maxPrice = null,
+            int? minRating = null)
         {
             const int PageSize = 12;
 
             var query = _db.Books
                 .Include(b => b.Category)
+                .Include(b => b.FlashSale)
                 .AsNoTracking();
 
+            // Chỉ Include Reviews khi cần filter hoặc sort theo rating
+            bool needReviews = minRating.HasValue || sort == "rating_desc";
+            if (needReviews)
+            {
+                query = query.Include(b => b.Reviews);
+            }
+
+            // Full-text search tối ưu - tìm kiếm trong nhiều trường
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var keyword = search.Trim().ToLower();
-                query = query.Where(b => b.Title.ToLower().Contains(keyword) ||
-                                         (b.Author != null && b.Author.ToLower().Contains(keyword)) ||
-                                         (b.Isbn != null && b.Isbn.Contains(keyword)));
+                var keywords = keyword.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                
+                // Tìm kiếm với nhiều từ khóa (AND logic - tất cả từ khóa phải xuất hiện)
+                foreach (var kw in keywords)
+                {
+                    query = query.Where(b => 
+                        b.Title.ToLower().Contains(kw) ||
+                        (b.Author != null && b.Author.ToLower().Contains(kw)) ||
+                        (b.Description != null && b.Description.ToLower().Contains(kw)) ||
+                        (b.Isbn != null && b.Isbn.Contains(kw)));
+                }
             }
 
+            // Filter theo danh mục
             if (categoryId.HasValue)
                 query = query.Where(b => b.CategoryId == categoryId.Value);
 
+            // Filter theo giá
+            if (minPrice.HasValue)
+                query = query.Where(b => b.Price >= minPrice.Value);
+            if (maxPrice.HasValue)
+                query = query.Where(b => b.Price <= maxPrice.Value);
+
+            // Filter theo đánh giá tối thiểu
+            if (minRating.HasValue && minRating.Value >= 1 && minRating.Value <= 5)
+            {
+                query = query.Where(b => b.Reviews.Any() && 
+                    b.Reviews.Average(r => r.Rating) >= minRating.Value);
+            }
+
+            // Sắp xếp - tối ưu bestseller bằng cách sử dụng subquery
             query = sort switch
             {
                 "price_asc" => query.OrderBy(b => b.Price),
                 "price_desc" => query.OrderByDescending(b => b.Price),
                 "title_asc" => query.OrderBy(b => b.Title),
                 "title_desc" => query.OrderByDescending(b => b.Title),
+                "rating_desc" => query.OrderByDescending(b => b.Reviews.Any() ? 
+                    b.Reviews.Average(r => r.Rating) : 0)
+                    .ThenByDescending(b => b.Reviews.Count),
+                "bestseller" => query.OrderByDescending(b => 
+                    _db.OrderItems
+                        .Where(oi => oi.BookId == b.Id && 
+                                     oi.Order != null && 
+                                     oi.Order.Status == "Completed")
+                        .Sum(oi => (int?)oi.Quantity) ?? 0)
+                    .ThenByDescending(b => b.Id),
                 _ => query.OrderByDescending(b => b.Id) // Mới nhất
             };
 
@@ -60,7 +109,10 @@ namespace BookStore.Controllers
                 CategoryId = categoryId,
                 Sort = sort,
                 Page = page,
-                TotalPages = (int)Math.Ceiling(total / (double)PageSize)
+                TotalPages = (int)Math.Ceiling(total / (double)PageSize),
+                MinPrice = minPrice,
+                MaxPrice = maxPrice,
+                MinRating = minRating
             };
 
             return View(vm);
