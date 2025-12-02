@@ -1,0 +1,331 @@
+@model BookStore.Models.Order
+@{
+    ViewData["Title"] = "Thanh toán QKT";
+    var order = ViewBag.Order as BookStore.Models.Order;
+    var orderId = ViewBag.OrderId as int? ?? 0;
+    var amount = ViewBag.Amount as decimal? ?? 0;
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="bi bi-credit-card-2-front me-2"></i>
+                        QKT Payment
+                    </h3>
+                    <p class="mb-0 mt-2 small opacity-75">Thanh toán an toàn và bảo mật</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-shield-check me-2"></i>
+                        <strong>Bảo mật:</strong> Thông tin thẻ của bạn được mã hóa và bảo vệ an toàn. 
+                        Chúng tôi không lưu trữ thông tin thẻ của bạn.
+                    </div>
+
+                    <!-- Logo thẻ được chấp nhận -->
+                    <div class="mb-4 text-center p-3 bg-light rounded">
+                        <p class="text-muted small mb-3 fw-semibold">
+                            <i class="bi bi-check-circle me-1 text-success"></i>Chúng tôi chấp nhận các loại thẻ sau:
+                        </p>
+                        <div class="d-flex justify-content-center align-items-center gap-4 flex-wrap">
+                            <!-- Visa Logo -->
+                            <div class="card-brand-logo" title="Visa">
+                                <svg width="80" height="50" viewBox="0 0 80 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="80" height="50" rx="5" fill="#1A1F71"/>
+                                    <text x="40" y="32" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white" text-anchor="middle">VISA</text>
+                                </svg>
+                            </div>
+                            <!-- Mastercard Logo -->
+                            <div class="card-brand-logo" title="Mastercard">
+                                <svg width="80" height="50" viewBox="0 0 80 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="80" height="50" rx="5" fill="white" stroke="#E31837" stroke-width="2"/>
+                                    <circle cx="28" cy="25" r="12" fill="#EB001B"/>
+                                    <circle cx="40" cy="25" r="12" fill="#F79E1B"/>
+                                    <text x="40" y="42" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#1A1F71" text-anchor="middle">Mastercard</text>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="text-muted mb-3">
+                            <i class="bi bi-receipt me-2"></i>Thông tin đơn hàng
+                        </h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <tr>
+                                    <td class="fw-semibold">Mã đơn hàng:</td>
+                                    <td>#@orderId</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-semibold">Tổng tiền:</td>
+                                    <td class="text-success fw-bold fs-5">@amount.ToString("N0") ₫</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-semibold">Trạng thái:</td>
+                                    <td>
+                                        <span class="badge bg-warning">Chờ thanh toán</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+
+                    <form method="post" action="@Url.Action("ProcessPayment", "QKTPayment")" id="paymentForm">
+                        <input type="hidden" name="orderId" value="@orderId" />
+                        
+                        <h5 class="text-muted mb-3">
+                            <i class="bi bi-credit-card me-2"></i>Thông tin thẻ thanh toán
+                        </h5>
+
+                        <div class="mb-3">
+                            <label for="cardNumber" class="form-label fw-semibold">
+                                Số thẻ <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="cardNumber" 
+                                       name="cardNumber" 
+                                       placeholder="1234 5678 9012 3456"
+                                       maxlength="19"
+                                       required
+                                       autocomplete="cc-number" />
+                                <span class="input-group-text" id="cardType">
+                                    <i class="bi bi-credit-card"></i>
+                                </span>
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Nhập số thẻ 16 chữ số trên thẻ của bạn
+                            </div>
+                            <div class="invalid-feedback">Vui lòng nhập số thẻ hợp lệ</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cardHolderName" class="form-label fw-semibold">
+                                Tên chủ thẻ <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="cardHolderName" 
+                                   name="cardHolderName" 
+                                   placeholder="NGUYEN VAN A"
+                                   required
+                                   autocomplete="cc-name" />
+                            <div class="invalid-feedback">Vui lòng nhập tên chủ thẻ</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="expiryDate" class="form-label fw-semibold">
+                                    Ngày hết hạn <span class="text-danger">*</span>
+                                </label>
+                                    <input type="text" 
+                                           class="form-control form-control-lg" 
+                                           id="expiryDate" 
+                                           name="expiryDate" 
+                                           placeholder="MM/YY"
+                                           maxlength="5"
+                                           required
+                                           autocomplete="cc-exp" />
+                                <div class="form-text">Ví dụ: 12/25</div>
+                                <div class="invalid-feedback">Vui lòng nhập ngày hết hạn (MM/YY)</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cvv" class="form-label fw-semibold">
+                                    CVV <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" 
+                                       class="form-control form-control-lg" 
+                                       id="cvv" 
+                                       name="cvv" 
+                                       placeholder="123"
+                                       maxlength="4"
+                                       required
+                                       autocomplete="cc-csc" />
+                                <div class="form-text">3 hoặc 4 chữ số ở mặt sau thẻ</div>
+                                <div class="invalid-feedback">Vui lòng nhập CVV</div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                                <i class="bi bi-lock-fill me-2"></i>
+                                Thanh toán @amount.ToString("N0") ₫
+                            </button>
+                            <a href="@Url.Action("Index", "Cart")" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>
+                                Hủy và quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3 border-success">
+                <div class="card-body bg-light">
+                    <small class="text-muted">
+                        <i class="bi bi-shield-check me-1 text-success"></i>
+                        <strong>QKT Payment</strong> - Hệ thống thanh toán an toàn và đáng tin cậy. 
+                        Mọi giao dịch đều được mã hóa và bảo vệ.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        border-radius: 0;
+    }
+    
+    .table td {
+        padding: 0.75rem;
+    }
+    
+    .form-control-lg {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+
+    #cardNumber {
+        font-family: 'Courier New', monospace;
+        letter-spacing: 2px;
+        font-size: 1.1rem;
+    }
+
+    #cardHolderName {
+        text-transform: uppercase;
+    }
+
+    .btn-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1.1rem;
+    }
+
+    .card-brand-logo {
+        display: inline-block;
+        padding: 8px;
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+    .card-brand-logo:hover {
+        transform: scale(1.05);
+    }
+
+    .card-brand-logo svg {
+        display: block;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cardNumberInput = document.getElementById('cardNumber');
+            const expiryDateInput = document.getElementById('expiryDate');
+            const cvvInput = document.getElementById('cvv');
+            const paymentForm = document.getElementById('paymentForm');
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Format số thẻ: tự động thêm khoảng trắng mỗi 4 số và hiển thị loại thẻ
+            cardNumberInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\s/g, ''); // Xóa tất cả khoảng trắng
+                let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value; // Thêm khoảng trắng mỗi 4 số
+                e.target.value = formattedValue;
+                
+                // Hiển thị loại thẻ
+                const cardTypeIcon = document.getElementById('cardType');
+                const firstDigit = value.charAt(0);
+                if (firstDigit === '4') {
+                    cardTypeIcon.innerHTML = '<i class="bi bi-credit-card text-primary"></i> <small class="text-muted">Visa</small>';
+                } else if (firstDigit === '5') {
+                    cardTypeIcon.innerHTML = '<i class="bi bi-credit-card text-danger"></i> <small class="text-muted">Mastercard</small>';
+                } else if (value.length > 0) {
+                    cardTypeIcon.innerHTML = '<i class="bi bi-credit-card"></i>';
+                } else {
+                    cardTypeIcon.innerHTML = '<i class="bi bi-credit-card"></i>';
+                }
+            });
+
+            // Format ngày hết hạn: MM/YY
+            expiryDateInput.addEventListener('input', function(e) {
+                let value = e.target.value.replace(/\D/g, ''); // Chỉ giữ số
+                if (value.length >= 2) {
+                    value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                }
+                e.target.value = value;
+            });
+
+            // Chỉ cho phép nhập số cho CVV
+            cvvInput.addEventListener('input', function(e) {
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+
+            // Validation và submit
+            paymentForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Kiểm tra validation
+                if (!paymentForm.checkValidity()) {
+                    paymentForm.classList.add('was-validated');
+                    return;
+                }
+
+                // Disable button và hiển thị loading
+                submitBtn.disabled = true;
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+
+                // Lấy số thẻ (bỏ khoảng trắng)
+                const cardNumber = cardNumberInput.value.replace(/\s/g, '');
+                const firstDigit = cardNumber.charAt(0);
+
+                // Xác định kết quả dựa trên số thẻ
+                let result = 'success';
+                if (firstDigit === '9') {
+                    result = 'failed';
+                } else if (firstDigit === '4' || firstDigit === '5') {
+                    result = 'success';
+                } else {
+                    // Mặc định thành công nếu form hợp lệ
+                    result = 'success';
+                }
+
+                // Tạo form ẩn để submit
+                const hiddenForm = document.createElement('form');
+                hiddenForm.method = 'POST';
+                hiddenForm.action = '@Url.Action("ProcessPayment", "QKTPayment")';
+                
+                const orderIdInput = document.createElement('input');
+                orderIdInput.type = 'hidden';
+                orderIdInput.name = 'orderId';
+                orderIdInput.value = '@orderId';
+                
+                const resultInput = document.createElement('input');
+                resultInput.type = 'hidden';
+                resultInput.name = 'result';
+                resultInput.value = result;
+
+                hiddenForm.appendChild(orderIdInput);
+                hiddenForm.appendChild(resultInput);
+                document.body.appendChild(hiddenForm);
+                hiddenForm.submit();
+            });
+        });
+    </script>
+}
+

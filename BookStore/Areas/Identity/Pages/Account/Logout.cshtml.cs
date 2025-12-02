@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using BookStore.Services;
 
 namespace BookStore.Areas.Identity.Pages.Account
 {
@@ -16,15 +17,20 @@ namespace BookStore.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ILogger<LogoutModel> _logger;
+        private readonly ICartService _cart;
 
-        public LogoutModel(SignInManager<IdentityUser> signInManager, ILogger<LogoutModel> logger)
+        public LogoutModel(SignInManager<IdentityUser> signInManager, ILogger<LogoutModel> logger, ICartService cart)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _cart = cart;
         }
 
         public async Task<IActionResult> OnPost(string returnUrl = null)
         {
+            // Xóa giỏ hàng trước khi đăng xuất
+            await _cart.ClearAsync();
+            
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
             if (returnUrl != null)

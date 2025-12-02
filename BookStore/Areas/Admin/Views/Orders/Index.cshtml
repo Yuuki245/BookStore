@@ -12,7 +12,7 @@
             <option value="">-- Tất cả trạng thái --</option>
             @foreach (var st in statuses)
             {
-                <option value="@st" selected="@(Model.Status == st)">@st</option>
+                <option value="@st" selected="@(Model.Status == st ? "selected" : null)">@st</option>
             }
         </select>
     </div>
@@ -23,7 +23,9 @@
         <input type="date" name="to" class="form-control" value="@(Model.To?.ToString("yyyy-MM-dd"))" />
     </div>
     <div class="col-auto">
-        <button class="btn btn-outline-primary">Lọc</button>
+        <button class="btn btn-outline-primary">
+            <i class="bi bi-filter me-1"></i>Lọc
+        </button>
     </div>
     <div class="col-auto">
         <a class="btn btn-success"
@@ -31,7 +33,7 @@
            asp-route-status="@Model.Status"
            asp-route-from="@(Model.From?.ToString("yyyy-MM-dd"))"
            asp-route-to="@(Model.To?.ToString("yyyy-MM-dd"))">
-            Export CSV
+            <i class="bi bi-download me-1"></i>Export CSV
         </a>
     </div>
 </form>
@@ -46,7 +48,7 @@
                     <th>Khách</th>
                     <th>Trạng thái</th>
                     <th class="text-end">Tổng</th>
-                    <th class="text-end"></th>
+                    <th class="text-end table-actions">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
@@ -58,10 +60,10 @@
                         <td>@o.UserEmail</td>
                         <td>@await Html.PartialAsync("_OrderStatusBadge", o.Status)</td>
                         <td class="text-end">@($"{o.TotalAmount:N0} ₫")</td>
-                        <td class="text-end">
+                        <td class="text-end table-actions">
                             <a asp-action="Details" asp-route-id="@o.Id"
                                class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-eye"></i> Details
+                                <i class="bi bi-eye me-1"></i>Chi tiết
                             </a>
                         </td>
                     </tr>

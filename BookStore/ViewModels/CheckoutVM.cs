@@ -14,6 +14,25 @@ namespace BookStore.Models.ViewModels
 
         public IEnumerable<CartItem> Items { get; set; } = new List<CartItem>();
         public decimal Subtotal => Items.Sum(i => i.UnitPrice * i.Quantity);
+        
+        // Danh sách địa chỉ đã sử dụng trước đó
+        public List<AddressOption> SavedAddresses { get; set; } = new List<AddressOption>();
+
+        // Mã giảm giá
+        public string? CouponCode { get; set; }
+        public decimal CouponDiscount { get; set; } = 0;
+        public string? CouponMessage { get; set; }
+
+        // Phương thức thanh toán: "COD" hoặc "QKT"
+        [Required(ErrorMessage = "Vui lòng chọn phương thức thanh toán")]
+        public string PaymentMethod { get; set; } = "COD";
+    }
+
+    public class AddressOption
+    {
+        public string Address { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string DisplayText => $"{Address} - {Phone}";
     }
 
     public class CartItemVM

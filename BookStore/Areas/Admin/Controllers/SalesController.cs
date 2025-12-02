@@ -30,12 +30,16 @@ namespace BookStore.Areas.Admin.Controllers
                 .ToListAsync();
 
             // Tải danh sách sách CHƯA sale để đưa vào dropdown
-            ViewBag.BooksList = new SelectList(
-                await _db.Books.AsNoTracking()
-                         .Where(b => b.OriginalPrice == null) // Chỉ lấy sách chưa sale
-                         .OrderBy(b => b.Title)
-                         .ToListAsync(),
-                "Id", "Title");
+            var booksNotOnSale = await _db.Books.AsNoTracking()
+                .Where(b => b.OriginalPrice == null) // Chỉ lấy sách chưa sale
+                .OrderBy(b => b.Title)
+                .ToListAsync();
+
+            ViewBag.BooksList = booksNotOnSale.Select(b => new SelectListItem
+            {
+                Value = b.Id.ToString(),
+                Text = $"{b.Title} - {b.Price:N0} ₫ (Giá gốc: {b.Price:N0} ₫)"
+            }).ToList();
 
             return View(saleItems);
         }
@@ -99,7 +103,7 @@ namespace BookStore.Areas.Admin.Controllers
             // 1. Reset tất cả sale cũ
             await ResetAllSalesLogic();
 
-            if (maxDiscount > 50) maxDiscount = 50;
+            if (maxDiscount > 30) maxDiscount = 30;
             var rand = new Random();
 
             // 2. Lấy ngẫu nhiên 'count' sách (đang không sale)

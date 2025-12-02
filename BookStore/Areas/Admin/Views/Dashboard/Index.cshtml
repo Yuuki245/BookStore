@@ -1,39 +1,139 @@
 ﻿@{
     ViewData["Title"] = "Dashboard";
+    var now = DateTime.Now.ToString("HH:mm");
+    var revenue = (decimal)ViewBag.Revenue;
 }
 
-<div class="row g-3">
+<div class="row g-4 quick-stats mb-4">
     <div class="col-md-4">
-        <div class="card p-3 text-center">
-            <div class="text-muted">Tổng đơn</div>
-            <div class="fs-3 fw-bold">@ViewBag.TotalOrders</div>
+        <div class="card glass-card card-lift h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-4">
+                <div class="flex-grow-1">
+                    <div class="text-uppercase small text-muted fw-semibold mb-2" style="letter-spacing: 0.5px;">Tổng đơn hàng</div>
+                    <div class="fs-2 fw-bold mb-1">@ViewBag.TotalOrders</div>
+                    <div class="text-muted small d-flex align-items-center gap-1">
+                        <i class="bi bi-clock-history"></i>
+                        <span>Cập nhật @now</span>
+                    </div>
+                </div>
+                <div class="stat-icon-large rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%); color: #667eea;">
+                    <i class="bi bi-bag-check fs-3"></i>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card p-3 text-center">
-            <div class="text-muted">Tổng doanh thu</div>
-            <div class="fs-3 fw-bold text-success">@(((decimal)ViewBag.Revenue).ToString("N0")) ₫</div>
+        <div class="card glass-card card-lift h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-4">
+                <div class="flex-grow-1">
+                    <div class="text-uppercase small text-muted fw-semibold mb-2" style="letter-spacing: 0.5px;">Tổng doanh thu</div>
+                    <div class="fs-2 fw-bold text-success mb-1">@revenue.ToString("N0") ₫</div>
+                    <div class="text-muted small d-flex align-items-center gap-1">
+                        <i class="bi bi-info-circle"></i>
+                        <span>Bao gồm VAT</span>
+                    </div>
+                </div>
+                <div class="stat-icon-large bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                    <i class="bi bi-currency-exchange fs-3"></i>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card p-3 text-center">
-            <div class="text-muted">Tổng sách</div>
-            <div class="fs-3 fw-bold">@ViewBag.TotalBooks</div>
+        <div class="card glass-card card-lift h-100">
+            <div class="card-body d-flex justify-content-between align-items-center p-4">
+                <div class="flex-grow-1">
+                    <div class="text-uppercase small text-muted fw-semibold mb-2" style="letter-spacing: 0.5px;">Tổng sách</div>
+                    <div class="fs-2 fw-bold mb-1">@ViewBag.TotalBooks</div>
+                    <div class="text-muted small d-flex align-items-center gap-1">
+                        <i class="bi bi-box-seam"></i>
+                        <span>Kho hiện có</span>
+                    </div>
+                </div>
+                <div class="stat-icon-large bg-warning-subtle text-warning rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
+                    <i class="bi bi-collection fs-3"></i>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="card mt-4">
-    <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="card-title m-0">Doanh thu</h5>
-            <div class="btn-group" role="group" aria-label="Revenue range">
-                <button type="button" class="btn btn-outline-primary btn-sm active" data-range="day">Ngày</button>
-                <button type="button" class="btn btn-outline-primary btn-sm" data-range="week">Tuần</button>
-                <button type="button" class="btn btn-outline-primary btn-sm" data-range="month">Tháng</button>
+<div class="row g-4 mt-4">
+    <div class="col-lg-8">
+        <div class="card glass-card card-lift">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                    <div>
+                        <h5 class="card-title m-0">Xu hướng doanh thu</h5>
+                        <p class="text-muted mb-0 small">So sánh theo từng khoảng thời gian</p>
+                    </div>
+                    <div class="range-switch btn-group btn-group-sm" role="group" aria-label="Khoảng doanh thu">
+                        <input type="radio" class="btn-check" name="rangeFilters" id="range-day" value="day" checked>
+                        <label class="btn btn-outline-primary" for="range-day">Ngày</label>
+
+                        <input type="radio" class="btn-check" name="rangeFilters" id="range-week" value="week">
+                        <label class="btn btn-outline-primary" for="range-week">Tuần</label>
+
+                        <input type="radio" class="btn-check" name="rangeFilters" id="range-month" value="month">
+                        <label class="btn btn-outline-primary" for="range-month">Tháng</label>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="revChart" height="140" aria-label="Biểu đồ doanh thu"></canvas>
+                </div>
             </div>
         </div>
-        <canvas id="revChart" height="120"></canvas>
+    </div>
+    <div class="col-lg-4">
+        <div class="card glass-card card-lift">
+            <div class="card-body">
+                <h5 class="card-title m-0 mb-3">Doanh thu theo thể loại</h5>
+                <div class="chart-wrapper">
+                    <canvas id="categoryChart" height="200" aria-label="Biểu đồ doanh thu theo thể loại"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="card glass-card card-lift">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="card-title m-0">Sách bán chậm</h5>
+                        <p class="text-muted mb-0 small">Sách bán < 5 cuốn trong 4 tuần gần nhất</p>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-modern align-middle mb-0" id="slowSellingTable">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Sách</th>
+                                <th>Thể loại</th>
+                                <th class="text-end">Đã bán (4 tuần)</th>
+                                <th class="text-end">Doanh thu</th>
+                                <th class="text-end">Tồn kho</th>
+                                <th class="text-end">Giá</th>
+                            </tr>
+                        </thead>
+                        <tbody id="slowSellingBody">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                    Đang tải dữ liệu...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-3" id="slowSellingPagination">
+                    <!-- Phân trang sẽ được thêm bởi JavaScript -->
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -41,43 +141,225 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-          const ctx = document.getElementById('revChart');
-          const btns = document.querySelectorAll('[data-range]');
-          let chart;
+            const ctx = document.getElementById('revChart');
+            const radios = document.querySelectorAll('input[name="rangeFilters"]');
+            let chart;
 
-          function initChart(labels, values){
-            if(chart) chart.destroy();
-            chart = new Chart(ctx, {
-              type: 'bar',
-              data: { labels, datasets: [{
-                label: 'Doanh thu (VNĐ)', data: values,
-                backgroundColor: '#0d6efd88', borderColor: '#0d6efd', borderWidth: 1, borderRadius: 6
-              }]},
-              options: {
-                responsive: true,
-                plugins: {
-                  legend: { display: false },
-                  tooltip: { callbacks: { label: c => c.parsed.y.toLocaleString('vi-VN') + ' ₫' } }
-                },
-                scales: { y: { ticks: { callback: v => v.toLocaleString('vi-VN') + ' ₫' } } }
-              }
+            function initChart(labels, values) {
+                if (chart) chart.destroy();
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels,
+                        datasets: [{
+                            label: 'Doanh thu (VNĐ)',
+                            data: values,
+                            backgroundColor: '#0d6efd55',
+                            borderColor: '#0d6efd',
+                            borderWidth: 2,
+                            borderRadius: 10,
+                            hoverBackgroundColor: '#0d6efd88'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: c => c.parsed.y.toLocaleString('vi-VN') + ' ₫'
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: {
+                                    callback: v => v.toLocaleString('vi-VN') + ' ₫'
+                                },
+                                grid: { color: 'rgba(15,23,42,0.08)' }
+                            },
+                            x: {
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            async function loadData(range) {
+                const res = await fetch(`/Admin/Dashboard/GetRevenue?range=${range}`);
+                const { labels, values } = await res.json();
+                initChart(labels, values);
+            }
+
+            radios.forEach(radio => {
+                radio.addEventListener('change', e => {
+                    if (e.target.checked) {
+                        loadData(e.target.value);
+                    }
+                });
             });
-          }
 
-          async function loadData(range){
-            const res = await fetch(`/Admin/Dashboard/GetRevenue?range=${range}`);
-            const { labels, values } = await res.json();
-            initChart(labels, values);
-          }
-
-          btns.forEach(btn => btn.addEventListener('click', () => {
-            btns.forEach(b=>b.classList.remove('active'));
-            btn.classList.add('active');
-            loadData(btn.dataset.range);
-          }));
-
-          loadData('day'); // mặc định
+            loadData('day');
         });
-    </script>
 
+        // Biểu đồ doanh thu theo thể loại
+        async function loadCategoryRevenue() {
+            const res = await fetch('/Admin/Dashboard/GetRevenueByCategory');
+            const data = await res.json();
+            
+            const ctx = document.getElementById('categoryChart');
+            if (!ctx) return;
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(c => c.categoryName || 'Chưa phân loại'),
+                    datasets: [{
+                        data: data.map(c => c.revenue),
+                        backgroundColor: [
+                            '#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1',
+                            '#20c997', '#fd7e14', '#e83e8c', '#6c757d', '#0dcaf0'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 10,
+                                font: { size: 11 }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value.toLocaleString('vi-VN')} ₫ (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Bảng sách bán chậm với phân trang
+        let currentPage = 1;
+        const pageSize = 5;
+
+        async function loadSlowSellingBooks(page = 1) {
+            const res = await fetch(`/Admin/Dashboard/GetSlowSellingBooks?page=${page}&pageSize=${pageSize}`);
+            const data = await res.json();
+            
+            const tbody = document.getElementById('slowSellingBody');
+            const pagination = document.getElementById('slowSellingPagination');
+            if (!tbody) return;
+            
+            if (!data.items || data.items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Không có sách bán chậm</td></tr>';
+                if (pagination) pagination.innerHTML = '';
+                return;
+            }
+            
+            // Tính STT dựa trên trang hiện tại
+            const startIndex = (data.page - 1) * data.pageSize;
+            
+            tbody.innerHTML = data.items.map((book, index) => `
+                <tr>
+                    <td>${startIndex + index + 1}</td>
+                    <td>
+                        <div class="fw-semibold">${book.title}</div>
+                        ${book.author ? `<div class="text-muted small">${book.author}</div>` : ''}
+                    </td>
+                    <td><span class="badge bg-light text-dark">${book.categoryName || 'Chưa phân loại'}</span></td>
+                    <td class="text-end">
+                        <span class="badge ${book.quantitySold === 0 ? 'bg-danger' : 'bg-warning'}">
+                            ${book.quantitySold} cuốn
+                        </span>
+                    </td>
+                    <td class="text-end">${book.revenue.toLocaleString('vi-VN')} ₫</td>
+                    <td class="text-end">
+                        <span class="badge ${book.stock > 10 ? 'badge-soft-success' : 'badge-soft-warning'}">
+                            ${book.stock} cuốn
+                        </span>
+                    </td>
+                    <td class="text-end">${book.price.toLocaleString('vi-VN')} ₫</td>
+                </tr>
+            `).join('');
+
+            // Hiển thị phân trang
+            if (pagination && data.totalPages > 1) {
+                let paginationHtml = '<nav><ul class="pagination justify-content-center mb-0">';
+                
+                // Nút Previous
+                paginationHtml += `<li class="page-item ${data.page === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${data.page - 1}" ${data.page === 1 ? 'onclick="return false;"' : ''}>Trước</a>
+                </li>`;
+                
+                // Số trang
+                const maxPages = 5;
+                let startPage = Math.max(1, data.page - Math.floor(maxPages / 2));
+                let endPage = Math.min(data.totalPages, startPage + maxPages - 1);
+                
+                if (endPage - startPage < maxPages - 1) {
+                    startPage = Math.max(1, endPage - maxPages + 1);
+                }
+                
+                if (startPage > 1) {
+                    paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="1">1</a></li>`;
+                    if (startPage > 2) {
+                        paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                    }
+                }
+                
+                for (let i = startPage; i <= endPage; i++) {
+                    paginationHtml += `<li class="page-item ${i === data.page ? 'active' : ''}">
+                        <a class="page-link" href="#" data-page="${i}">${i}</a>
+                    </li>`;
+                }
+                
+                if (endPage < data.totalPages) {
+                    if (endPage < data.totalPages - 1) {
+                        paginationHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                    }
+                    paginationHtml += `<li class="page-item"><a class="page-link" href="#" data-page="${data.totalPages}">${data.totalPages}</a></li>`;
+                }
+                
+                // Nút Next
+                paginationHtml += `<li class="page-item ${data.page === data.totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" data-page="${data.page + 1}" ${data.page === data.totalPages ? 'onclick="return false;"' : ''}>Sau</a>
+                </li>`;
+                
+                paginationHtml += '</ul></nav>';
+                pagination.innerHTML = paginationHtml;
+                
+                // Thêm event listeners cho phân trang
+                pagination.querySelectorAll('a[data-page]').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const page = parseInt(link.getAttribute('data-page'));
+                        if (page && page !== data.page && page >= 1 && page <= data.totalPages) {
+                            currentPage = page;
+                            loadSlowSellingBooks(page);
+                        }
+                    });
+                });
+            } else if (pagination) {
+                pagination.innerHTML = '';
+            }
+        }
+
+        // Load dữ liệu khi trang tải
+        loadCategoryRevenue();
+        loadSlowSellingBooks();
+    </script>
 }

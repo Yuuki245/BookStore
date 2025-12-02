@@ -1,25 +1,87 @@
-﻿@model IEnumerable<BookStore.Models.Category>
+﻿@using System.Linq
+@model IEnumerable<BookStore.Models.Category>
 @{
-    ViewData["Title"] = "Categories";
+    ViewData["Title"] = "Thể loại";
+    var total = Model.Count();
 }
-<h2>Categories</h2>
-<p><a asp-action="Create" class="btn btn-primary">Create New</a></p>
-<table class="table table-striped align-middle">
-    <thead><tr><th>Name</th><th>Description</th><th style="width:160px;"></th></tr></thead>
-    <tbody>
-        @foreach (var c in Model)
-        {
-            <tr>
-                <td>@c.Name</td>
-                <td>@c.Description</td>
-                <td class="text-end">
-                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary">Edit</a>
-                    <form asp-action="Delete" asp-route-id="@c.Id" method="post" class="d-inline">
-                        @Html.AntiForgeryToken()
-                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this?')">Delete</button>
-                    </form>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+
+<div class="card card-lift shadow-sm mb-4">
+    <div class="card-header bg-transparent border-0 pb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3">
+            <div>
+                <h4 class="mb-1">Thể loại sách</h4>
+                <p class="text-muted mb-0 small">@total thể loại đang khả dụng</p>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="input-group" style="width: 300px; min-width: 250px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="search" id="categorySearch" class="form-control border-start-0" placeholder="Tìm nhanh theo tên/mô tả">
+                </div>
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Thêm thể loại
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-modern align-middle mb-0" id="categoryTable">
+            <thead>
+                <tr>
+                    <th>Tên</th>
+                    <th>Mô tả</th>
+                    <th class="text-end table-actions">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-semibold">@c.Name</div>
+                        </td>
+                        <td class="text-muted">
+                            @if (string.IsNullOrWhiteSpace(c.Description))
+                            {
+                                <span class="badge bg-light text-muted">Chưa cập nhật</span>
+                            }
+                            else
+                            {
+                                @c.Description
+                            }
+                        </td>
+                        <td class="text-end table-actions">
+                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-pencil-square me-1"></i>Sửa
+                            </a>
+                            <form asp-action="Delete" asp-route-id="@c.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Xoá thể loại @c.Name?');">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-sm btn-outline-danger">
+                                    <i class="bi bi-trash me-1"></i>Xoá
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-transparent border-0 pt-3">
+        <small class="text-muted">Dễ dàng lọc/thao tác trực tiếp trên bảng.</small>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const search = document.getElementById('categorySearch');
+            const rows = document.querySelectorAll('#categoryTable tbody tr');
+            search?.addEventListener('input', () => {
+                const term = search.value.trim().toLowerCase();
+                rows.forEach(row => {
+                    row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+                });
+            });
+        });
+    </script>
+}

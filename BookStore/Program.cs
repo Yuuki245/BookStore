@@ -19,6 +19,50 @@ builder.Services
     .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews();
+
+// ✅ Swagger/OpenAPI
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "BookStore API",
+        Version = "v1",
+        Description = "API documentation for BookStore - Test và kiểm tra các API endpoints\n\n" +
+                      "📌 Lưu ý:\n" +
+                      "- Các API có [Authorize] cần đăng nhập trước\n" +
+                      "- API Admin cần quyền Admin\n" +
+                      "- Một số API đã bỏ ValidateAntiForgeryToken để test qua Swagger"
+    });
+    
+    // Cấu hình để Swagger phát hiện cả MVC Controllers
+    c.CustomSchemaIds(type => type.FullName);
+    
+    // Cho phép Swagger phát hiện các action có Route attribute
+    c.DocInclusionPredicate((docName, apiDesc) =>
+    {
+        // Chỉ hiển thị các action có Route attribute hoặc trả về JSON
+        return apiDesc.RelativePath != null;
+    });
+    
+    // Thêm security definition cho cookie authentication
+    c.AddSecurityDefinition("cookieAuth", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        In = Microsoft.OpenApi.Models.ParameterLocation.Cookie,
+        Name = ".AspNetCore.Identity.Application",
+        Description = "Cookie authentication (đăng nhập trước khi test API có [Authorize])"
+    });
+    
+    // Include XML comments nếu có
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
+});
+
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(opt =>
 {
@@ -27,7 +71,8 @@ builder.Services.AddSession(opt =>
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICartService, SessionCartService>();
-builder.Services.AddScoped<IVnPayService, VnPayService>();
+builder.Services.AddScoped<IQKTPaymentService, QKTPaymentService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 // ✅ Bật nén Gzip/Brotli
 builder.Services.AddResponseCompression(opt =>
 {
@@ -53,6 +98,15 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
+    
+    // ✅ Swagger UI (chỉ trong Development)
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "BookStore API v1");
+        c.RoutePrefix = "swagger"; // Truy cập tại /swagger
+        c.DocumentTitle = "BookStore API Documentation";
+    });
 }
 else
 {
@@ -91,7 +145,8 @@ app.Use(async (ctx, next) =>
     "connect-src 'self' cdn.jsdelivr.net *.tiny.cloud *.tawk.to wss://*.tawk.to",
 
     // 🟢 SỬA 6: Thêm *.tawk.to (cho phép Tawk.to chạy trong frame)
-    "frame-src 'self' *.tawk.to",
+    // 🗺️ Thêm Google Maps (cho phép nhúng bản đồ)
+    "frame-src 'self' *.tawk.to *.google.com maps.google.com",
 
     "frame-ancestors 'self'"
 );

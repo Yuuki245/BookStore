@@ -6,8 +6,15 @@
     ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
 }
 
+<div class="manage-page-header mb-4">
+    <h3 class="fw-bold mb-2">
+        <i class="bi bi-shield-check me-2 text-primary"></i>@ViewData["Title"]
+    </h3>
+    <p class="text-muted mb-0">Bảo mật tài khoản với xác thực hai yếu tố</p>
+</div>
+
 <partial name="_StatusMessage" for="StatusMessage" />
-<h3>@ViewData["Title"]</h3>
+
 @{
     var consentFeature = HttpContext.Features.Get<ITrackingConsentFeature>();
     @if (consentFeature?.CanTrack ?? true)
@@ -36,26 +43,50 @@
                 </div>
             }
 
-            if (Model.IsMachineRemembered)
-            {
-                <form method="post" style="display: inline-block">
-                    <button type="submit" class="btn btn-primary">Quên trình duyệt này</button>
-                </form>
-            }
-            <a asp-page="./Disable2fa" class="btn btn-primary">Tắt 2FA</a>
-            <a asp-page="./GenerateRecoveryCodes" class="btn btn-primary">Đặt lại mã khôi phục</a>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                @if (Model.IsMachineRemembered)
+                {
+                    <form method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Quên trình duyệt này
+                        </button>
+                    </form>
+                }
+                <a asp-page="./Disable2fa" class="btn btn-outline-danger">
+                    <i class="bi bi-shield-x me-2"></i>Tắt 2FA
+                </a>
+                <a asp-page="./GenerateRecoveryCodes" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-clockwise me-2"></i>Đặt lại mã khôi phục
+                </a>
+            </div>
         }
 
-        <h4>Ứng dụng xác thực</h4>
-        @if (!Model.HasAuthenticator)
-        {
-            <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">Thêm ứng dụng xác thực</a>
-        }
-        else
-        {
-            <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">Thiết lập ứng dụng xác thực</a>
-            <a id="reset-authenticator" asp-page="./ResetAuthenticator" class="btn btn-primary">Đặt lại ứng dụng xác thực</a>
-        }
+        <div class="card glass-card mb-4">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-phone me-2 text-primary"></i>Ứng dụng xác thực
+                </h5>
+                @if (!Model.HasAuthenticator)
+                {
+                    <p class="text-muted mb-3">Thêm ứng dụng xác thực để bảo mật tài khoản tốt hơn</p>
+                    <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Thêm ứng dụng xác thực
+                    </a>
+                }
+                else
+                {
+                    <p class="text-muted mb-3">Ứng dụng xác thực đã được thiết lập</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a id="enable-authenticator" asp-page="./EnableAuthenticator" class="btn btn-outline-primary">
+                            <i class="bi bi-gear me-2"></i>Thiết lập ứng dụng xác thực
+                        </a>
+                        <a id="reset-authenticator" asp-page="./ResetAuthenticator" class="btn btn-outline-warning">
+                            <i class="bi bi-arrow-clockwise me-2"></i>Đặt lại ứng dụng xác thực
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
     }
     else
     {
@@ -65,6 +96,13 @@
         </div>
     }
 }
+
+<style>
+    .manage-page-header {
+        border-bottom: 2px solid var(--bg-secondary);
+        padding-bottom: 1rem;
+    }
+</style>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

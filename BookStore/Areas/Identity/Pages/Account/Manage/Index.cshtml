@@ -1,29 +1,80 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Profile";
+    ViewData["Title"] = "Hồ sơ";
     ViewData["ActivePage"] = ManageNavPages.Index;
 }
 
-<h3>@ViewData["Title"]</h3>
+<div class="manage-page-header mb-4">
+    <h3 class="fw-bold mb-2">
+        <i class="bi bi-person-circle me-2 text-primary"></i>@ViewData["Title"]
+    </h3>
+    <p class="text-muted mb-0">Quản lý thông tin tài khoản của bạn</p>
+</div>
+
 <partial name="_StatusMessage" for="StatusMessage" />
+
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-8 col-lg-6">
         <form id="profile-form" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Username" class="form-control" placeholder="Please choose your username." disabled />
-                <label asp-for="Username" class="form-label"></label>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            
+            <div class="mb-4">
+                <label asp-for="Username" class="form-label fw-semibold">
+                    <i class="bi bi-person me-2 text-primary"></i>Tên đăng nhập
+                </label>
+                <input asp-for="Username" 
+                       class="form-control form-control-lg" 
+                       placeholder="Tên đăng nhập" 
+                       disabled />
+                <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>Tên đăng nhập không thể thay đổi
+                </div>
             </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number."/>
-                <label asp-for="Input.PhoneNumber" class="form-label"></label>
-                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+
+            <div class="mb-4">
+                <label asp-for="Input.PhoneNumber" class="form-label fw-semibold">
+                    <i class="bi bi-telephone me-2 text-primary"></i>Số điện thoại
+                </label>
+                <input asp-for="Input.PhoneNumber" 
+                       class="form-control form-control-lg" 
+                       placeholder="0123456789"/>
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger small"></span>
+                <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>Số điện thoại để liên hệ khi cần
+                </div>
             </div>
-            <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
+
+            <button id="update-profile-button" type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-check-circle me-2"></i>Lưu thay đổi
+            </button>
         </form>
     </div>
 </div>
+
+<style>
+    .manage-page-header {
+        border-bottom: 2px solid var(--bg-secondary);
+        padding-bottom: 1rem;
+    }
+
+    .form-control-lg {
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid #e5e7eb;
+        transition: all var(--transition-fast);
+    }
+
+    .form-control-lg:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 0.2rem rgba(59, 97, 235, 0.1);
+    }
+
+    .form-control-lg:disabled {
+        background-color: var(--bg-secondary);
+        opacity: 0.7;
+    }
+</style>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

@@ -47,7 +47,7 @@ public class BooksController : Controller
     // ====== Index ======
     public async Task<IActionResult> Index(string? q, int? categoryId, string? sort = "new", int page = 1)
     {
-        const int PageSize = 10;
+        const int PageSize = 9;
 
         var query = _db.Books
             .Include(b => b.Category)
@@ -57,7 +57,8 @@ public class BooksController : Controller
         if (!string.IsNullOrWhiteSpace(q))
         {
             var keyword = q.Trim().ToLower();
-            query = query.Where(b => b.Title.ToLower().Contains(keyword) || b.Author.ToLower().Contains(keyword));
+            query = query.Where(b => b.Title.ToLower().Contains(keyword) || 
+                                     (b.Author != null && b.Author.ToLower().Contains(keyword)));
         }
 
         // 🔸 Lọc theo thể loại

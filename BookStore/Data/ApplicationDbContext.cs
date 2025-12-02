@@ -15,6 +15,10 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Review> Reviews => Set<Review>();
     public DbSet<BlogPost> BlogPosts => Set<BlogPost>();
+    public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
+    public DbSet<FlashSale> FlashSales => Set<FlashSale>();
+    public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<Notification> Notifications => Set<Notification>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -66,5 +70,50 @@ public class ApplicationDbContext : IdentityDbContext
             .WithMany()
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Restrict); // Không xóa bài post nếu user bị xóa
+
+        // WishlistItem - User (n-1)
+        builder.Entity<WishlistItem>()
+            .HasOne(w => w.User)
+            .WithMany()
+            .HasForeignKey(w => w.UserId)
+            .OnDelete(DeleteBehavior.Cascade); // Xóa wishlist khi user bị xóa
+
+        // WishlistItem - Book (n-1)
+        builder.Entity<WishlistItem>()
+            .HasOne(w => w.Book)
+            .WithMany()
+            .HasForeignKey(w => w.BookId)
+            .OnDelete(DeleteBehavior.Cascade); // Xóa wishlist khi sách bị xóa
+
+        // Đảm bảo mỗi user chỉ có 1 wishlist item cho mỗi sách
+        builder.Entity<WishlistItem>()
+            .HasIndex(w => new { w.UserId, w.BookId })
+            .IsUnique();
+
+        // Book - FlashSale (n-1, optional)
+        builder.Entity<Book>()
+            .HasOne(b => b.FlashSale)
+            .WithMany(f => f.Books)
+            .HasForeignKey(b => b.FlashSaleId)
+            .OnDelete(DeleteBehavior.SetNull); // Set null khi flash sale bị xóa
+
+        // Indexes cho performance
+        builder.Entity<WishlistItem>().HasIndex(w => w.UserId);
+        builder.Entity<FlashSale>().HasIndex(f => f.StartTime);
+        builder.Entity<FlashSale>().HasIndex(f => f.EndTime);
+
+        // Coupon - Indexes
+        builder.Entity<Coupon>().HasIndex(c => c.Code).IsUnique();
+        builder.Entity<Coupon>().HasIndex(c => c.StartDate);
+        builder.Entity<Coupon>().HasIndex(c => c.EndDate);
+
+        // Notification - Indexes
+        builder.Entity<Notification>().HasIndex(n => n.UserId);
+        builder.Entity<Notification>().HasIndex(n => new { n.UserId, n.IsRead });
+        builder.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany()
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

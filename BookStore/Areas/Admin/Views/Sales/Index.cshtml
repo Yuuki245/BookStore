@@ -21,7 +21,9 @@
             <input type="number" name="newSalePrice" class="form-control" min="1" placeholder="Ví dụ: 89000" required />
         </div>
         <div class="col-md-2 d-flex align-items-end">
-            <button type="submit" class="btn btn-primary w-100">Thêm Sale</button>
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="bi bi-plus-circle me-1"></i>Thêm Sale
+            </button>
         </div>
     </form>
 </div>
@@ -29,14 +31,14 @@
 <div class="card p-3 mb-3">
     <h5>Công cụ Sale (Ngẫu nhiên)</h5>
     <p class="text-muted small">
-        Hành động "Tạo Sale ngẫu nhiên" sẽ xóa tất cả sale cũ và tạo một đợt sale ngẫu nhiên mới cho 12 sản phẩm (tối đa 50%).
+        Hành động "Tạo Sale ngẫu nhiên" sẽ xóa tất cả sale cũ và tạo một đợt sale ngẫu nhiên mới cho 12 sản phẩm (tối đa 30%).
     </p>
     <div class="d-flex gap-2">
         <form asp-action="GenerateNewSale" method="post">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-warning"
                     onclick="return confirm('Bạn có chắc muốn xóa sale cũ và tạo sale mới?')">
-                <i class="bi bi-shuffle"></i> Tạo Sale ngẫu nhiên
+                <i class="bi bi-shuffle me-1"></i>Tạo Sale ngẫu nhiên
             </button>
         </form>
 
@@ -44,7 +46,7 @@
             @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-outline-danger"
                     onclick="return confirm('Bạn có chắc muốn GỠ BỎ toàn bộ sale?')">
-                <i class="bi bi-x-lg"></i> Reset Tất cả Sale
+                <i class="bi bi-x-lg me-1"></i>Reset Tất cả Sale
             </button>
         </form>
     </div>
@@ -82,7 +84,9 @@
                             <td class="text-end">
                                 <form asp-action="RemoveSale" asp-route-id="@b.Id" method="post">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-warning">Gỡ</button>
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-x-circle me-1"></i>Gỡ
+                                    </button>
                                 </form>
                             </td>
                         </tr>

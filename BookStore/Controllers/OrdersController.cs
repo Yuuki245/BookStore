@@ -18,7 +18,11 @@ namespace BookStore.Controllers
         public async Task<IActionResult> Index(int page = 1)
         {
             const int PageSize = 10;
-            var uid = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var uid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(uid))
+            {
+                return Unauthorized();
+            }
 
             var q = _db.Orders
                 .AsNoTracking()
@@ -45,7 +49,12 @@ namespace BookStore.Controllers
         // GET: /Orders/Details/5
         public async Task<IActionResult> Details(int id)
         {
-            var uid = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var uid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(uid))
+            {
+                return Unauthorized();
+            }
+            
             var order = await _db.Orders
                 .AsNoTracking()
                 .Include(o => o.Items).ThenInclude(i => i.Book)
@@ -61,14 +70,27 @@ namespace BookStore.Controllers
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id)
         {
-            var uid = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var uid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(uid))
+            {
+                return Unauthorized();
+            }
+            
             var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == id);
             if (order == null) return NotFound();
             if (order.UserId != uid) return Forbid();
 
-            if (order.Status != "Pending")
+            // Chỉ cho phép hủy khi đơn ở trạng thái Pending hoặc Confirmed
+            if (order.Status != "Pending" && order.Status != "Confirmed")
             {
-                TempData["Warning"] = "Chỉ được hủy đơn khi trạng thái đang chờ (Pending).";
+                TempData["Warning"] = "Chỉ được hủy đơn khi trạng thái đang chờ (Pending) hoặc đã xác nhận (Confirmed).";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Không cho phép hủy đơn đã bị hủy
+            if (order.Status == "Canceled")
+            {
+                TempData["Warning"] = "Đơn hàng đã bị hủy.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 

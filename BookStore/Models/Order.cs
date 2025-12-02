@@ -29,5 +29,12 @@ public class Order
     [Required, StringLength(30)]
     public string Status { get; set; } = "Pending"; // Pending/Confirmed/Shipped/Completed/Canceled
 
+    [StringLength(50)]
+    public string? CouponCode { get; set; } // Mã giảm giá đã sử dụng
+
+    [Column(TypeName = "decimal(18,2)")]
+    [Range(0, 1000000)]
+    public decimal DiscountAmount { get; set; } = 0; // Số tiền giảm giá từ coupon
+
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
 }

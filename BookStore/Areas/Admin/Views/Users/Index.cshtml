@@ -21,23 +21,29 @@
                     <tr>
                         <td>@user.Email</td>
                         <td>
-                            @foreach (var role in user.Roles)
-                            {
-                                // Đặt logic chọn màu ở đây
-                                var badgeClass = role switch {
-                                    "Admin" => "text-bg-danger",  // Màu đỏ
-                                    "Customer" => "text-bg-primary", // Màu xanh
-                                    _ => "text-bg-secondary" // Màu xám cho các role khác
-                                };
-                                
-                                <span class="badge @badgeClass">
-                                    @role
-                                </span>
-                            }
-                            </td>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var role in user.Roles)
+                                {
+                                    // Đặt logic chọn màu ở đây với màu nổi bật hơn
+                                    var badgeClass = role switch {
+                                        "Admin" => "text-bg-danger",  // Màu đỏ
+                                        "Customer" => "text-bg-primary", // Màu xanh
+                                        _ => "text-bg-secondary" // Màu xám cho các role khác
+                                    };
+                                    
+                                    <span class="badge @badgeClass role-badge">
+                                        @role
+                                    </span>
+                                }
+                                @if (!user.Roles.Any())
+                                {
+                                    <span class="badge text-bg-light text-muted role-badge">Không có quyền</span>
+                                }
+                            </div>
+                        </td>
                         <td class="text-end">
                             <a asp-action="ManageRoles" asp-route-id="@user.UserId" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-pencil-square"></i> Quản lý Quyền
+                                <i class="bi bi-pencil-square me-1"></i>Quản lý Quyền
                             </a>
                         </td>
                     </tr>

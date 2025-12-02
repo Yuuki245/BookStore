@@ -5,58 +5,127 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>@(ViewData["Title"] ?? "Admin") · BookStore</title>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="~/css/admin.css" />
+    <link rel="stylesheet" href="~/css/page-animations.css" asp-append-version="true" />
     <script src="https://cdn.tiny.cloud/1/jm9wxk3197ldj2uw6zi5krclkwhcxljroctyp3tak3vk3ixn/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
 </head>
-<body class="min-vh-100">
+<body class="min-vh-100" data-bs-theme="light" id="adminBody">
     <div class="admin-wrap d-flex">
         <!-- Sidebar -->
-        <aside class="admin-sidebar border-end bg-white">
-            <div class="p-3 border-bottom d-flex align-items-center gap-2">
-                <i class="bi bi-book-half fs-4 text-primary"></i>
-                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
-                   class="text-decoration-none h5 m-0 text-dark">BookStore Admin</a>
+        <aside class="admin-sidebar border-end bg-white d-flex flex-column">
+            <div class="p-3 border-bottom d-flex align-items-center gap-2 sidebar-brand">
+                <div class="brand-icon">
+                    <i class="bi bi-book-half"></i>
+                </div>
+                <div class="sidebar-brand-text">
+                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
+                       class="text-decoration-none text-dark fw-semibold d-block">BookStore Admin</a>
+                    <small class="text-muted">Workspace trung tâm</small>
+                </div>
+                <button class="btn btn-sm btn-link p-0 ms-auto sidebar-toggle-btn" id="btnToggleSidebar" title="Thu gọn/Mở rộng sidebar">
+                    <i class="bi bi-chevron-left" id="sidebarToggleIcon"></i>
+                </button>
             </div>
-            <nav class="p-2">
-                <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
-                   class="admin-link nav-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-                <a asp-area="Admin" asp-controller="Categories" asp-action="Index"
-                   class="admin-link nav-link"><i class="bi bi-tags me-2"></i>Categories</a>
-                <a asp-area="Admin" asp-controller="Books" asp-action="Index"
-                   class="admin-link nav-link"><i class="bi bi-journal-text me-2"></i>Books</a>
-                <a asp-area="Admin" asp-controller="Orders" asp-action="Index"
-                   class="admin-link nav-link"><i class="bi bi-receipt me-2"></i>Orders</a>
-                <a asp-area="Admin" asp-controller="Sales" asp-action="Index"
-                   class="admin-link nav-link"><i class="bi bi-tag-fill me-2"></i>Sales</a>
-                <a asp-area="Admin" asp-controller="Blog" asp-action="Index"
-                   class="admin-link nav-link"><i class="bi bi-pencil-square me-2"></i>Blog</a>
-                <a asp-area="Admin" asp-controller="Users" asp-action="Index"
-                   class="admin-link nav-link"><i class="bi bi-people-fill me-2"></i>Người dùng</a>
-                <hr />
-                <a asp-area="" asp-controller="Home" asp-action="Index"
-                   class="admin-link nav-link"><i class="bi bi-arrow-left-circle me-2"></i>Back to Store</a>
+            <nav class="p-3 flex-grow-1">
+                <div class="nav-section">
+                    <span class="nav-label">Tổng quan</span>
+                    <a asp-area="Admin" asp-controller="Dashboard" asp-action="Index"
+                       class="admin-link nav-link">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+                <div class="nav-section mt-3">
+                    <span class="nav-label">Quản lý</span>
+                    <a asp-area="Admin" asp-controller="Categories" asp-action="Index"
+                       class="admin-link nav-link">
+                        <i class="bi bi-tags"></i>
+                        <span>Thể loại</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Books" asp-action="Index"
+                       class="admin-link nav-link">
+                        <i class="bi bi-journal-text"></i>
+                        <span>Sách</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Orders" asp-action="Index"
+                       class="admin-link nav-link">
+                        <i class="bi bi-receipt"></i>
+                        <span>Đơn hàng</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Sales" asp-action="Index"
+                       class="admin-link nav-link">
+                        <i class="bi bi-tag-fill"></i>
+                        <span>Khuyến mãi</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="FlashSale" asp-action="Index"
+                       class="admin-link nav-link">
+                        <i class="bi bi-lightning-charge"></i>
+                        <span>Flash Sale</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Coupon" asp-action="Index"
+                       class="admin-link nav-link">
+                        <i class="bi bi-ticket-perforated"></i>
+                        <span>Mã giảm giá</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Blog" asp-action="Index"
+                       class="admin-link nav-link">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Blog</span>
+                    </a>
+                    <a asp-area="Admin" asp-controller="Users" asp-action="Index"
+                       class="admin-link nav-link">
+                        <i class="bi bi-people-fill"></i>
+                        <span>Người dùng</span>
+                    </a>
+                </div>
             </nav>
+            <div class="sidebar-footer border-top p-3">
+                <a asp-area="" asp-controller="Home" asp-action="Index"
+                   class="admin-link nav-link">
+                    <i class="bi bi-arrow-left-circle"></i>
+                    <span>Quay lại cửa hàng</span>
+                </a>
+            </div>
         </aside>
 
         <!-- Main -->
         <div class="admin-main flex-grow-1">
-            <header class="admin-header border-bottom bg-white d-flex align-items-center justify-content-between px-3">
-                <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-sm btn-outline-secondary d-lg-none" id="btnToggleSidebar"><i class="bi bi-list"></i></button>
-                    <div class="fs-5 fw-semibold">@ViewData["Title"]</div>
-                </div>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="text-muted small"><i class="bi bi-person-circle me-1"></i>@User.Identity?.Name</span>
-                    <form method="post" asp-area="Identity" asp-page="/Account/Logout" class="m-0">
-                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-box-arrow-right me-1"></i>Logout</button>
-                    </form>
+            <header class="admin-header border-bottom bg-white">
+                <div class="d-flex align-items-center justify-content-between px-3 flex-nowrap gap-3">
+                    <div class="d-flex align-items-center gap-3 flex-nowrap">
+                        <div class="admin-page-title">
+                            <small class="text-muted text-uppercase">Trung tâm điều khiển</small>
+                            <div class="fs-5 fw-semibold m-0">@ViewData["Title"]</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-nowrap">
+                        <div class="admin-quick-actions d-none d-md-flex gap-2 flex-nowrap">
+                            <a asp-area="Admin" asp-controller="Books" asp-action="Create" class="btn btn-sm btn-primary-soft">
+                                <i class="bi bi-plus-circle me-1"></i>Thêm sách
+                            </a>
+                            <a asp-area="Admin" asp-controller="Orders" asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-lightning-charge me-1"></i>Đơn gần đây
+                            </a>
+                        </div>
+                        <span class="text-muted small d-flex align-items-center gap-1 flex-nowrap">
+                            <i class="bi bi-person-circle fs-5" style="color: #667eea;"></i>
+                            <span class="d-none d-sm-inline">@User.Identity?.Name</span>
+                        </span>
+                        <form method="post" asp-area="Identity" asp-page="/Account/Logout" class="m-0 flex-nowrap">
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-box-arrow-right me-1"></i><span class="d-none d-sm-inline">Logout</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </header>
 
-            <main class="admin-content container-fluid py-3 flex-grow-1">
+            <main class="admin-content container-fluid py-4 flex-grow-1">
                 @await Html.PartialAsync("~/Views/Shared/_Toast.cshtml")
                 @RenderBody()
             </main>
@@ -64,19 +133,63 @@
     </div>
 
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/page-animations.js" asp-append-version="true"></script>
     <script>
-        // Active link
-        (function(){
-          const path = location.pathname.toLowerCase();
-          document.querySelectorAll('.admin-link').forEach(a=>{
-            if (a.getAttribute('href') && path.startsWith(a.getAttribute('href').toLowerCase())) {
-              a.classList.add('active');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Đánh dấu active link
+            const path = location.pathname.toLowerCase();
+            document.querySelectorAll('.admin-link').forEach(a => {
+                const href = a.getAttribute('href');
+                if (href && path.startsWith(href.toLowerCase())) {
+                    a.classList.add('active');
+                }
+            });
+
+            // Xử lý toggle sidebar
+            const sidebarBtn = document.getElementById('btnToggleSidebar');
+            const sidebarToggleIcon = document.getElementById('sidebarToggleIcon');
+            const sidebar = document.querySelector('.admin-sidebar');
+            
+            if (sidebarBtn) {
+                sidebarBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Toggle class
+                    const isCollapsed = document.body.classList.toggle('sidebar-collapsed');
+                    
+                    // Force reflow để đảm bảo CSS được áp dụng
+                    if (sidebar) {
+                        sidebar.offsetHeight; // Force reflow
+                    }
+                    
+                    // Debug
+                    console.log('Sidebar toggled:', isCollapsed ? 'collapsed' : 'expanded');
+                    console.log('Body classes:', document.body.className);
+                    console.log('Sidebar width:', sidebar ? window.getComputedStyle(sidebar).width : 'N/A');
+                    
+                    // Lưu trạng thái vào localStorage
+                    localStorage.setItem('sidebarCollapsed', isCollapsed);
+                });
+                
+                // Đảm bảo button có thể click
+                sidebarBtn.style.pointerEvents = 'auto';
+                sidebarBtn.style.cursor = 'pointer';
+            } else {
+                console.error('Sidebar toggle button not found!');
             }
-          });
-          // Toggle sidebar (mobile)
-          const btn = document.getElementById('btnToggleSidebar');
-          if (btn) btn.addEventListener('click', () => document.body.classList.toggle('sidebar-open'));
-        })();
+            
+            // Khôi phục trạng thái sidebar từ localStorage
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                document.body.classList.add('sidebar-collapsed');
+                // Force reflow sau khi restore
+                if (sidebar) {
+                    setTimeout(() => {
+                        sidebar.offsetHeight; // Force reflow
+                    }, 100);
+                }
+            }
+        });
     </script>
     @RenderSection("Scripts", required: false)
 </body>

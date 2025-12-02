@@ -68,6 +68,9 @@ else
                         <table class="table align-middle">
                             <thead class="table-light">
                                 <tr>
+                                    <th style="width:50px">
+                                        <input type="checkbox" id="selectAll" class="form-check-input" checked>
+                                    </th>
                                     <th style="width:72px"></th>
                                     <th>Sách</th>
                                     <th class="text-end">Đơn giá</th>
@@ -80,7 +83,10 @@ else
                                 @foreach (var it in Model.Items)
                                 {
                                     var sub = it.UnitPrice * it.Quantity;
-                                    <tr>
+                                    <tr data-book-id="@it.BookId" data-unit-price="@it.UnitPrice" data-quantity="@it.Quantity">
+                                        <td>
+                                            <input type="checkbox" class="form-check-input item-checkbox" name="selectedItems" value="@it.BookId" checked>
+                                        </td>
                                         <td>
                                             <img src="@(it.CoverUrl ?? "/images/no-cover.png")" class="rounded" style="width:56px;height:74px;object-fit:cover" />
                                         </td>
@@ -90,26 +96,31 @@ else
                                         <td class="text-end">@it.UnitPrice.ToString("N0") ₫</td>
                                         <td>
                                             <div class="d-flex justify-content-center align-items-center gap-1">
-                                                <form asp-action="Update" method="post" class="d-inline">
+                                                <form asp-action="Update" method="post" class="d-inline quantity-form" data-book-id="@it.BookId">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="bookId" value="@it.BookId" />
-                                                    <input type="hidden" name="qty" value="@(Math.Max(it.Quantity - 1, 1))" />
-                                                    <button class="btn btn-sm btn-outline-secondary" title="Giảm">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary quantity-decrease" title="Giảm">
                                                         <i class="bi bi-dash"></i>
                                                     </button>
                                                 </form>
-                                                <div class="px-2" style="min-width:2ch;text-align:center">@it.Quantity</div>
-                                                <form asp-action="Update" method="post" class="d-inline">
+                                                <input type="number" 
+                                                       name="qty" 
+                                                       value="@it.Quantity" 
+                                                       min="1" 
+                                                       class="form-control form-control-sm text-center quantity-input" 
+                                                       style="width: 60px; padding: 0.25rem;"
+                                                       data-book-id="@it.BookId"
+                                                       data-original-value="@it.Quantity" />
+                                                <form asp-action="Update" method="post" class="d-inline quantity-form" data-book-id="@it.BookId">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="bookId" value="@it.BookId" />
-                                                    <input type="hidden" name="qty" value="@(it.Quantity + 1)" />
-                                                    <button class="btn btn-sm btn-outline-secondary" title="Tăng">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary quantity-increase" title="Tăng">
                                                         <i class="bi bi-plus"></i>
                                                     </button>
                                                 </form>
                                             </div>
                                         </td>
-                                        <td class="text-end fw-semibold">@sub.ToString("N0") ₫</td>
+                                        <td class="text-end fw-semibold item-subtotal">@sub.ToString("N0") ₫</td>
                                         <td class="text-end">
                                             <form asp-action="Remove" method="post" class="d-inline">
                                                 @Html.AntiForgeryToken()
@@ -142,41 +153,244 @@ else
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2">
                         <div class="text-muted">Tạm tính</div>
-                        <div>@subtotal.ToString("N0") ₫</div>
+                        <div id="cart-subtotal">@subtotal.ToString("N0") ₫</div>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <div class="text-muted">Phí vận chuyển</div>
                         <div>Miễn phí</div>
                     </div>
 
-                    @if (discountAmount > 0)
-                    {
+                    <div id="discount-section" style="display:none;">
                         <div class="d-flex justify-content-between mb-2 text-success">
-                            <div class="fw-semibold">@discountMessage</div>
-                            <div class="fw-semibold">- @discountAmount.ToString("N0") ₫</div>
+                            <div class="fw-semibold" id="discount-message"></div>
+                            <div class="fw-semibold" id="discount-amount"></div>
                         </div>
-                    }
+                    </div>
 
                     <hr />
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="fw-bold">Tổng</div>
-                        <div class="fs-5 fw-bold text-success">@finalTotal.ToString("N0") ₫</div>
+                        <div class="fs-5 fw-bold text-success" id="cart-total">@finalTotal.ToString("N0") ₫</div>
                     </div>
 
                     <div class="d-grid mt-4">
-                        <a asp-controller="Checkout" asp-action="Index" class="btn btn-success btn-lg">
-                            <i class="bi bi-bag-check me-2"></i> Thanh toán
-                        </a>
+                        <form id="checkout-form" asp-controller="Checkout" asp-action="Index" method="get">
+                            <button type="submit" class="btn btn-success btn-lg w-100" id="checkout-btn">
+                                <i class="bi bi-bag-check me-2"></i> Thanh toán
+                            </button>
+                        </form>
                     </div>
                     
-                    @if (discountAmount > 0)
-                    {
-                        <div class="alert alert-info mt-3 mb-0">
-                            <small><i class="bi bi-info-circle me-1"></i>Bạn đã tiết kiệm được <strong>@discountAmount.ToString("N0") ₫</strong>!</small>
-                        </div>
-                    }
+                    <div id="savings-alert" class="alert alert-info mt-3 mb-0" style="display:none;">
+                        <small><i class="bi bi-info-circle me-1"></i>Bạn đã tiết kiệm được <strong id="savings-amount"></strong>!</small>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAll = document.getElementById('selectAll');
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+            const checkoutForm = document.getElementById('checkout-form');
+            const checkoutBtn = document.getElementById('checkout-btn');
+
+            // Tính toán lại tổng tiền
+            function updateCartSummary() {
+                let subtotal = 0;
+                const selectedItems = [];
+
+                itemCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const row = checkbox.closest('tr');
+                        const bookId = row.dataset.bookId;
+                        const unitPrice = parseFloat(row.dataset.unitPrice);
+                        const quantity = parseInt(row.dataset.quantity);
+                        const itemSubtotal = unitPrice * quantity;
+                        subtotal += itemSubtotal;
+                        selectedItems.push(bookId);
+                    }
+                });
+
+                // Tính giảm giá
+                let discountAmount = 0;
+                let discountMessage = '';
+                
+                if (subtotal >= 5000000) {
+                    discountAmount = 500000;
+                    discountMessage = 'Giảm giá (Đơn hàng > 5Tr)';
+                } else if (subtotal >= 2000000) {
+                    discountAmount = 100000;
+                    discountMessage = 'Giảm giá (Đơn hàng > 2Tr)';
+                } else if (subtotal >= 1000000) {
+                    discountAmount = 70000;
+                    discountMessage = 'Giảm giá (Đơn hàng > 1Tr)';
+                } else if (subtotal >= 500000) {
+                    discountAmount = 50000;
+                    discountMessage = 'Giảm giá (Đơn hàng > 500k)';
+                } else if (subtotal >= 200000) {
+                    discountAmount = 10000;
+                    discountMessage = 'Giảm giá (Đơn hàng > 200k)';
+                }
+
+                const finalTotal = subtotal - discountAmount;
+
+                // Cập nhật UI
+                document.getElementById('cart-subtotal').textContent = subtotal.toLocaleString('vi-VN') + ' ₫';
+                
+                const discountSection = document.getElementById('discount-section');
+                if (discountAmount > 0) {
+                    discountSection.style.display = 'block';
+                    document.getElementById('discount-message').textContent = discountMessage;
+                    document.getElementById('discount-amount').textContent = '- ' + discountAmount.toLocaleString('vi-VN') + ' ₫';
+                    
+                    const savingsAlert = document.getElementById('savings-alert');
+                    savingsAlert.style.display = 'block';
+                    document.getElementById('savings-amount').textContent = discountAmount.toLocaleString('vi-VN') + ' ₫';
+                } else {
+                    discountSection.style.display = 'none';
+                    document.getElementById('savings-alert').style.display = 'none';
+                }
+
+                document.getElementById('cart-total').textContent = finalTotal.toLocaleString('vi-VN') + ' ₫';
+
+                // Cập nhật nút thanh toán
+                if (selectedItems.length === 0) {
+                    checkoutBtn.disabled = true;
+                    checkoutBtn.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>Vui lòng chọn sản phẩm';
+                } else {
+                    checkoutBtn.disabled = false;
+                    checkoutBtn.innerHTML = '<i class="bi bi-bag-check me-2"></i> Thanh toán (' + selectedItems.length + ')';
+                    
+                    // Xóa tất cả hidden inputs cũ
+                    checkoutForm.querySelectorAll('input[name="selectedBookIds"]').forEach(input => input.remove());
+                    
+                    // Thêm hidden inputs cho các item được chọn
+                    selectedItems.forEach(bookId => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'selectedBookIds';
+                        input.value = bookId;
+                        checkoutForm.appendChild(input);
+                    });
+                }
+
+                // Cập nhật checkbox "Chọn tất cả"
+                const allChecked = Array.from(itemCheckboxes).every(cb => cb.checked);
+                const someChecked = Array.from(itemCheckboxes).some(cb => cb.checked);
+                selectAll.checked = allChecked;
+                selectAll.indeterminate = someChecked && !allChecked;
+            }
+
+            // Xử lý checkbox "Chọn tất cả"
+            selectAll.addEventListener('change', function() {
+                itemCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAll.checked;
+                });
+                updateCartSummary();
+            });
+
+            // Xử lý checkbox từng item
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateCartSummary);
+            });
+
+            // Xử lý khi submit form - đảm bảo selectedBookIds được gửi
+            checkoutForm.addEventListener('submit', function(e) {
+                e.preventDefault(); // Ngăn submit mặc định
+                
+                const selectedItems = Array.from(itemCheckboxes)
+                    .filter(cb => cb.checked)
+                    .map(cb => cb.value);
+                
+                if (selectedItems.length === 0) {
+                    alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
+                    return false;
+                }
+                
+                // Xây dựng URL với query string
+                const baseUrl = checkoutForm.getAttribute('action') || '/Checkout';
+                const queryParams = selectedItems.map(id => `selectedBookIds=${id}`).join('&');
+                const url = baseUrl + (queryParams ? '?' + queryParams : '');
+                
+                // Chuyển hướng đến URL với selectedBookIds
+                window.location.href = url;
+            });
+
+            // Khởi tạo
+            updateCartSummary();
+
+            // Xử lý nhập số lượng trực tiếp
+            document.querySelectorAll('.quantity-input').forEach(input => {
+                let timeout;
+                
+                input.addEventListener('change', function() {
+                    const bookId = this.dataset.bookId;
+                    let qty = parseInt(this.value) || 1;
+                    
+                    // Đảm bảo số lượng >= 1
+                    if (qty < 1) {
+                        qty = 1;
+                        this.value = 1;
+                    }
+                    
+                    // Submit form để cập nhật
+                    const form = document.querySelector(`.quantity-form[data-book-id="${bookId}"]`);
+                    if (form) {
+                        const hiddenQty = form.querySelector('input[name="qty"]');
+                        if (!hiddenQty) {
+                            const qtyInput = document.createElement('input');
+                            qtyInput.type = 'hidden';
+                            qtyInput.name = 'qty';
+                            qtyInput.value = qty;
+                            form.appendChild(qtyInput);
+                        } else {
+                            hiddenQty.value = qty;
+                        }
+                        form.submit();
+                    }
+                });
+
+                // Xử lý khi người dùng nhấn Enter
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.target.blur(); // Trigger change event
+                    }
+                });
+            });
+
+            // Xử lý nút tăng
+            document.querySelectorAll('.quantity-increase').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const form = this.closest('.quantity-form');
+                    const bookId = form.dataset.bookId;
+                    const input = document.querySelector(`.quantity-input[data-book-id="${bookId}"]`);
+                    if (input) {
+                        let currentQty = parseInt(input.value) || 1;
+                        input.value = currentQty + 1;
+                        input.dispatchEvent(new Event('change'));
+                    }
+                });
+            });
+
+            // Xử lý nút giảm
+            document.querySelectorAll('.quantity-decrease').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const form = this.closest('.quantity-form');
+                    const bookId = form.dataset.bookId;
+                    const input = document.querySelector(`.quantity-input[data-book-id="${bookId}"]`);
+                    if (input) {
+                        let currentQty = parseInt(input.value) || 1;
+                        if (currentQty > 1) {
+                            input.value = currentQty - 1;
+                            input.dispatchEvent(new Event('change'));
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 }

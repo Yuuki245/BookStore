@@ -1,4 +1,5 @@
 ﻿using BookStore.Data;
+using BookStore.Helpers;
 using BookStore.Models; // 🟢 THÊM USING NÀY
 using BookStore.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -29,21 +30,50 @@ public class HomeController : Controller
 
         var bestsellers = await _db.Books
             .AsNoTracking()
+            .Include(b => b.FlashSale)
             .Where(b => topSellingBookIds.Contains(b.Id))
             .ToListAsync();
 
         var orderedBestsellers = topSellingBookIds
-            .Select(id => bestsellers.First(b => b.Id == id))
-            .ToList();
+            .Select(id => bestsellers.FirstOrDefault(b => b.Id == id))
+            .Where(b => b != null)
+            .ToList()!;
+
+        // Lấy Flash Sale đang active
+        var now = TimeHelper.GetVietnamTime(); // Dùng VN time (GMT+7)
+        var allFlashSales = await _db.FlashSales
+            .AsNoTracking()
+            .Include(f => f.Books)
+                .ThenInclude(b => b.Category)
+            .Where(f => f.IsActive)
+            .ToListAsync();
+        
+        // Filter bằng VN time
+        var activeFlashSale = allFlashSales
+            .Where(f =>
+            {
+                var startTime = TimeHelper.ToVietnamTime(f.StartTime);
+                var endTime = TimeHelper.ToVietnamTime(f.EndTime);
+                return now >= startTime && now <= endTime;
+            })
+            .OrderByDescending(f => f.CreatedAt)
+            .FirstOrDefault();
+
+        var flashSaleBooks = activeFlashSale?.Books?.Take(12).ToList() ?? new List<Book>();
 
         var vm = new HomeVM
         {
             Bestsellers = orderedBestsellers,
-            NewReleases = await _db.Books.AsNoTracking().OrderByDescending(b => b.Id).Take(12).ToListAsync(),
+            NewReleases = await _db.Books.AsNoTracking()
+                .Include(b => b.FlashSale)
+                .OrderByDescending(b => b.Id).Take(12).ToListAsync(),
             DailySales = await _db.Books.AsNoTracking()
+                .Include(b => b.FlashSale)
                 .Where(b => b.OriginalPrice != null)
                 .OrderBy(b => b.Title)
-                .ToListAsync()
+                .ToListAsync(),
+            FlashSaleBooks = flashSaleBooks,
+            ActiveFlashSale = activeFlashSale
         };
         return View(vm);
     }

@@ -1,7 +1,9 @@
 ﻿using BookStore.Data;
 using BookStore.Services;
 using BookStore.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookStore.Controllers
 {
@@ -9,11 +11,13 @@ namespace BookStore.Controllers
     {
         private readonly ICartService _cart;
         private readonly ApplicationDbContext _db;
+        private readonly UserManager<IdentityUser> _userMgr;
 
-        public CartController(ICartService cart, ApplicationDbContext db)
+        public CartController(ICartService cart, ApplicationDbContext db, UserManager<IdentityUser> userMgr)
         {
             _cart = cart;
             _db = db;
+            _userMgr = userMgr;
         }
 
         // GET: /Cart
@@ -28,7 +32,23 @@ namespace BookStore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Add(int bookId, int qty = 1)
         {
-            var book = await _db.Books.FindAsync(bookId);
+            // Chặn admin không cho thêm vào giỏ hàng
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var user = await _userMgr.GetUserAsync(User);
+                if (user != null && await _userMgr.IsInRoleAsync(user, "Admin"))
+                {
+                    TempData["Error"] = "Tài khoản Admin không thể mua hàng.";
+                    var referer = Request.Headers["Referer"].ToString();
+                    if (!string.IsNullOrEmpty(referer))
+                        return Redirect(referer);
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            var book = await _db.Books
+                .Include(b => b.FlashSale)
+                .FirstOrDefaultAsync(b => b.Id == bookId);
             if (book == null)
                 return NotFound();
 
@@ -36,9 +56,9 @@ namespace BookStore.Controllers
             TempData["Success"] = "Đã thêm vào giỏ.";
 
             // 🔁 Quay lại trang trước nếu có (Home, Books, Details,...)
-            var referer = Request.Headers["Referer"].ToString();
-            if (!string.IsNullOrEmpty(referer))
-                return Redirect(referer);
+            var refererUrl = Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(refererUrl))
+                return Redirect(refererUrl);
 
             return RedirectToAction(nameof(Index));
         }

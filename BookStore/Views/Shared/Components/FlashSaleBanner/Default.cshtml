@@ -1,0 +1,111 @@
+@model BookStore.Models.FlashSale
+
+@if (Model != null)
+{
+    var timeRemaining = Model.TimeRemaining;
+    var discountPercent = Model.DiscountPercent;
+    var bookCount = Model.Books?.Count ?? 0;
+
+    <div class="flash-sale-banner card border-0 mb-4 fade-in" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white;">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="flash-sale-icon">
+                            <i class="bi bi-lightning-charge-fill" style="font-size: 2.5rem;"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold mb-1">@Model.Title</h3>
+                            @if (!string.IsNullOrEmpty(Model.Description))
+                            {
+                                <p class="mb-0 opacity-90">@Model.Description</p>
+                            }
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-4">
+                        <div>
+                            <div class="small opacity-75">Giảm giá</div>
+                            <div class="h4 fw-bold mb-0">@discountPercent%</div>
+                        </div>
+                        <div>
+                            <div class="small opacity-75">Số sách</div>
+                            <div class="h5 fw-bold mb-0">@bookCount sách</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <div class="mb-2">
+                        <div class="small opacity-75 mb-2">Còn lại</div>
+                        <div id="flash-sale-countdown-@Model.Id" class="countdown-display h4 fw-bold mb-3">
+                            <span class="countdown-days">00</span>:
+                            <span class="countdown-hours">00</span>:
+                            <span class="countdown-minutes">00</span>:
+                            <span class="countdown-seconds">00</span>
+                        </div>
+                    </div>
+                    <a asp-controller="FlashSale" asp-action="Index" class="btn btn-light btn-lg">
+                        <i class="bi bi-eye me-2"></i>Xem tất cả
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Dùng local time, không cần Z (UTC)
+            const endTime = new Date('@Model.EndTime.ToString("yyyy-MM-ddTHH:mm:ss")');
+            const countdownElement = document.getElementById('flash-sale-countdown-@Model.Id');
+            
+            if (!countdownElement) return;
+
+            function updateCountdown() {
+                const now = new Date();
+                const diff = endTime - now;
+
+                if (diff <= 0) {
+                    countdownElement.innerHTML = '<span class="text-warning">Đã kết thúc</span>';
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                countdownElement.querySelector('.countdown-days').textContent = String(days).padStart(2, '0');
+                countdownElement.querySelector('.countdown-hours').textContent = String(hours).padStart(2, '0');
+                countdownElement.querySelector('.countdown-minutes').textContent = String(minutes).padStart(2, '0');
+                countdownElement.querySelector('.countdown-seconds').textContent = String(seconds).padStart(2, '0');
+            }
+
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        })();
+    </script>
+
+    <style>
+        .flash-sale-banner {
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        }
+
+        .flash-sale-icon {
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        .countdown-display {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+    </style>
+}
+

@@ -29,8 +29,10 @@ public class SessionCartService : ICartService
     {
         var items = await GetItemsAsync();
         var it = items.FirstOrDefault(i => i.BookId == book.Id);
+        // Sử dụng giá sau flash sale nếu có
+        var unitPrice = book.IsOnFlashSale ? book.FinalPrice : book.Price;
         if (it is null)
-            items.Add(new CartItem { BookId = book.Id, Title = book.Title, UnitPrice = book.Price, Quantity = qty, CoverUrl = book.CoverUrl });
+            items.Add(new CartItem { BookId = book.Id, Title = book.Title, UnitPrice = unitPrice, Quantity = qty, CoverUrl = book.CoverUrl });
         else
             it.Quantity += qty;
         Save(items);

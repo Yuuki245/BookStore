@@ -1,0 +1,181 @@
+@model int
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link position-relative" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-bell fs-5"></i>
+            @if (Model > 0)
+            {
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                    @(Model > 99 ? "99+" : Model.ToString())
+                </span>
+            }
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notificationDropdown" style="min-width: 320px; max-height: 400px; overflow-y: auto;">
+            <li>
+                <a class="dropdown-item text-center fw-semibold" asp-controller="Notifications" asp-action="Index">
+                    <i class="bi bi-list-ul me-1"></i>Xem tất cả thông báo
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <h6 class="dropdown-header d-flex justify-content-between align-items-center">
+                    <span>Thông báo</span>
+                    @if (Model > 0)
+                    {
+                        <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" id="markAllReadBtn">
+                            Đánh dấu tất cả đã đọc
+                        </button>
+                    }
+                </h6>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <div id="notificationList" class="px-2 py-2">
+                    <div class="text-center text-muted py-3">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </li>
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const notificationList = document.getElementById('notificationList');
+        const markAllReadBtn = document.getElementById('markAllReadBtn');
+
+        // Function để render notifications
+        function renderNotifications(notifications) {
+            if (notifications.length > 0) {
+                let html = '';
+                notifications.forEach(function(notif) {
+                    const typeClass = notif.type === 'Success' ? 'text-success' : 
+                                   notif.type === 'Warning' ? 'text-warning' : 
+                                   notif.type === 'Danger' ? 'text-danger' : 'text-info';
+                    const icon = notif.type === 'Success' ? 'check-circle' : 
+                               notif.type === 'Warning' ? 'exclamation-triangle' : 
+                               notif.type === 'Danger' ? 'x-circle' : 'info-circle';
+                    const readClass = notif.isRead ? '' : 'fw-semibold';
+                    const bgClass = notif.isRead ? '' : 'bg-light';
+                    
+                    html += `
+                        <div class="notification-item ${bgClass} p-2 mb-2 rounded ${notif.isRead ? '' : 'border-start border-3 border-primary'}" 
+                             data-notification-id="${notif.id}" 
+                             ${notif.linkUrl ? `onclick="window.location.href='${notif.linkUrl}'" style="cursor: pointer;"` : ''}>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="${typeClass} ${readClass} small">
+                                        <i class="bi bi-${icon} me-1"></i>${notif.title}
+                                    </div>
+                                    <div class="text-muted small mt-1">${notif.message}</div>
+                                    <div class="text-muted" style="font-size: 0.7rem;">${new Date(notif.createdAt).toLocaleString('vi-VN')}</div>
+                                </div>
+                                ${!notif.isRead ? '<button type="button" class="btn-close btn-close-sm ms-2 mark-read-btn" aria-label="Đánh dấu đã đọc"></button>' : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                notificationList.innerHTML = html;
+
+                // Xử lý đánh dấu đã đọc
+                document.querySelectorAll('.mark-read-btn').forEach(btn => {
+                    btn.addEventListener('click', async function(e) {
+                        e.stopPropagation();
+                        const notificationItem = this.closest('.notification-item');
+                        const notificationId = notificationItem.dataset.notificationId;
+                        
+                        try {
+                            const formData = new FormData();
+                            formData.append('id', notificationId);
+                            
+                            const response = await fetch('@Url.Action("MarkAsRead", "Notifications")', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (response.ok) {
+                                // Reload notifications sau khi đánh dấu đã đọc
+                                await loadNotifications();
+                            }
+                        } catch (error) {
+                            console.error('Error marking notification as read:', error);
+                        }
+                    });
+                });
+            } else {
+                notificationList.innerHTML = '<div class="text-center text-muted py-3">Không có thông báo nào</div>';
+            }
+        }
+
+        // Function để load notifications
+        async function loadNotifications() {
+            try {
+                const response = await fetch('@Url.Action("GetNotifications", "Notifications")');
+                const data = await response.json();
+                
+                if (data.success) {
+                    renderNotifications(data.notifications || []);
+                    
+                    // Cập nhật badge
+                    const badge = notificationDropdown.querySelector('.badge');
+                    const unreadCount = (data.notifications || []).filter(n => !n.isRead).length;
+                    if (unreadCount <= 0) {
+                        if (badge) badge.remove();
+                    } else {
+                        if (!badge) {
+                            const span = document.createElement('span');
+                            span.className = 'position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger';
+                            span.style.fontSize = '0.65rem';
+                            notificationDropdown.appendChild(span);
+                        }
+                        const badgeEl = notificationDropdown.querySelector('.badge');
+                        if (badgeEl) {
+                            badgeEl.textContent = unreadCount > 99 ? '99+' : unreadCount.toString();
+                        }
+                    }
+                } else {
+                    notificationList.innerHTML = '<div class="text-center text-muted py-3">Không có thông báo nào</div>';
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+                notificationList.innerHTML = '<div class="text-center text-danger py-3">Có lỗi xảy ra khi tải thông báo</div>';
+            }
+        }
+
+        if (notificationDropdown) {
+            notificationDropdown.addEventListener('shown.bs.dropdown', async function() {
+                // Load notifications khi dropdown mở
+                await loadNotifications();
+            });
+        }
+
+        // Đánh dấu tất cả đã đọc
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                try {
+                    const response = await fetch('@Url.Action("MarkAllAsRead", "Notifications")', {
+                        method: 'POST',
+                        headers: {
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        // Reload notifications
+                        await loadNotifications();
+                    }
+                } catch (error) {
+                    console.error('Error marking all as read:', error);
+                }
+            });
+        }
+    });
+</script>
+

@@ -1,0 +1,137 @@
+@model IEnumerable<BookStore.Models.Coupon>
+@{
+    ViewData["Title"] = "Quản lý Mã giảm giá";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h2 class="mb-1">Quản lý Mã giảm giá</h2>
+        <p class="text-muted mb-0 small">@Model.Count() mã giảm giá</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Tạo mã giảm giá
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card text-center py-5">
+        <div class="card-body">
+            <i class="bi bi-ticket-perforated text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3 mb-2">Chưa có mã giảm giá nào</h5>
+            <p class="text-muted mb-4">Tạo mã giảm giá đầu tiên để khuyến khích khách hàng!</p>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Tạo mã giảm giá
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-modern align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Mã</th>
+                        <th>Loại giảm giá</th>
+                        <th>Giá trị</th>
+                        <th>Đơn tối thiểu</th>
+                        <th>Đã dùng</th>
+                        <th>Thời gian</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var coupon in Model)
+                    {
+                        var now = DateTime.Now;
+                        var isValid = coupon.IsValid;
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@coupon.Code</div>
+                                @if (!string.IsNullOrEmpty(coupon.Description))
+                                {
+                                    <div class="text-muted small">@coupon.Description</div>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-info">@(coupon.DiscountType == "Percentage" ? "Phần trăm" : "Số tiền")</span>
+                            </td>
+                            <td>
+                                @if (coupon.DiscountType == "Percentage")
+                                {
+                                    <span>@coupon.DiscountValue%</span>
+                                    @if (coupon.MaxDiscount.HasValue)
+                                    {
+                                        <div class="text-muted small">Tối đa: @coupon.MaxDiscount.Value.ToString("N0") ₫</div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span>@coupon.DiscountValue.ToString("N0") ₫</span>
+                                }
+                            </td>
+                            <td>
+                                @if (coupon.MinOrderAmount.HasValue)
+                                {
+                                    <span>@coupon.MinOrderAmount.Value.ToString("N0") ₫</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Không</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">@coupon.UsedCount</span>
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div><strong>Bắt đầu:</strong> @coupon.StartDate.ToString("dd/MM/yyyy")</div>
+                                    <div><strong>Kết thúc:</strong> @coupon.EndDate.ToString("dd/MM/yyyy")</div>
+                                </div>
+                            </td>
+                            <td>
+                                @if (isValid && coupon.IsActive)
+                                {
+                                    <span class="badge bg-success">Hoạt động</span>
+                                }
+                                else if (!coupon.IsActive)
+                                {
+                                    <span class="badge bg-danger">Đã tắt</span>
+                                }
+                                else if (now < coupon.StartDate)
+                                {
+                                    <span class="badge bg-warning">Sắp diễn ra</span>
+                                }
+                                else if (now > coupon.EndDate)
+                                {
+                                    <span class="badge bg-secondary">Đã hết hạn</span>
+                                }
+                                else if (coupon.UsageLimit.HasValue && coupon.UsedCount >= coupon.UsageLimit)
+                                {
+                                    <span class="badge bg-secondary">Đã hết lượt</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a asp-action="Edit" asp-route-id="@coupon.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil me-1"></i>Sửa
+                                    </a>
+                                    <form asp-action="Delete" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa mã giảm giá này?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash me-1"></i>Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+

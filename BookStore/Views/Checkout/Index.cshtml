@@ -58,13 +58,26 @@
             <div class="card-body p-4">
                 <form method="post" id="checkoutForm">
                     @Html.AntiForgeryToken()
-                    @Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
+                    @* Thêm hidden inputs cho selectedBookIds *@
+                    @foreach (var item in Model.Items)
+                    {
+                        <input type="hidden" name="selectedBookIds" value="@item.BookId" />
+                    }
+                    @* Hidden input cho CouponCode - phải nằm trong form để được gửi đi *@
+                    <input type="hidden" asp-for="CouponCode" id="couponCodeHidden" />
+                    @* Hidden input cho PaymentMethod *@
+                    <input type="hidden" asp-for="PaymentMethod" id="paymentMethodHidden" value="COD" />
+                    @if (ViewData.ModelState.Any(x => x.Value?.Errors?.Count > 0))
+                    {
+                        @Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
+                    }
 
                     <div class="mb-4">
                         <label asp-for="ShippingAddress" class="form-label fw-semibold">
                             <i class="bi bi-house-door me-1"></i>Địa chỉ giao hàng
                         </label>
                         <input asp-for="ShippingAddress" 
+                               id="shippingAddressInput"
                                class="form-control form-control-lg" 
                                placeholder="Nhập địa chỉ đầy đủ của bạn" />
                         <span asp-validation-for="ShippingAddress" class="text-danger small"></span>
@@ -78,6 +91,7 @@
                             <i class="bi bi-telephone me-1"></i>Số điện thoại
                         </label>
                         <input asp-for="PhoneNumber" 
+                               id="phoneNumberInput"
                                class="form-control form-control-lg" 
                                placeholder="0123456789" 
                                type="tel" />
@@ -98,7 +112,8 @@
                 </h5>
             </div>
             <div class="card-body p-4">
-                <div class="payment-method-card active">
+                <!-- COD Payment Method -->
+                <div class="payment-method-card active" data-payment="COD" onclick="selectPaymentMethod('COD')" style="cursor: pointer;">
                     <div class="d-flex align-items-center">
                         <div class="payment-icon me-3">
                             <i class="bi bi-truck fs-1 text-primary"></i>
@@ -116,9 +131,28 @@
                     </div>
                 </div>
 
-                <div class="alert alert-info mt-3 mb-0">
+                <!-- QKT Payment Method -->
+                <div class="payment-method-card mt-3" data-payment="QKT" onclick="selectPaymentMethod('QKT')" style="cursor: pointer;">
+                    <div class="d-flex align-items-center">
+                        <div class="payment-icon me-3">
+                            <i class="bi bi-credit-card-2-front fs-1 text-primary"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 fw-bold">Thanh toán trực tuyến (QKT Payment)</h6>
+                            <p class="text-muted mb-0 small">
+                                <i class="bi bi-lock-fill me-1 text-success"></i>
+                                Thanh toán an toàn bằng thẻ tín dụng/ghi nợ qua cổng QKT Payment. Bảo mật và nhanh chóng.
+                            </p>
+                        </div>
+                        <div class="payment-check">
+                            <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0" id="paymentInfoAlert">
                     <i class="bi bi-info-circle me-2"></i>
-                    <strong>Lưu ý:</strong> Bạn sẽ thanh toán cho nhân viên giao hàng khi nhận được sản phẩm.
+                    <strong>Lưu ý:</strong> <span id="paymentInfoText">Bạn sẽ thanh toán cho nhân viên giao hàng khi nhận được sản phẩm.</span>
                 </div>
             </div>
         </div>
@@ -176,9 +210,24 @@
                             </span>
                         </div>
 
+                        <!-- Mã giảm giá -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-ticket-perforated me-1"></i>Mã giảm giá
+                            </label>
+                            <div class="input-group">
+                                <input type="text" id="couponCode" class="form-control" placeholder="Nhập mã giảm giá" style="text-transform: uppercase;" />
+                                <button type="button" id="applyCouponBtn" class="btn btn-outline-primary">
+                                    <i class="bi bi-check-circle me-1"></i>Áp dụng
+                                </button>
+                            </div>
+                            <div id="couponMessage" class="mt-2" style="min-height: 24px;"></div>
+                            @* CouponCode đã được di chuyển vào trong form checkoutForm *@
+                        </div>
+
                         @if (discountAmount > 0)
                         {
-                            <div class="d-flex justify-content-between mb-2 text-success">
+                            <div class="d-flex justify-content-between mb-2 text-success" id="autoDiscountRow">
                                 <span class="fw-semibold">
                                     <i class="bi bi-gift me-1"></i>@discountMessage
                                 </span>
@@ -186,22 +235,26 @@
                             </div>
                         }
 
+                        <div id="couponDiscountRow" class="d-flex justify-content-between mb-2 text-success" style="display: none;">
+                            <span class="fw-semibold">
+                                <i class="bi bi-ticket-perforated me-1"></i>Giảm giá từ mã
+                            </span>
+                            <span class="fw-bold" id="couponDiscountAmount">- 0 ₫</span>
+                        </div>
+
                         <hr class="my-3" />
 
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <span class="fw-bold fs-5">Tổng cộng</span>
-                            <span class="fw-bold fs-4 text-success">@finalTotal.ToString("N0") ₫</span>
+                            <span class="fw-bold fs-4 text-success" id="finalTotal">@finalTotal.ToString("N0") ₫</span>
                         </div>
 
-                        @if (discountAmount > 0)
-                        {
-                            <div class="alert alert-success mb-0">
-                                <small>
-                                    <i class="bi bi-gift-fill me-1"></i>
-                                    Bạn đã tiết kiệm được <strong>@discountAmount.ToString("N0") ₫</strong>!
-                                </small>
-                            </div>
-                        }
+                        <div id="savingsAlert" class="alert alert-success mb-0" style="display: none;">
+                            <small>
+                                <i class="bi bi-gift-fill me-1"></i>
+                                Bạn đã tiết kiệm được <strong id="totalSavings">0</strong> ₫!
+                            </small>
+                        </div>
                     </div>
 
                     <!-- Nút đặt hàng -->
@@ -274,21 +327,269 @@
     .breadcrumb-item.active {
         color: var(--muted);
     }
+
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Form validation feedback
-        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
-            const address = document.querySelector('[name="ShippingAddress"]').value.trim();
-            const phone = document.querySelector('[name="PhoneNumber"]').value.trim();
-            
-            if (!address || !phone) {
-                e.preventDefault();
-                alert('Vui lòng điền đầy đủ thông tin giao hàng!');
-                return false;
+        // Đảm bảo DOM đã load xong
+        document.addEventListener('DOMContentLoaded', function() {
+            // Xử lý chọn phương thức thanh toán
+            function selectPaymentMethod(method) {
+                const paymentMethodHidden = document.getElementById('paymentMethodHidden');
+                const paymentCards = document.querySelectorAll('.payment-method-card');
+                const paymentInfoText = document.getElementById('paymentInfoText');
+                
+                if (paymentMethodHidden) {
+                    paymentMethodHidden.value = method;
+                }
+                
+                // Cập nhật UI
+                paymentCards.forEach(card => {
+                    if (card.dataset.payment === method) {
+                        card.classList.add('active');
+                    } else {
+                        card.classList.remove('active');
+                    }
+                });
+                
+                // Cập nhật thông báo
+                if (paymentInfoText) {
+                    if (method === 'COD') {
+                        paymentInfoText.textContent = 'Bạn sẽ thanh toán cho nhân viên giao hàng khi nhận được sản phẩm.';
+                    } else if (method === 'QKT') {
+                        paymentInfoText.textContent = 'Bạn sẽ được chuyển đến cổng thanh toán QKT Payment để hoàn tất thanh toán.';
+                    }
+                }
             }
-        });
+            
+            // Expose function globally
+            window.selectPaymentMethod = selectPaymentMethod;
+            
+            // Xử lý mã giảm giá
+            const couponCodeInput = document.getElementById('couponCode');
+            const applyCouponBtn = document.getElementById('applyCouponBtn');
+            const couponMessage = document.getElementById('couponMessage');
+            const couponCodeHidden = document.getElementById('couponCodeHidden');
+            const couponDiscountRow = document.getElementById('couponDiscountRow');
+            const couponDiscountAmount = document.getElementById('couponDiscountAmount');
+            const autoDiscountRow = document.getElementById('autoDiscountRow');
+            const finalTotal = document.getElementById('finalTotal');
+            const savingsAlert = document.getElementById('savingsAlert');
+            const totalSavings = document.getElementById('totalSavings');
+
+            let currentSubtotal = parseFloat('@subtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)');
+            let currentAutoDiscount = parseFloat('@discountAmount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)');
+            let currentCouponDiscount = 0;
+
+            function updateTotal() {
+                if (!finalTotal) return;
+                const total = currentSubtotal - currentAutoDiscount - currentCouponDiscount;
+                finalTotal.textContent = total.toLocaleString('vi-VN') + ' ₫';
+                
+                const totalSavingsValue = currentAutoDiscount + currentCouponDiscount;
+                if (savingsAlert && totalSavings) {
+                    if (totalSavingsValue > 0) {
+                        totalSavings.textContent = totalSavingsValue.toLocaleString('vi-VN');
+                        savingsAlert.style.display = 'block';
+                    } else {
+                        savingsAlert.style.display = 'none';
+                    }
+                }
+            }
+
+            function showCouponMessage(message, type) {
+                if (!couponMessage) {
+                    console.error('couponMessage element not found');
+                    return;
+                }
+                
+                const typeClass = type === 'success' ? 'text-success' : 
+                                 type === 'error' ? 'text-danger' : 
+                                 type === 'warning' ? 'text-warning' : 'text-info';
+                const icon = type === 'success' ? 'bi-check-circle' : 
+                            type === 'error' ? 'bi-x-circle' : 
+                            type === 'warning' ? 'bi-exclamation-triangle' : 'bi-info-circle';
+                
+                couponMessage.innerHTML = `<div class="${typeClass} small fw-semibold animate-fade-in"><i class="bi ${icon} me-1"></i>${message}</div>`;
+                couponMessage.style.display = 'block';
+                
+                // Scroll to message nếu cần
+                couponMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            // Debug: Kiểm tra elements
+            console.log('Coupon elements:', {
+                applyCouponBtn: !!applyCouponBtn,
+                couponCodeInput: !!couponCodeInput,
+                couponMessage: !!couponMessage
+            });
+
+            if (applyCouponBtn && couponCodeInput) {
+                applyCouponBtn.addEventListener('click', async function() {
+                    const code = couponCodeInput.value.trim().toUpperCase();
+                if (!code) {
+                    showCouponMessage('Vui lòng nhập mã giảm giá.', 'error');
+                    couponCodeInput.focus();
+                    return;
+                }
+
+                // Disable button và hiển thị loading
+                applyCouponBtn.disabled = true;
+                const originalBtnText = applyCouponBtn.innerHTML;
+                applyCouponBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang kiểm tra...';
+                applyCouponBtn.classList.add('opacity-75');
+                
+                // Xóa thông báo cũ
+                if (couponMessage) {
+                    couponMessage.innerHTML = '';
+                }
+
+                try {
+                    // Tạo AbortController để có thể timeout
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 giây timeout
+
+                    const validateUrl = '@Url.Action("ValidateCoupon", "Checkout")';
+                    console.log('Validating coupon at URL:', validateUrl, 'with code:', code, 'subtotal:', currentSubtotal);
+
+                    // Sử dụng URLSearchParams để gửi dữ liệu dạng form-urlencoded (tương thích với model binding)
+                    const params = new URLSearchParams();
+                    params.append('couponCode', code);
+                    params.append('subtotal', currentSubtotal.toString());
+
+                    const response = await fetch(validateUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: params.toString(),
+                        signal: controller.signal
+                    });
+
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('HTTP error response:', response.status, errorText);
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    // Kiểm tra content type trước khi parse JSON
+                    const contentType = response.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        const text = await response.text();
+                        console.error('Unexpected response type:', contentType, text);
+                        throw new Error('Server returned non-JSON response');
+                    }
+
+                    const data = await response.json();
+                    console.log('Coupon validation response:', data);
+
+                    if (data.success) {
+                        if (couponCodeHidden) {
+                            couponCodeHidden.value = code;
+                        }
+                        currentCouponDiscount = data.discount || 0;
+                        
+                        // Ẩn auto discount nếu coupon discount lớn hơn
+                        if (currentCouponDiscount > currentAutoDiscount) {
+                            if (autoDiscountRow) autoDiscountRow.style.display = 'none';
+                            currentAutoDiscount = 0;
+                        } else {
+                            if (autoDiscountRow) autoDiscountRow.style.display = 'flex';
+                            currentCouponDiscount = 0; // Không dùng coupon nếu auto discount tốt hơn
+                            if (couponCodeHidden) couponCodeHidden.value = '';
+                        }
+
+                        if (currentCouponDiscount > 0) {
+                            if (couponDiscountRow) couponDiscountRow.style.display = 'flex';
+                            if (couponDiscountAmount) couponDiscountAmount.textContent = '- ' + currentCouponDiscount.toLocaleString('vi-VN') + ' ₫';
+                            showCouponMessage(data.message || 'Áp dụng mã giảm giá thành công!', 'success');
+                        } else {
+                            if (couponDiscountRow) couponDiscountRow.style.display = 'none';
+                            showCouponMessage('Mã giảm giá đã được áp dụng, nhưng giảm giá tự động tốt hơn.', 'info');
+                        }
+
+                        updateTotal();
+                    } else {
+                        if (couponCodeHidden) {
+                            couponCodeHidden.value = '';
+                        }
+                        currentCouponDiscount = 0;
+                        if (couponDiscountRow) couponDiscountRow.style.display = 'none';
+                        if (autoDiscountRow) autoDiscountRow.style.display = 'flex';
+                        
+                        const messageType = data.message && data.message.includes('không tồn tại') ? 'error' : 'warning';
+                        showCouponMessage(data.message || 'Mã giảm giá không hợp lệ.', messageType);
+                        updateTotal();
+                    }
+                } catch (error) {
+                    console.error('Error validating coupon:', error);
+                    
+                    let errorMessage = 'Có lỗi xảy ra khi kiểm tra mã giảm giá.';
+                    if (error.name === 'AbortError') {
+                        errorMessage = 'Yêu cầu quá thời gian chờ. Vui lòng kiểm tra kết nối và thử lại.';
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    }
+                    
+                    showCouponMessage(errorMessage, 'error');
+                } finally {
+                    applyCouponBtn.disabled = false;
+                    applyCouponBtn.innerHTML = originalBtnText || '<i class="bi bi-check-circle me-1"></i>Áp dụng';
+                    applyCouponBtn.classList.remove('opacity-75');
+                }
+                });
+
+                // Cho phép nhấn Enter để áp dụng
+                couponCodeInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyCouponBtn.click();
+                    }
+                });
+            } else {
+                console.error('Coupon elements not found:', { applyCouponBtn, couponCodeInput });
+            }
+
+            // Form validation feedback
+            const checkoutForm = document.getElementById('checkoutForm');
+            const shippingAddressInput = document.getElementById('shippingAddressInput');
+            const phoneNumberInput = document.getElementById('phoneNumberInput');
+            
+            if (checkoutForm && shippingAddressInput && phoneNumberInput) {
+                checkoutForm.addEventListener('submit', function(e) {
+                    const address = shippingAddressInput.value.trim();
+                    const phone = phoneNumberInput.value.trim();
+                    
+                    if (!address || !phone) {
+                        e.preventDefault();
+                        alert('Vui lòng điền đầy đủ thông tin giao hàng!');
+                        return false;
+                    }
+                    
+                    // Đảm bảo coupon code được gửi đi nếu đã áp dụng
+                    if (couponCodeHidden && couponCodeHidden.value) {
+                        console.log('Coupon code sẽ được gửi:', couponCodeHidden.value);
+                    }
+                });
+            }
+        }); // End DOMContentLoaded
     </script>
 }

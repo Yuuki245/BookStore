@@ -1,0 +1,84 @@
+@{
+    int bookId = (int)ViewBag.BookId;
+    bool isInWishlist = (bool)ViewBag.IsInWishlist;
+    bool isAuthenticated = (bool)ViewBag.IsAuthenticated;
+}
+
+@if (isAuthenticated)
+{
+    <form asp-controller="Wishlist" asp-action="Toggle" method="post" class="wishlist-form d-inline" data-book-id="@bookId" onclick="event.stopPropagation();">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="bookId" value="@bookId" />
+        <button type="submit" class="btn btn-sm wishlist-btn rounded-circle @(isInWishlist ? "btn-danger" : "btn-outline-danger")" 
+                style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                title="@(isInWishlist ? "Xóa khỏi danh sách yêu thích" : "Thêm vào danh sách yêu thích")">
+            <i class="bi @(isInWishlist ? "bi-heart-fill" : "bi-heart")"></i>
+        </button>
+    </form>
+}
+else
+{
+    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-sm btn-outline-danger rounded-circle" 
+       style="width: 36px; height: 36px; padding: 0; display: flex; align-items: center; justify-content: center;"
+       title="Đăng nhập để thêm vào danh sách yêu thích"
+       onclick="event.stopPropagation();">
+        <i class="bi bi-heart"></i>
+    </a>
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Xử lý AJAX cho wishlist button
+        document.querySelectorAll('.wishlist-form').forEach(form => {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const form = this;
+                const button = form.querySelector('.wishlist-btn');
+                const icon = button.querySelector('i');
+                const bookId = form.dataset.bookId;
+                
+                try {
+                    const formData = new FormData(form);
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'RequestVerificationToken': form.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Cập nhật UI
+                        if (data.isInWishlist) {
+                            button.classList.remove('btn-outline-danger');
+                            button.classList.add('btn-danger');
+                            icon.classList.remove('bi-heart');
+                            icon.classList.add('bi-heart-fill');
+                            button.title = 'Xóa khỏi danh sách yêu thích';
+                        } else {
+                            button.classList.remove('btn-danger');
+                            button.classList.add('btn-outline-danger');
+                            icon.classList.remove('bi-heart-fill');
+                            icon.classList.add('bi-heart');
+                            button.title = 'Thêm vào danh sách yêu thích';
+                        }
+                        
+                        // Hiển thị thông báo
+                        if (window.showToast) {
+                            showToast(data.message, 'success');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    if (window.showToast) {
+                        showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+                    }
+                }
+            });
+        });
+    });
+</script>
+

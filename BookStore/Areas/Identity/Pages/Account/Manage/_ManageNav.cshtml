@@ -2,14 +2,69 @@
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }
-<ul class="nav nav-pills flex-column">
-    <li class="nav-item"><a class="nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">Hồ sơ</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">Email</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">Mật khẩu</a></li>
+<ul class="nav nav-pills flex-column gap-2">
+    <li class="nav-item">
+        <a class="nav-link manage-nav-link @ManageNavPages.IndexNavClass(ViewContext)" id="profile" asp-page="./Index">
+            <i class="bi bi-person me-2"></i>Hồ sơ
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link manage-nav-link @ManageNavPages.EmailNavClass(ViewContext)" id="email" asp-page="./Email">
+            <i class="bi bi-envelope me-2"></i>Email
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link manage-nav-link @ManageNavPages.ChangePasswordNavClass(ViewContext)" id="change-password" asp-page="./ChangePassword">
+            <i class="bi bi-key me-2"></i>Mật khẩu
+        </a>
+    </li>
     @if (hasExternalLogins)
     {
-        <li id="external-logins" class="nav-item"><a id="external-login" class="nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">Liên kết ngoài</a></li>
+        <li id="external-logins" class="nav-item">
+            <a id="external-login" class="nav-link manage-nav-link @ManageNavPages.ExternalLoginsNavClass(ViewContext)" asp-page="./ExternalLogins">
+                <i class="bi bi-link-45deg me-2"></i>Liên kết ngoài
+            </a>
+        </li>
     }
-    <li class="nav-item"><a class="nav-link @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">Xác thực 2 yếu tố</a></li>
-    <li class="nav-item"><a class="nav-link @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">Dữ liệu cá nhân</a></li>
+    <li class="nav-item">
+        <a class="nav-link manage-nav-link @ManageNavPages.TwoFactorAuthenticationNavClass(ViewContext)" id="two-factor" asp-page="./TwoFactorAuthentication">
+            <i class="bi bi-shield-check me-2"></i>Xác thực 2 yếu tố
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link manage-nav-link @ManageNavPages.PersonalDataNavClass(ViewContext)" id="personal-data" asp-page="./PersonalData">
+            <i class="bi bi-database me-2"></i>Dữ liệu cá nhân
+        </a>
+    </li>
 </ul>
+
+<style>
+    .manage-nav-link {
+        border-radius: var(--radius-sm);
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        transition: all var(--transition-fast);
+        color: var(--text);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+    }
+
+    .manage-nav-link:hover {
+        background-color: var(--bg-secondary);
+        color: var(--brand);
+        transform: translateX(4px);
+    }
+
+    .manage-nav-link.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 600;
+    }
+
+    .manage-nav-link.active:hover {
+        background: linear-gradient(135deg, #5568d3 0%, #653a8f 100%);
+        color: white;
+        transform: translateX(4px);
+    }
+</style>

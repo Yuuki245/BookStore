@@ -20,7 +20,7 @@
         <div class="mx-lg-auto my-2 my-lg-0 search-lg">
             <form asp-controller="Books" asp-action="Index" method="get" class="search-wrap" asp-area="">
                 <i class="bi bi-search"></i>
-                <input class="form-control search-input" name="search" placeholder="Search titles, authors, sellers, or series" value="@(Context.Request.Query["search"])" />
+                <input class="form-control search-input" name="search" placeholder="    Search titles, authors, sellers, or series" value="@(Context.Request.Query["search"])" />
             </form>
         </div>
 
@@ -40,12 +40,23 @@
                 }
                 else
                 {
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Wishlist" asp-action="Index" asp-area="" title="Danh sách yêu thích">
+                            <i class="bi bi-heart"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        @await Component.InvokeAsync("NotificationBell")
+                    </li>
                     <li class="nav-item"><a class="nav-link" asp-controller="Orders" asp-action="Index" asp-area=""><i class="bi bi-bag"></i></a></li>
                 }
             }
-            <li class="nav-item">
-                @await Component.InvokeAsync("CartWidget")
-            </li>
+            @if (!SignInManager.IsSignedIn(User) || !User.IsInRole("Admin"))
+            {
+                <li class="nav-item">
+                    @await Component.InvokeAsync("CartWidget")
+                </li>
+            }
             <li class="nav-item"><partial name="_LoginPartial" /></li>
         </ul>
     </div>

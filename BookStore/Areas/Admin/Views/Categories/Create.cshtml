@@ -16,8 +16,12 @@
         <input asp-for="Description" class="form-control" />
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
-    <button class="btn btn-primary">Save</button>
-    <a asp-action="Index" class="btn btn-outline-secondary ms-2">Back</a>
+    <button class="btn btn-primary">
+        <i class="bi bi-check-circle me-1"></i>Lưu
+    </button>
+    <a asp-action="Index" class="btn btn-outline-secondary ms-2">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
 </form>
 @section Scripts {
 <partial name="_ValidationScriptsPartial" />

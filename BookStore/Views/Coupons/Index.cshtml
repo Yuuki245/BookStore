@@ -1,0 +1,474 @@
+@{
+    ViewData["Title"] = "Mã Giảm Giá";
+    var activeCoupons = ViewBag.ActiveCoupons as List<BookStore.Models.Coupon> ?? new List<BookStore.Models.Coupon>();
+    var upcomingCoupons = ViewBag.UpcomingCoupons as List<BookStore.Models.Coupon> ?? new List<BookStore.Models.Coupon>();
+    var expiredCoupons = ViewBag.ExpiredCoupons as List<BookStore.Models.Coupon> ?? new List<BookStore.Models.Coupon>();
+    var now = ViewBag.Now as DateTime? ?? DateTime.Now;
+}
+
+<div class="container my-4">
+    <!-- Header -->
+    <div class="text-center mb-4 fade-in">
+        <h1 class="fw-bold mb-2">
+            <i class="bi bi-ticket-perforated text-primary me-2"></i>Mã Giảm Giá
+        </h1>
+        <p class="text-muted">Khám phá các mã giảm giá hấp dẫn dành cho bạn</p>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="couponTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab">
+                <i class="bi bi-check-circle me-2"></i>Đang Hiệu Lực
+                <span class="badge bg-success ms-2">@activeCoupons.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab">
+                <i class="bi bi-clock me-2"></i>Sắp Diễn Ra
+                <span class="badge bg-warning ms-2">@upcomingCoupons.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="expired-tab" data-bs-toggle="tab" data-bs-target="#expired" type="button" role="tab">
+                <i class="bi bi-x-circle me-2"></i>Đã Hết Hiệu Lực
+                <span class="badge bg-secondary ms-2">@expiredCoupons.Count</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="couponTabContent">
+        <!-- Tab: Đang Hiệu Lực -->
+        <div class="tab-pane fade show active" id="active" role="tabpanel">
+            @if (!activeCoupons.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-ticket-perforated text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 mb-2">Chưa có mã giảm giá nào đang hiệu lực</h4>
+                    <p class="text-muted">Hãy quay lại sau để xem các mã giảm giá mới!</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var coupon in activeCoupons)
+                    {
+                        var remainingDays = (coupon.EndDate - now).Days;
+                        var isPercentage = coupon.DiscountType == "Percentage";
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card h-100 coupon-card border-0 shadow-sm hover-lift">
+                                <div class="card-body p-4">
+                                    <!-- Header với mã code -->
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <h5 class="fw-bold mb-0 text-primary">@coupon.Code</h5>
+                                                <button class="btn btn-sm btn-outline-primary copy-coupon-btn" 
+                                                        data-code="@coupon.Code" 
+                                                        title="Sao chép mã">
+                                                    <i class="bi bi-clipboard"></i>
+                                                </button>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(coupon.Description))
+                                            {
+                                                <p class="text-muted small mb-0">@coupon.Description</p>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- Giảm giá -->
+                                    <div class="mb-3">
+                                        @if (isPercentage)
+                                        {
+                                            <div class="d-flex align-items-baseline gap-2">
+                                                <span class="h3 fw-bold text-danger mb-0">@coupon.DiscountValue%</span>
+                                                <span class="text-muted">OFF</span>
+                                            </div>
+                                            @if (coupon.MaxDiscount.HasValue)
+                                            {
+                                                <div class="text-muted small">Tối đa: @coupon.MaxDiscount.Value.ToString("N0") ₫</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex align-items-baseline gap-2">
+                                                <span class="h3 fw-bold text-danger mb-0">@coupon.DiscountValue.ToString("N0")</span>
+                                                <span class="text-muted">₫</span>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Điều kiện -->
+                                    <div class="mb-3">
+                                        @if (coupon.MinOrderAmount.HasValue)
+                                        {
+                                            <div class="small text-muted mb-1">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Đơn hàng tối thiểu: <strong>@coupon.MinOrderAmount.Value.ToString("N0") ₫</strong>
+                                            </div>
+                                        }
+                                        @if (coupon.UsageLimit.HasValue)
+                                        {
+                                            <div class="small text-muted mb-1">
+                                                <i class="bi bi-people me-1"></i>
+                                                Còn lại: <strong>@(coupon.UsageLimit.Value - coupon.UsedCount) lượt</strong>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="small text-success mb-1">
+                                                <i class="bi bi-infinity me-1"></i>
+                                                Không giới hạn lượt sử dụng
+                                            </div>
+                                        }
+                                        @if (coupon.MaxUsagePerUser.HasValue)
+                                        {
+                                            <div class="small text-info mb-1">
+                                                <i class="bi bi-person-check me-1"></i>
+                                                Mỗi user: <strong>Tối đa @coupon.MaxUsagePerUser.Value lần</strong>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Thời gian -->
+                                    <div class="border-top pt-3">
+                                        <div class="small text-muted mb-2">
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            <strong>Hết hạn:</strong> @coupon.EndDate.ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                        @if (remainingDays > 0)
+                                        {
+                                            <div class="badge bg-warning text-dark">
+                                                Còn @remainingDays ngày
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="badge bg-danger">
+                                                Hết hạn hôm nay
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Tab: Sắp Diễn Ra -->
+        <div class="tab-pane fade" id="upcoming" role="tabpanel">
+            @if (!upcomingCoupons.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-clock text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 mb-2">Chưa có mã giảm giá sắp diễn ra</h4>
+                    <p class="text-muted">Hãy quay lại sau để xem các mã giảm giá mới!</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var coupon in upcomingCoupons)
+                    {
+                        var daysUntilStart = (coupon.StartDate - now).Days;
+                        var isPercentage = coupon.DiscountType == "Percentage";
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card h-100 coupon-card border-0 shadow-sm hover-lift" style="opacity: 0.9;">
+                                <div class="card-body p-4">
+                                    <!-- Header với mã code -->
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <h5 class="fw-bold mb-0 text-primary">@coupon.Code</h5>
+                                                <span class="badge bg-warning text-dark">Sắp diễn ra</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(coupon.Description))
+                                            {
+                                                <p class="text-muted small mb-0">@coupon.Description</p>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- Giảm giá -->
+                                    <div class="mb-3">
+                                        @if (isPercentage)
+                                        {
+                                            <div class="d-flex align-items-baseline gap-2">
+                                                <span class="h3 fw-bold text-danger mb-0">@coupon.DiscountValue%</span>
+                                                <span class="text-muted">OFF</span>
+                                            </div>
+                                            @if (coupon.MaxDiscount.HasValue)
+                                            {
+                                                <div class="text-muted small">Tối đa: @coupon.MaxDiscount.Value.ToString("N0") ₫</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex align-items-baseline gap-2">
+                                                <span class="h3 fw-bold text-danger mb-0">@coupon.DiscountValue.ToString("N0")</span>
+                                                <span class="text-muted">₫</span>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Điều kiện -->
+                                    <div class="mb-3">
+                                        @if (coupon.MinOrderAmount.HasValue)
+                                        {
+                                            <div class="small text-muted mb-1">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Đơn hàng tối thiểu: <strong>@coupon.MinOrderAmount.Value.ToString("N0") ₫</strong>
+                                            </div>
+                                        }
+                                        @if (coupon.UsageLimit.HasValue)
+                                        {
+                                            <div class="small text-muted mb-1">
+                                                <i class="bi bi-people me-1"></i>
+                                                Giới hạn: <strong>@coupon.UsageLimit.Value lượt</strong>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="small text-success mb-1">
+                                                <i class="bi bi-infinity me-1"></i>
+                                                Không giới hạn lượt sử dụng
+                                            </div>
+                                        }
+                                        @if (coupon.MaxUsagePerUser.HasValue)
+                                        {
+                                            <div class="small text-info mb-1">
+                                                <i class="bi bi-person-check me-1"></i>
+                                                Mỗi user: <strong>Tối đa @coupon.MaxUsagePerUser.Value lần</strong>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Thời gian -->
+                                    <div class="border-top pt-3">
+                                        <div class="small text-muted mb-2">
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            <strong>Bắt đầu:</strong> @coupon.StartDate.ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                        <div class="small text-muted mb-2">
+                                            <i class="bi bi-calendar-x me-1"></i>
+                                            <strong>Kết thúc:</strong> @coupon.EndDate.ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                        @if (daysUntilStart > 0)
+                                        {
+                                            <div class="badge bg-info">
+                                                Bắt đầu sau @daysUntilStart ngày
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="badge bg-success">
+                                                Bắt đầu hôm nay
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Tab: Đã Hết Hiệu Lực -->
+        <div class="tab-pane fade" id="expired" role="tabpanel">
+            @if (!expiredCoupons.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-x-circle text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 mb-2">Chưa có mã giảm giá nào đã hết hiệu lực</h4>
+                    <p class="text-muted">Tất cả mã giảm giá đều đang hoạt động!</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var coupon in expiredCoupons)
+                    {
+                        var daysSinceExpired = (now - coupon.EndDate).Days;
+                        var isPercentage = coupon.DiscountType == "Percentage";
+                        var expiredReason = "";
+                        if (!coupon.IsActive)
+                        {
+                            expiredReason = "Đã bị tắt";
+                        }
+                        else if (now > coupon.EndDate)
+                        {
+                            expiredReason = "Đã hết hạn";
+                        }
+                        else if (coupon.UsageLimit.HasValue && coupon.UsedCount >= coupon.UsageLimit)
+                        {
+                            expiredReason = "Đã hết lượt sử dụng";
+                        }
+                        
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card h-100 coupon-card border-0 shadow-sm" style="opacity: 0.7;">
+                                <div class="card-body p-4">
+                                    <!-- Header với mã code -->
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <h5 class="fw-bold mb-0 text-muted">@coupon.Code</h5>
+                                                <span class="badge bg-secondary">@expiredReason</span>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(coupon.Description))
+                                            {
+                                                <p class="text-muted small mb-0">@coupon.Description</p>
+                                            }
+                                        </div>
+                                    </div>
+
+                                    <!-- Giảm giá -->
+                                    <div class="mb-3">
+                                        @if (isPercentage)
+                                        {
+                                            <div class="d-flex align-items-baseline gap-2">
+                                                <span class="h3 fw-bold text-muted mb-0">@coupon.DiscountValue%</span>
+                                                <span class="text-muted">OFF</span>
+                                            </div>
+                                            @if (coupon.MaxDiscount.HasValue)
+                                            {
+                                                <div class="text-muted small">Tối đa: @coupon.MaxDiscount.Value.ToString("N0") ₫</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="d-flex align-items-baseline gap-2">
+                                                <span class="h3 fw-bold text-muted mb-0">@coupon.DiscountValue.ToString("N0")</span>
+                                                <span class="text-muted">₫</span>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Điều kiện -->
+                                    <div class="mb-3">
+                                        @if (coupon.MinOrderAmount.HasValue)
+                                        {
+                                            <div class="small text-muted mb-1">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Đơn hàng tối thiểu: <strong>@coupon.MinOrderAmount.Value.ToString("N0") ₫</strong>
+                                            </div>
+                                        }
+                                        @if (coupon.UsageLimit.HasValue)
+                                        {
+                                            <div class="small text-muted mb-1">
+                                                <i class="bi bi-people me-1"></i>
+                                                Đã dùng: <strong>@coupon.UsedCount/@coupon.UsageLimit.Value lượt</strong>
+                                            </div>
+                                        }
+                                        @if (coupon.MaxUsagePerUser.HasValue)
+                                        {
+                                            <div class="small text-muted mb-1">
+                                                <i class="bi bi-person-check me-1"></i>
+                                                Mỗi user: <strong>Tối đa @coupon.MaxUsagePerUser.Value lần</strong>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Thời gian -->
+                                    <div class="border-top pt-3">
+                                        <div class="small text-muted mb-2">
+                                            <i class="bi bi-calendar-event me-1"></i>
+                                            <strong>Bắt đầu:</strong> @coupon.StartDate.ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                        <div class="small text-muted mb-2">
+                                            <i class="bi bi-calendar-x me-1"></i>
+                                            <strong>Kết thúc:</strong> @coupon.EndDate.ToString("dd/MM/yyyy HH:mm")
+                                        </div>
+                                        @if (now > coupon.EndDate && daysSinceExpired > 0)
+                                        {
+                                            <div class="badge bg-secondary">
+                                                Đã hết hạn @daysSinceExpired ngày
+                                            </div>
+                                        }
+                                        else if (now > coupon.EndDate)
+                                        {
+                                            <div class="badge bg-danger">
+                                                Đã hết hạn hôm nay
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .coupon-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: var(--radius-lg);
+    }
+
+    .coupon-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md) !important;
+    }
+
+    .copy-coupon-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .copy-coupon-btn:hover {
+        background-color: var(--brand);
+        color: white;
+        border-color: var(--brand);
+    }
+
+    .fade-in {
+        animation: fadeIn 0.5s ease-in;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .hover-lift {
+        transition: all 0.3s ease;
+    }
+</style>
+
+<script>
+    // Copy coupon code to clipboard
+    document.querySelectorAll('.copy-coupon-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const code = this.getAttribute('data-code');
+            navigator.clipboard.writeText(code).then(() => {
+                // Show toast notification
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="bi bi-check"></i>';
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-outline-primary');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Không thể sao chép mã. Vui lòng sao chép thủ công: ' + code);
+            });
+        });
+    });
+</script>
+

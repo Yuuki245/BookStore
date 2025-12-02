@@ -1,0 +1,98 @@
+@model List<BookStore.Models.WishlistItem>
+@{
+    ViewData["Title"] = "Danh sách yêu thích";
+}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">
+            <i class="bi bi-heart-fill text-danger me-2"></i>Danh sách yêu thích
+        </h2>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Tiếp tục mua sắm
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state fade-in text-center py-5">
+            <div class="empty-state-icon mb-3">
+                <i class="bi bi-heart" style="font-size: 4rem; color: #dee2e6;"></i>
+            </div>
+            <h3 class="mb-3">Danh sách yêu thích đang trống</h3>
+            <p class="text-muted mb-4">Hãy thêm sách vào danh sách yêu thích để xem lại sau!</p>
+            <a asp-controller="Books" asp-action="Index" class="btn btn-primary btn-lg">
+                <i class="bi bi-search me-2"></i>Khám phá sách
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="book-card card h-100">
+                        <a asp-controller="Books" asp-action="Details" asp-route-id="@item.Book.Id" class="text-decoration-none">
+                            <img src="@(item.Book.CoverUrl ?? "/images/no-cover.png")" 
+                                 class="card-img-top" 
+                                 alt="@item.Book.Title"
+                                 style="height: 300px; object-fit: cover;" />
+                        </a>
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title fw-semibold text-truncate-2-lines mb-2">
+                                <a asp-controller="Books" asp-action="Details" asp-route-id="@item.Book.Id" class="text-decoration-none text-dark">
+                                    @item.Book.Title
+                                </a>
+                            </h6>
+                            <p class="text-muted small mb-2">@item.Book.Author</p>
+                            
+                            <div class="book-price mb-3">
+                                @if (item.Book.OriginalPrice != null && item.Book.OriginalPrice > 0)
+                                {
+                                    <span class="fw-bold text-danger">@($"{item.Book.Price:N0} ₫")</span>
+                                    <span class="text-muted text-decoration-line-through small ms-2">
+                                        @($"{item.Book.OriginalPrice.Value:N0} ₫")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="fw-bold text-success">@($"{item.Book.Price:N0} ₫")</span>
+                                }
+                            </div>
+
+                            <div class="mt-auto d-flex gap-2">
+                                <form asp-controller="Cart" asp-action="Add" method="post" class="flex-grow-1">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="bookId" value="@item.Book.Id" />
+                                    <input type="hidden" name="qty" value="1" />
+                                    <button type="submit" class="btn btn-primary w-100 btn-sm">
+                                        <i class="bi bi-bag-plus me-1"></i>Thêm vào giỏ
+                                    </button>
+                                </form>
+                                <form asp-action="Remove" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Xóa khỏi danh sách yêu thích">
+                                        <i class="bi bi-heartbreak"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .empty-state {
+        padding: 4rem 2rem;
+    }
+
+    .empty-state-icon {
+        opacity: 0.5;
+    }
+</style>
+

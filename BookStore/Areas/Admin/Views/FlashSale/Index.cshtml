@@ -1,0 +1,128 @@
+@model IEnumerable<BookStore.Models.FlashSale>
+@{
+    ViewData["Title"] = "Quản lý Flash Sale";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h2 class="mb-1">Quản lý Flash Sale</h2>
+        <p class="text-muted mb-0 small">@Model.Count() flash sale</p>
+    </div>
+    @{
+        var hasActiveFlashSale = ViewBag.HasActiveFlashSale as bool? ?? false;
+        var activeFlashSaleInfo = ViewBag.ActiveFlashSaleInfo as string;
+    }
+    @if (hasActiveFlashSale)
+    {
+        <div class="d-flex flex-column align-items-end gap-2">
+            <a asp-action="Create" class="btn btn-primary" style="pointer-events: none; opacity: 0.6; cursor: not-allowed;" title="@activeFlashSaleInfo">
+                <i class="bi bi-plus-circle me-1"></i>Tạo Flash Sale
+            </a>
+            <div class="alert alert-warning mb-0 py-2 px-3" style="font-size: 0.875rem;">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                <strong>Không thể tạo flash sale mới:</strong> @activeFlashSaleInfo
+            </div>
+        </div>
+    }
+    else
+    {
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i>Tạo Flash Sale
+        </a>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card text-center py-5">
+        <div class="card-body">
+            <i class="bi bi-lightning-charge text-muted" style="font-size: 3rem;"></i>
+            <h5 class="mt-3 mb-2">Chưa có Flash Sale nào</h5>
+            <p class="text-muted mb-4">Tạo flash sale đầu tiên để thu hút khách hàng!</p>
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i>Tạo Flash Sale
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-modern align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Tiêu đề</th>
+                        <th>Thời gian</th>
+                        <th>Giảm giá</th>
+                        <th>Số sách</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sale in Model)
+                    {
+                        var now = DateTime.Now; // Dùng local time để so sánh
+                        var startTime = sale.StartTime.Kind == DateTimeKind.Utc ? sale.StartTime.ToLocalTime() : sale.StartTime;
+                        var endTime = sale.EndTime.Kind == DateTimeKind.Utc ? sale.EndTime.ToLocalTime() : sale.EndTime;
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@sale.Title</div>
+                                @if (!string.IsNullOrEmpty(sale.Description))
+                                {
+                                    <div class="text-muted small">@sale.Description</div>
+                                }
+                            </td>
+                            <td>
+                                <div class="small">
+                                    <div><strong>Bắt đầu:</strong> @startTime.ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div><strong>Kết thúc:</strong> @endTime.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-danger">@sale.DiscountPercent%</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">@sale.Books.Count sách</span>
+                            </td>
+                            <td>
+                                @if (sale.IsCurrentlyActive)
+                                {
+                                    <span class="badge bg-success">Đang diễn ra</span>
+                                }
+                                else if (now < startTime)
+                                {
+                                    <span class="badge bg-warning">Sắp diễn ra</span>
+                                }
+                                else if (now > endTime)
+                                {
+                                    <span class="badge bg-secondary">Đã kết thúc</span>
+                                }
+                                else if (!sale.IsActive)
+                                {
+                                    <span class="badge bg-danger">Đã tắt</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <a asp-action="Edit" asp-route-id="@sale.Id" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil me-1"></i>Sửa
+                                    </a>
+                                    <form asp-area="Admin" asp-controller="FlashSale" asp-action="Delete" asp-route-id="@sale.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc muốn xóa flash sale này?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@sale.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash me-1"></i>Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+

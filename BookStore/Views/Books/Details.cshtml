@@ -63,7 +63,19 @@
         </div>
 
         <div class="book-price-detail mb-3">
-            @if (Model.MainBook.OriginalPrice != null && Model.MainBook.OriginalPrice > 0)
+            @if (Model.MainBook.IsOnFlashSale)
+            {
+                <div class="mb-2">
+                    <span class="badge bg-danger mb-2">
+                        <i class="bi bi-lightning-charge-fill me-1"></i>Flash Sale: -@Model.MainBook.FlashSale.DiscountPercent%
+                    </span>
+                </div>
+                <span class="fs-2 fw-bold text-danger">@($"{Model.MainBook.FinalPrice:N0} ₫")</span>
+                <span class="fs-4 text-muted text-decoration-line-through ms-2">
+                    @($"{Model.MainBook.Price:N0} ₫")
+                </span>
+            }
+            else if (Model.MainBook.OriginalPrice != null && Model.MainBook.OriginalPrice > 0)
             {
                 <span class="fs-2 fw-bold text-danger">@($"{Model.MainBook.Price:N0} ₫")</span>
                 <span class="fs-4 text-muted text-decoration-line-through ms-2">
@@ -76,19 +88,63 @@
             }
         </div>
 
-        <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 mb-4">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="bookId" value="@Model.MainBook.Id" />
-            <input type="number" name="qty" value="1" min="1" class="form-control" style="max-width:80px;" />
-            <button class="btn btn-primary btn-lg"><i class="bi bi-bag-plus"></i> Thêm vào giỏ</button>
-            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg">Quay lại</a>
-        </form>
+        @* Hiển thị trạng thái tồn kho *@
+        @if (Model.MainBook.Stock <= 0)
+        {
+            <div class="alert alert-warning mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle fs-4"></i>
+                <div>
+                    <strong>Sản phẩm đã hết hàng</strong>
+                    <p class="mb-0 small">Hiện tại sản phẩm này đã hết hàng. Vui lòng quay lại sau!</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-muted mb-3">
+                <i class="bi bi-check-circle me-1"></i>
+                <strong>Còn hàng:</strong> @Model.MainBook.Stock cuốn
+            </div>
+        }
 
-        <h5 class="fw-bold">Mô tả</h5>
-        <div id="descriptionContainer" class="description-collapsed">
-            <p id="descriptionContent" style="white-space: pre-wrap; margin-bottom: 0;">@Model.MainBook.Description</p>
+        <div class="d-flex gap-2 mb-4 align-items-center flex-wrap">
+            @* Wishlist button - luôn hiển thị *@
+            <div>
+                @await Component.InvokeAsync("WishlistButton", new { bookId = Model.MainBook.Id })
+            </div>
+
+            @* Form thêm vào giỏ hàng - chỉ hiển thị khi còn hàng *@
+            @if (Model.MainBook.Stock > 0)
+            {
+                <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 align-items-center">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="bookId" value="@Model.MainBook.Id" />
+                    <div class="d-flex align-items-center gap-1" style="max-width:120px;">
+                        <button type="button" class="btn btn-outline-secondary quantity-decrease-detail" title="Giảm">
+                            <i class="bi bi-dash"></i>
+                        </button>
+                        <input type="text" name="qty" id="qty-input-detail" value="1" class="form-control text-center" style="max-width:70px; padding: 0.5rem; font-size: 1rem !important; color: #212529 !important; font-weight: 600 !important; background-color: #fff !important; opacity: 1 !important;" data-min="1" data-max="@Model.MainBook.Stock" />
+                        <button type="button" class="btn btn-outline-secondary quantity-increase-detail" title="Tăng">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+                    <button class="btn btn-primary btn-lg"><i class="bi bi-bag-plus"></i> Thêm vào giỏ</button>
+                </form>
+            }
+            else
+            {
+                <button class="btn btn-secondary btn-lg" disabled>
+                    <i class="bi bi-bag-x"></i> Hết hàng
+                </button>
+            }
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-lg">Quay lại</a>
         </div>
-        <button id="toggleDescription" class="btn btn-link p-0 mt-1" style="display: none;">Xem thêm</button>
+
+        <h5 class="fw-bold mb-2">Mô tả</h5>
+        <div id="descriptionContainer" class="description-collapsed">
+            <p id="descriptionContent" style="white-space: pre-wrap; margin: 0; padding: 0;">@Model.MainBook.Description</p>
+        </div>
+        <button id="toggleDescription" class="btn btn-link p-0 mt-2 mb-0" style="display: none;">Xem thêm</button>
     </div>
 </div>
 
@@ -187,8 +243,8 @@
 @if (Model.RelatedBooks.Any())
 {
     <hr class="my-4" />
-    <h3 class="mb-3">Sách cùng thể loại</h3>
-    <div class="row g-3 row-cols-2 row-cols-md-4">
+    <h3 class="mb-2">Sách cùng thể loại</h3>
+    <div class="row g-2 row-cols-2 row-cols-md-4">
         @foreach (var b in Model.RelatedBooks)
         {
             <div class="col">
@@ -201,27 +257,151 @@
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Xử lý mô tả sách
             const container = document.getElementById('descriptionContainer');
             const content = document.getElementById('descriptionContent');
             const button = document.getElementById('toggleDescription');
 
-            const maxHeight = 120;
+            if (container && content && button) {
+                const maxHeight = 120;
 
-            if (content.scrollHeight > maxHeight) {
-                button.style.display = 'block';
+                // Kiểm tra nếu nội dung vượt quá chiều cao tối đa
+                if (content.scrollHeight > maxHeight) {
+                    button.style.display = 'block';
+                } else {
+                    button.style.display = 'none';
+                }
+
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const isCollapsed = container.classList.contains('description-collapsed');
+                    
+                    if (isCollapsed) {
+                        // Mở rộng - animation mượt mà từ dưới lên
+                        const currentHeight = content.scrollHeight;
+                        container.style.maxHeight = currentHeight + 'px';
+                        
+                        // Thêm class expanded với animation
+                        requestAnimationFrame(() => {
+                            container.classList.remove('description-collapsed');
+                            container.classList.add('expanded');
+                        });
+                        
+                        button.textContent = 'Thu gọn';
+                        
+                        // Sau khi animation xong, set max-height về auto
+                        setTimeout(() => {
+                            container.style.maxHeight = 'none';
+                        }, 700);
+                    } else {
+                        // Thu gọn - animation mượt mà
+                        const currentHeight = content.scrollHeight;
+                        container.style.maxHeight = currentHeight + 'px';
+                        
+                        // Force reflow để đảm bảo animation chạy
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                                container.classList.remove('expanded');
+                                container.classList.add('description-collapsed');
+                                container.style.maxHeight = maxHeight + 'px';
+                            });
+                        });
+                        
+                        button.textContent = 'Xem thêm';
+                    }
+                });
             }
 
-            button.addEventListener('click', function() {
-                if (container.classList.contains('description-collapsed')) {
-                    container.classList.remove('description-collapsed');
-                    container.classList.add('expanded');
-                    button.textContent = 'Thu gọn';
-                } else {
-                    container.classList.remove('expanded');
-                    container.classList.add('description-collapsed');
-                    button.textContent = 'Xem thêm';
+            // Xử lý nút tăng/giảm số lượng ở trang chi tiết
+            const qtyInput = document.getElementById('qty-input-detail');
+            const decreaseBtn = document.querySelector('.quantity-decrease-detail');
+            const increaseBtn = document.querySelector('.quantity-increase-detail');
+
+            if (!qtyInput) {
+                console.error('qty-input-detail not found');
+            } else {
+                const minQty = parseInt(qtyInput.getAttribute('data-min')) || 1;
+                const maxQty = parseInt(qtyInput.getAttribute('data-max')) || 999;
+                
+                // Đảm bảo giá trị mặc định là 1 và hiển thị
+                if (!qtyInput.value || parseInt(qtyInput.value) < minQty) {
+                    qtyInput.value = minQty.toString();
                 }
-            });
+                
+                // Đảm bảo input hiển thị giá trị rõ ràng với !important
+                qtyInput.style.setProperty('color', '#212529', 'important');
+                qtyInput.style.setProperty('font-size', '1rem', 'important');
+                qtyInput.style.setProperty('font-weight', '600', 'important');
+                qtyInput.style.setProperty('background-color', '#fff', 'important');
+                qtyInput.style.setProperty('opacity', '1', 'important');
+                
+                // Force update để đảm bảo giá trị hiển thị
+                qtyInput.setAttribute('value', qtyInput.value);
+                
+                // Function để cập nhật và hiển thị giá trị
+                function updateQuantity(newValue) {
+                    qtyInput.value = newValue.toString();
+                    qtyInput.setAttribute('value', newValue.toString());
+                    // Force browser to re-render
+                    qtyInput.style.display = 'none';
+                    qtyInput.offsetHeight; // Trigger reflow
+                    qtyInput.style.display = '';
+                }
+
+                if (decreaseBtn) {
+                    decreaseBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        let currentQty = parseInt(qtyInput.value) || minQty;
+                        if (currentQty > minQty) {
+                            updateQuantity(currentQty - 1);
+                        }
+                    });
+                }
+
+                if (increaseBtn) {
+                    increaseBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        let currentQty = parseInt(qtyInput.value) || minQty;
+                        if (currentQty < maxQty) {
+                            updateQuantity(currentQty + 1);
+                        } else {
+                            alert('Số lượng không được vượt quá tồn kho (' + maxQty + ' cuốn).');
+                        }
+                    });
+                }
+
+                // Đảm bảo số lượng hợp lệ khi người dùng nhập
+                qtyInput.addEventListener('change', function() {
+                    let qty = parseInt(this.value) || minQty;
+                    if (qty < minQty) {
+                        updateQuantity(minQty);
+                    } else if (qty > maxQty) {
+                        updateQuantity(maxQty);
+                        alert('Số lượng không được vượt quá tồn kho (' + maxQty + ' cuốn).');
+                    } else {
+                        updateQuantity(qty);
+                    }
+                });
+
+                // Xử lý khi người dùng nhập trực tiếp - chỉ cho phép số
+                qtyInput.addEventListener('input', function() {
+                    // Chỉ giữ lại số
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                    let qty = parseInt(this.value);
+                    if (isNaN(qty) || qty < minQty) {
+                        this.value = minQty.toString();
+                    } else if (qty > maxQty) {
+                        this.value = maxQty.toString();
+                    }
+                    // Force update display
+                    updateQuantity(parseInt(this.value) || minQty);
+                });
+                
+                // Đảm bảo hiển thị khi trang load
+                setTimeout(function() {
+                    updateQuantity(parseInt(qtyInput.value) || minQty);
+                }, 100);
+            }
         });
     </script>
 }

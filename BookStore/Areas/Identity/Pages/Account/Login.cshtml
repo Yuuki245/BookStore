@@ -5,45 +5,124 @@
     ViewData["Title"] = "Đăng nhập";
 }
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <form id="account" method="post">
-                <h2>Sử dụng tài khoản của bạn để đăng nhập.</h2>
-                <hr />
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label asp-for="Input.Email" class="form-label">Email</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+<div class="auth-container">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100 py-5">
+            <div class="col-md-5 col-lg-4">
+                <div class="auth-card card glass-card card-lift">
+                    <div class="card-body p-4 p-md-5">
+                        <div class="text-center mb-4">
+                            <div class="auth-icon mb-3">
+                                <i class="bi bi-person-circle text-primary" style="font-size: 3.5rem;"></i>
+                            </div>
+                            <h2 class="fw-bold mb-2">Chào mừng trở lại</h2>
+                            <p class="text-muted mb-0">Đăng nhập vào tài khoản của bạn</p>
+                        </div>
+
+                        <form id="account" method="post" class="mt-4">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                            
+                            <div class="mb-3">
+                                <label asp-for="Input.Email" class="form-label fw-semibold">
+                                    <i class="bi bi-envelope me-2 text-primary"></i>Email
+                                </label>
+                                <input asp-for="Input.Email" 
+                                       class="form-control form-control-lg" 
+                                       autocomplete="username" 
+                                       aria-required="true" 
+                                       placeholder="name@example.com" />
+                                <span asp-validation-for="Input.Email" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-3">
+                                <label asp-for="Input.Password" class="form-label fw-semibold">
+                                    <i class="bi bi-lock me-2 text-primary"></i>Mật khẩu
+                                </label>
+                                <input asp-for="Input.Password" 
+                                       class="form-control form-control-lg" 
+                                       autocomplete="current-password" 
+                                       aria-required="true" 
+                                       placeholder="Nhập mật khẩu" />
+                                <span asp-validation-for="Input.Password" class="text-danger small"></span>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="Input.RememberMe" id="rememberMe" />
+                                    <label class="form-check-label" for="rememberMe">
+                                        Ghi nhớ đăng nhập
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button id="login-submit" type="submit" class="btn btn-primary btn-lg w-100 mb-3">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Đăng nhập
+                            </button>
+
+                            <div class="text-center">
+                                <a id="forgot-password" asp-page="./ForgotPassword" class="text-decoration-none text-primary">
+                                    <i class="bi bi-question-circle me-1"></i>Quên mật khẩu?
+                                </a>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <div class="text-center">
+                                <p class="text-muted mb-0">Chưa có tài khoản?</p>
+                                <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="btn btn-outline-primary w-100 mt-2">
+                                    <i class="bi bi-person-plus me-2"></i>Đăng ký ngay
+                                </a>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Mật khẩu</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
-                </div>
-                <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        Ghi nhớ tôi?
-                    </label>
-                </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Đăng nhập</button>
-                </div>
-                <div class="mt-3">
-                    <p>
-                        <a id="forgot-password" asp-page="./ForgotPassword">Quên mật khẩu?</a>
-                    </p>
-                    <p>
-                        <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Đăng ký tài khoản mới</a>
-                    </p>
-                </div>
-            </form>
-        </section>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .auth-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+
+    .auth-card {
+        border: none;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .auth-icon {
+        display: inline-block;
+        padding: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    .auth-icon i {
+        color: white !important;
+        font-size: 2.5rem !important;
+    }
+
+    .form-control-lg {
+        padding: 0.75rem 1rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid #e5e7eb;
+        transition: all var(--transition-fast);
+    }
+
+    .form-control-lg:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 0.2rem rgba(59, 97, 235, 0.1);
+    }
+</style>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

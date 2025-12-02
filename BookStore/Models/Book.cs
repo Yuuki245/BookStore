@@ -37,6 +37,10 @@ public class Book
     public int CategoryId { get; set; }
     public Category? Category { get; set; }
 
+    // FK cho Flash Sale (optional)
+    public int? FlashSaleId { get; set; }
+    public FlashSale? FlashSale { get; set; }
+
     public string? Description { get; set; }
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     [NotMapped]
@@ -44,4 +48,21 @@ public class Book
 
     [NotMapped]
     public double AverageRating => Reviews.Any() ? Reviews.Average(r => r.Rating) : 0;
+
+    [NotMapped]
+    public decimal FinalPrice
+    {
+        get
+        {
+            if (FlashSale != null && FlashSale.IsCurrentlyActive)
+            {
+                var discount = Price * (FlashSale.DiscountPercent / 100m);
+                return Price - discount;
+            }
+            return Price;
+        }
+    }
+
+    [NotMapped]
+    public bool IsOnFlashSale => FlashSale != null && FlashSale.IsCurrentlyActive;
 }

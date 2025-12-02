@@ -1,5 +1,6 @@
 ﻿using BookStore.Data;
 using BookStore.Models.ViewModels;
+using BookStore.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,13 @@ namespace BookStore.Areas.Admin.Controllers;
 public class OrdersController : Controller
 {
     private readonly ApplicationDbContext _db;
-    public OrdersController(ApplicationDbContext db) => _db = db;
+    private readonly INotificationService _notificationService;
+    
+    public OrdersController(ApplicationDbContext db, INotificationService notificationService)
+    {
+        _db = db;
+        _notificationService = notificationService;
+    }
 
     public async Task<IActionResult> Index(string? status, DateTime? from, DateTime? to, int page = 1)
     {
@@ -73,8 +80,48 @@ public class OrdersController : Controller
     {
         var order = await _db.Orders.FindAsync(id);
         if (order == null) return NotFound();
+        
+        // Không cho phép thay đổi trạng thái khi đơn đã bị hủy
+        if (order.Status == "Canceled")
+        {
+            TempData["Error"] = "Không thể thay đổi trạng thái đơn hàng đã bị hủy.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        
+        // Không cho phép thay đổi trạng thái khi đơn đã hoàn thành
+        if (order.Status == "Completed")
+        {
+            TempData["Error"] = "Không thể thay đổi trạng thái đơn hàng đã hoàn thành.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        
+        var oldStatus = order.Status;
         order.Status = status;
         await _db.SaveChangesAsync();
+
+        // Tạo thông báo cho user khi trạng thái đơn hàng thay đổi
+        var statusMessages = new Dictionary<string, string>
+        {
+            { "Confirmed", "Đơn hàng #" + order.Id + " đã được xác nhận." },
+            { "Shipped", "Đơn hàng #" + order.Id + " đã được gửi đi." },
+            { "Completed", "Đơn hàng #" + order.Id + " đã hoàn thành. Cảm ơn bạn đã mua sắm!" },
+            { "Canceled", "Đơn hàng #" + order.Id + " đã bị hủy." }
+        };
+
+        if (statusMessages.ContainsKey(status) && oldStatus != status)
+        {
+            var message = statusMessages[status];
+            var type = status == "Completed" ? "Success" : status == "Canceled" ? "Danger" : "Info";
+            await _notificationService.CreateNotificationAsync(
+                order.UserId,
+                "Cập nhật đơn hàng",
+                message,
+                type,
+                $"/Orders/Details/{order.Id}"
+            );
+        }
+
+        TempData["Success"] = "Đã cập nhật trạng thái đơn hàng.";
         return RedirectToAction(nameof(Details), new { id });
     }
     [HttpGet]

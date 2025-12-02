@@ -72,6 +72,7 @@ namespace BookStore.Controllers
         {
             var book = await _db.Books.AsNoTracking()
                                       .Include(b => b.Category)
+                                      .Include(b => b.FlashSale)
                                       .Include(b => b.Reviews)
                                           .ThenInclude(r => r.User)
                                       .FirstOrDefaultAsync(b => b.Id == id);

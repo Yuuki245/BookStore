@@ -113,6 +113,8 @@ namespace BookStore.Areas.Admin.Controllers
 
         // ACTION XỬ LÝ TẢI ẢNH (Sử dụng _env)
         [HttpPost]
+        [Route("Admin/Blog/UploadImage")]
+        [Produces("application/json")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UploadImage(IFormFile file)
         {

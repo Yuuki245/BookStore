@@ -1,0 +1,115 @@
+@model BookStore.Models.FlashSale
+@{
+    ViewData["Title"] = "Chỉnh sửa Flash Sale";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Chỉnh sửa Flash Sale</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Quay lại
+    </a>
+</div>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    
+    <div class="card">
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label asp-for="Title" class="form-label fw-semibold">Tiêu đề *</label>
+                <input asp-for="Title" class="form-control" placeholder="Ví dụ: Flash Sale Black Friday" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label fw-semibold">Mô tả</label>
+                <textarea asp-for="Description" class="form-control" rows="3" placeholder="Mô tả về flash sale..."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="StartTime" class="form-label fw-semibold">Thời gian bắt đầu *</label>
+                    @if (ViewBag.HasStarted == true)
+                    {
+                        <input asp-for="StartTime" class="form-control" type="datetime-local" readonly style="background-color: #e9ecef; cursor: not-allowed;" />
+                        <input type="hidden" asp-for="StartTime" />
+                        <div class="form-text text-warning">
+                            <i class="bi bi-exclamation-triangle me-1"></i>Flash sale đã bắt đầu, không thể thay đổi thời gian bắt đầu.
+                        </div>
+                    }
+                    else
+                    {
+                        <input asp-for="StartTime" class="form-control" type="datetime-local" />
+                    }
+                    <span asp-validation-for="StartTime" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="EndTime" class="form-label fw-semibold">Thời gian kết thúc *</label>
+                    <input asp-for="EndTime" class="form-control" type="datetime-local" />
+                    <span asp-validation-for="EndTime" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label asp-for="DiscountPercent" class="form-label fw-semibold">Phần trăm giảm giá (%) *</label>
+                    <input asp-for="DiscountPercent" class="form-control" type="number" min="0" max="100" />
+                    <span asp-validation-for="DiscountPercent" class="text-danger"></span>
+                    <div class="form-text">Nhập số từ 0 đến 100</div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label asp-for="MaxQuantityPerUser" class="form-label fw-semibold">Giới hạn số lượng/khách hàng</label>
+                    <input asp-for="MaxQuantityPerUser" class="form-control" type="number" min="1" />
+                    <span asp-validation-for="MaxQuantityPerUser" class="text-danger"></span>
+                    <div class="form-text">Để trống nếu không giới hạn</div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check form-switch">
+                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                    <label asp-for="IsActive" class="form-check-label fw-semibold">Kích hoạt flash sale</label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Chọn sách tham gia flash sale</label>
+                <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                    @if (ViewBag.Books != null)
+                    {
+                        @foreach (SelectListItem book in ViewBag.Books)
+                        {
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="selectedBookIds" value="@book.Value" id="book_@book.Value" @(book.Selected ? "checked" : "") />
+                                <label class="form-check-label" for="book_@book.Value">
+                                    @book.Text
+                                </label>
+                            </div>
+                        }
+                    }
+                </div>
+                <div class="form-text">Chọn các sách sẽ được áp dụng giảm giá trong flash sale này</div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>Lưu thay đổi
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Hủy
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

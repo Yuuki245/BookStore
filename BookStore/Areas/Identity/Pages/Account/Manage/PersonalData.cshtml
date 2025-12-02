@@ -5,22 +5,45 @@
     ViewData["ActivePage"] = ManageNavPages.PersonalData;
 }
 
-<h3>@ViewData["Title"]</h3>
+<div class="manage-page-header mb-4">
+    <h3 class="fw-bold mb-2">
+        <i class="bi bi-database me-2 text-primary"></i>@ViewData["Title"]
+    </h3>
+    <p class="text-muted mb-0">Quản lý dữ liệu cá nhân của bạn</p>
+</div>
 
 <div class="row">
-    <div class="col-md-6">
-        <p>Tài khoản của bạn chứa dữ liệu cá nhân mà bạn đã cung cấp cho chúng tôi. Trang này cho phép bạn tải xuống hoặc xóa dữ liệu đó.</p>
-        <p>
-            <strong>Việc xóa dữ liệu này sẽ xóa vĩnh viễn tài khoản của bạn và không thể khôi phục được.</strong>
-        </p>
-        <form id="download-data" asp-page="DownloadPersonalData" method="post">
-            <button class="btn btn-primary" type="submit">Tải xuống</button>
-        </form>
-        <p>
-            <a id="delete" asp-page="DeletePersonalData" class="btn btn-danger">Xóa tài khoản</a>
-        </p>
+    <div class="col-md-8 col-lg-6">
+        <div class="alert alert-info mb-4">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Thông tin:</strong> Tài khoản của bạn chứa dữ liệu cá nhân mà bạn đã cung cấp cho chúng tôi. Trang này cho phép bạn tải xuống hoặc xóa dữ liệu đó.
+        </div>
+
+        <div class="alert alert-warning mb-4">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <strong>Cảnh báo:</strong> Việc xóa dữ liệu này sẽ xóa vĩnh viễn tài khoản của bạn và không thể khôi phục được.
+        </div>
+
+        <div class="d-flex flex-column gap-3">
+            <form id="download-data" asp-page="DownloadPersonalData" method="post" class="d-inline">
+                <button class="btn btn-primary btn-lg w-100" type="submit">
+                    <i class="bi bi-download me-2"></i>Tải xuống dữ liệu
+                </button>
+            </form>
+            
+            <a id="delete" asp-page="DeletePersonalData" class="btn btn-danger btn-lg w-100">
+                <i class="bi bi-trash me-2"></i>Xóa tài khoản
+            </a>
+        </div>
     </div>
 </div>
+
+<style>
+    .manage-page-header {
+        border-bottom: 2px solid var(--bg-secondary);
+        padding-bottom: 1rem;
+    }
+</style>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
