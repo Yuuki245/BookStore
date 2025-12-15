@@ -10,4 +10,4 @@ I. GIỚI THIỆU DỰ ÁN
 
 QKT Book là một ứng dụng bán sách thương mại điện tử được phát triển bằng ASP.NET Core MVC (sử dụng kiến trúc Model-View-Controller) và Cơ sở dữ liệu SQL Server trên Azure. Dự án mô phỏng đầy đủ quy trình mua sắm, thanh toán, quản lý kho và quản trị hệ thống.
 
-Được phát triển bởi: [Phạm Văn Quyết/Yuuki245P (Sinh viên CNTT)
+Được phát triển bởi: [Phạm Văn Quyết/Yuuki245 (Sinh viên CNTT)
