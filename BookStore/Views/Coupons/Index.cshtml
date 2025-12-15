@@ -1,9 +1,10 @@
+@using BookStore.Helpers
 @{
     ViewData["Title"] = "Mã Giảm Giá";
     var activeCoupons = ViewBag.ActiveCoupons as List<BookStore.Models.Coupon> ?? new List<BookStore.Models.Coupon>();
     var upcomingCoupons = ViewBag.UpcomingCoupons as List<BookStore.Models.Coupon> ?? new List<BookStore.Models.Coupon>();
     var expiredCoupons = ViewBag.ExpiredCoupons as List<BookStore.Models.Coupon> ?? new List<BookStore.Models.Coupon>();
-    var now = ViewBag.Now as DateTime? ?? DateTime.Now;
+    var now = ViewBag.Now as DateTime? ?? TimeHelper.GetVietnamTime();
 }
 
 <div class="container my-4">
@@ -173,7 +174,9 @@
                 <div class="row g-4">
                     @foreach (var coupon in upcomingCoupons)
                     {
-                        var daysUntilStart = (coupon.StartDate - now).Days;
+                        var startDate = TimeHelper.ToVietnamTime(coupon.StartDate);
+                        var endDate = TimeHelper.ToVietnamTime(coupon.EndDate);
+                        var daysUntilStart = (startDate - now).Days;
                         var isPercentage = coupon.DiscountType == "Percentage";
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card h-100 coupon-card border-0 shadow-sm hover-lift" style="opacity: 0.9;">
@@ -250,11 +253,11 @@
                                     <div class="border-top pt-3">
                                         <div class="small text-muted mb-2">
                                             <i class="bi bi-calendar-event me-1"></i>
-                                            <strong>Bắt đầu:</strong> @coupon.StartDate.ToString("dd/MM/yyyy HH:mm")
+                                            <strong>Bắt đầu:</strong> @startDate.ToString("dd/MM/yyyy HH:mm")
                                         </div>
                                         <div class="small text-muted mb-2">
                                             <i class="bi bi-calendar-x me-1"></i>
-                                            <strong>Kết thúc:</strong> @coupon.EndDate.ToString("dd/MM/yyyy HH:mm")
+                                            <strong>Kết thúc:</strong> @endDate.ToString("dd/MM/yyyy HH:mm")
                                         </div>
                                         @if (daysUntilStart > 0)
                                         {
@@ -292,7 +295,9 @@
                 <div class="row g-4">
                     @foreach (var coupon in expiredCoupons)
                     {
-                        var daysSinceExpired = (now - coupon.EndDate).Days;
+                        var startDate = TimeHelper.ToVietnamTime(coupon.StartDate);
+                        var endDate = TimeHelper.ToVietnamTime(coupon.EndDate);
+                        var daysSinceExpired = (now - endDate).Days;
                         var isPercentage = coupon.DiscountType == "Percentage";
                         var expiredReason = "";
                         if (!coupon.IsActive)
@@ -376,19 +381,19 @@
                                     <div class="border-top pt-3">
                                         <div class="small text-muted mb-2">
                                             <i class="bi bi-calendar-event me-1"></i>
-                                            <strong>Bắt đầu:</strong> @coupon.StartDate.ToString("dd/MM/yyyy HH:mm")
+                                            <strong>Bắt đầu:</strong> @startDate.ToString("dd/MM/yyyy HH:mm")
                                         </div>
                                         <div class="small text-muted mb-2">
                                             <i class="bi bi-calendar-x me-1"></i>
-                                            <strong>Kết thúc:</strong> @coupon.EndDate.ToString("dd/MM/yyyy HH:mm")
+                                            <strong>Kết thúc:</strong> @endDate.ToString("dd/MM/yyyy HH:mm")
                                         </div>
-                                        @if (now > coupon.EndDate && daysSinceExpired > 0)
+                                        @if (now > endDate && daysSinceExpired > 0)
                                         {
                                             <div class="badge bg-secondary">
                                                 Đã hết hạn @daysSinceExpired ngày
                                             </div>
                                         }
-                                        else if (now > coupon.EndDate)
+                                        else if (now > endDate)
                                         {
                                             <div class="badge bg-danger">
                                                 Đã hết hạn hôm nay

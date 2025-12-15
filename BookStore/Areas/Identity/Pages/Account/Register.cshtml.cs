@@ -25,6 +25,7 @@ namespace BookStore.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IUserStore<IdentityUser> _userStore;
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
@@ -34,6 +35,7 @@ namespace BookStore.Areas.Identity.Pages.Account
             UserManager<IdentityUser> userManager,
             IUserStore<IdentityUser> userStore,
             SignInManager<IdentityUser> signInManager,
+            RoleManager<IdentityRole> roleManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender)
         {
@@ -41,6 +43,7 @@ namespace BookStore.Areas.Identity.Pages.Account
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _signInManager = signInManager;
+            _roleManager = roleManager;
             _logger = logger;
             _emailSender = emailSender;
         }
@@ -121,6 +124,25 @@ namespace BookStore.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
+
+                    // Đảm bảo role "Customer" tồn tại
+                    if (!await _roleManager.RoleExistsAsync("Customer"))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole("Customer"));
+                        _logger.LogInformation("Created Customer role.");
+                    }
+
+                    // Gán role "Customer" cho user mới đăng ký
+                    var roleResult = await _userManager.AddToRoleAsync(user, "Customer");
+                    if (roleResult.Succeeded)
+                    {
+                        _logger.LogInformation("Assigned Customer role to new user.");
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to assign Customer role to new user: {Errors}", 
+                            string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                    }
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

@@ -906,3 +906,127 @@ body[data-bs-theme="light"] .admin-wrap input[type="radio"]:checked + .btn-outli
         transition: none !important;
     }
 }
+
+/* ===== Order Status Badge Styles - Không có border, hiển thị rõ ràng ===== */
+.status-badge,
+.badge.status-badge {
+    border: none !important;
+    padding: 0.5rem 0.875rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    border-radius: 0.5rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    background: transparent !important;
+}
+
+.status-badge.status-badge-pending,
+.badge.status-badge.status-badge-pending {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+    color: white !important;
+}
+
+.status-badge.status-badge-confirmed,
+.badge.status-badge.status-badge-confirmed {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+    color: white !important;
+}
+
+.status-badge.status-badge-shipped,
+.badge.status-badge.status-badge-shipped {
+    background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
+    color: white !important;
+}
+
+.status-badge.status-badge-completed,
+.badge.status-badge.status-badge-completed {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%) !important;
+    color: white !important;
+}
+
+.status-badge.status-badge-canceled,
+.badge.status-badge.status-badge-canceled {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
+}
+
+.status-badge.status-badge-unknown,
+.badge.status-badge.status-badge-unknown {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
+    color: #6c757d !important;
+}
+
+.status-badge:hover,
+.badge.status-badge:hover {
+    transform: translateY(-1px) !important;
+    opacity: 0.9 !important;
+}
+
+.status-badge i,
+.badge.status-badge i {
+    color: inherit !important;
+}
+
+/* ===== Role Badge Styles - Không có border, hiển thị rõ ràng ===== */
+.role-badge-enhanced,
+.badge.role-badge-enhanced {
+    border: none !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    border-radius: 0.5rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+    background: transparent !important;
+}
+
+.role-badge-admin,
+.badge.role-badge-enhanced.role-badge-admin,
+.role-badge-enhanced.role-badge-admin {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
+}
+
+.role-badge-customer,
+.badge.role-badge-enhanced.role-badge-customer,
+.role-badge-enhanced.role-badge-customer {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+    color: white !important;
+}
+
+.role-badge-other,
+.badge.role-badge-enhanced.role-badge-other,
+.role-badge-enhanced.role-badge-other {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+    color: white !important;
+}
+
+.role-badge-no-role,
+.badge.role-badge-no-role {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
+    color: #6c757d !important;
+    border: none !important;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    border-radius: 0.5rem !important;
+}
+
+.role-badge-enhanced:hover,
+.badge.role-badge-enhanced:hover {
+    transform: translateY(-1px) !important;
+    opacity: 0.9 !important;
+}
+
+.role-badge-enhanced i,
+.badge.role-badge-enhanced i {
+    color: inherit !important;
+}

@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<BookStore.Models.ViewModels.OrderListItemVM>
+@using BookStore.Helpers
 @{
     ViewData["Title"] = "Đơn hàng của tôi";
     int page = ViewBag.Page ?? 1;
@@ -47,7 +48,7 @@ else
                     {
                         <tr>
                             <td class="fw-semibold">#@o.Id</td>
-                            <td>@o.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@TimeHelper.ToVietnamTime(o.CreatedAt).ToString("dd/MM/yyyy HH:mm")</td>
                             <td>@await Html.PartialAsync("_OrderStatusBadge", o.Status)</td>
                             <td class="text-end fw-semibold">@o.TotalAmount.ToString("N0") ₫</td>
                             <td class="text-end">

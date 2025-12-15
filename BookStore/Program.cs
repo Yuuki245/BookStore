@@ -73,6 +73,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICartService, SessionCartService>();
 builder.Services.AddScoped<IQKTPaymentService, QKTPaymentService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, EmailSender>();
 // ✅ Bật nén Gzip/Brotli
 builder.Services.AddResponseCompression(opt =>
 {

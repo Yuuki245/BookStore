@@ -22,7 +22,7 @@ public class NotificationService : INotificationService
             Message = message,
             Type = type,
             LinkUrl = linkUrl,
-            CreatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow // 🔴 FIX: Sử dụng UtcNow thống nhất với toàn bộ project
         };
 
         _db.Notifications.Add(notification);

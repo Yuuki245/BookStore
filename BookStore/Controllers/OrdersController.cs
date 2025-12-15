@@ -76,7 +76,9 @@ namespace BookStore.Controllers
                 return Unauthorized();
             }
             
-            var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == id);
+            var order = await _db.Orders
+                .Include(o => o.Items)
+                .FirstOrDefaultAsync(o => o.Id == id);
             if (order == null) return NotFound();
             if (order.UserId != uid) return Forbid();
 
@@ -94,7 +96,45 @@ namespace BookStore.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
+            var previousStatus = order.Status;
             order.Status = "Canceled";
+
+            // 🔴 FIX: Hoàn lại tồn kho nếu đơn đã được xác nhận (đã trừ kho trước đó)
+            if (previousStatus == "Confirmed")
+            {
+                foreach (var item in order.Items)
+                {
+                    var book = await _db.Books.FindAsync(item.BookId);
+                    if (book != null)
+                    {
+                        book.Stock += item.Quantity; // Hoàn lại tồn kho
+                    }
+                }
+            }
+
+            // 🔴 FIX: Hoàn lại điểm đã sử dụng
+            if (order.PointsUsed > 0)
+            {
+                _db.PointTransactions.Add(new PointTransaction
+                {
+                    UserId = order.UserId,
+                    Points = order.PointsUsed, // Số dương để hoàn lại
+                    TransactionType = "Refunded",
+                    Description = $"Hoàn lại {order.PointsUsed} điểm từ đơn hàng #{order.Id} đã hủy",
+                    OrderId = order.Id
+                });
+            }
+
+            // 🔴 FIX: Hoàn lại lượt sử dụng coupon
+            if (!string.IsNullOrEmpty(order.CouponCode))
+            {
+                var coupon = await _db.Coupons.FirstOrDefaultAsync(c => c.Code == order.CouponCode);
+                if (coupon != null && coupon.UsedCount > 0)
+                {
+                    coupon.UsedCount--; // Giảm số lần đã sử dụng
+                }
+            }
+
             await _db.SaveChangesAsync();
             TempData["Success"] = "Đã hủy đơn hàng.";
             return RedirectToAction(nameof(Details), new { id });

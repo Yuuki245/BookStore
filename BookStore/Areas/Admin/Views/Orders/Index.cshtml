@@ -1,4 +1,5 @@
 ﻿@model BookStore.Models.ViewModels.OrderAdminListVM
+@using BookStore.Helpers
 @{
     ViewData["Title"] = "Orders";
     var statuses = new[] { "Pending", "Confirmed", "Shipped", "Completed", "Canceled" };
@@ -56,7 +57,7 @@
                 {
                     <tr>
                         <td>@o.Id</td>
-                        <td>@o.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@TimeHelper.ToVietnamTime(o.CreatedAt).ToString("dd/MM/yyyy HH:mm")</td>
                         <td>@o.UserEmail</td>
                         <td>@await Html.PartialAsync("_OrderStatusBadge", o.Status)</td>
                         <td class="text-end">@($"{o.TotalAmount:N0} ₫")</td>

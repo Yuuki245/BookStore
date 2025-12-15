@@ -89,16 +89,14 @@ public class FlashSaleController : Controller
             }
         }
 
-        // Chỉ lấy sách không có OriginalPrice (không đang sale)
+        // Chỉ lấy sách không đang sale và không đang trong flash sale khác
         ViewBag.Books = await _db.Books
             .AsNoTracking()
-            .Where(b => b.OriginalPrice == null || b.OriginalPrice == 0)
+            .Where(b => (b.OriginalPrice == null || b.OriginalPrice == 0) && b.FlashSaleId == null)
             .Select(b => new SelectListItem
             {
                 Value = b.Id.ToString(),
-                Text = b.OriginalPrice != null && b.OriginalPrice > 0
-                    ? $"{b.Title} - {b.Price:N0} ₫ (Giá gốc: {b.OriginalPrice.Value:N0} ₫)"
-                    : $"{b.Title} - {b.Price:N0} ₫"
+                Text = $"{b.Title} - {b.Price:N0} ₫"
             })
             .ToListAsync();
 
@@ -169,6 +167,7 @@ public class FlashSaleController : Controller
                     
                     ViewBag.Books = await _db.Books
                         .AsNoTracking()
+                        .Where(b => (b.OriginalPrice == null || b.OriginalPrice == 0) && b.FlashSaleId == null)
                         .Select(b => new SelectListItem
                         {
                             Value = b.Id.ToString(),
@@ -220,16 +219,14 @@ public class FlashSaleController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        // Chỉ lấy sách không có OriginalPrice (không đang sale)
+        // Chỉ lấy sách không đang sale và không đang trong flash sale khác
         ViewBag.Books = await _db.Books
             .AsNoTracking()
-            .Where(b => b.OriginalPrice == null || b.OriginalPrice == 0)
+            .Where(b => (b.OriginalPrice == null || b.OriginalPrice == 0) && b.FlashSaleId == null)
             .Select(b => new SelectListItem
             {
                 Value = b.Id.ToString(),
-                Text = b.OriginalPrice != null && b.OriginalPrice > 0
-                    ? $"{b.Title} - {b.Price:N0} ₫ (Giá gốc: {b.OriginalPrice.Value:N0} ₫)"
-                    : $"{b.Title} - {b.Price:N0} ₫"
+                Text = $"{b.Title} - {b.Price:N0} ₫"
             })
             .ToListAsync();
 
@@ -267,19 +264,17 @@ public class FlashSaleController : Controller
         // Load book IDs đã được chọn trước
         var selectedBookIds = flashSale.Books.Select(b => b.Id).ToList();
 
-        // Chỉ lấy sách không có OriginalPrice (không đang sale)
-        // Tạo SelectListItem với logic so sánh ở client-side
+        // Chỉ lấy sách không đang sale và không đang trong flash sale khác (trừ flash sale hiện tại)
         var allBooks = await _db.Books
             .AsNoTracking()
-            .Where(b => b.OriginalPrice == null || b.OriginalPrice == 0)
+            .Where(b => (b.OriginalPrice == null || b.OriginalPrice == 0) && 
+                       (b.FlashSaleId == null || b.FlashSaleId == id))
             .ToListAsync();
 
         ViewBag.Books = allBooks.Select(b => new SelectListItem
         {
             Value = b.Id.ToString(),
-            Text = b.OriginalPrice != null && b.OriginalPrice > 0
-                ? $"{b.Title} - {b.Price:N0} ₫ (Giá gốc: {b.OriginalPrice.Value:N0} ₫)"
-                : $"{b.Title} - {b.Price:N0} ₫",
+            Text = $"{b.Title} - {b.Price:N0} ₫",
             Selected = selectedBookIds.Contains(b.Id)
         }).ToList();
 
@@ -315,14 +310,23 @@ public class FlashSaleController : Controller
             if (startTimeVN >= endTimeVN)
             {
                 ModelState.AddModelError("EndTime", "Thời gian kết thúc phải sau thời gian bắt đầu");
-                ViewBag.Books = await _db.Books
-                    .AsNoTracking()
-                    .Select(b => new SelectListItem
-                    {
-                        Value = b.Id.ToString(),
-                        Text = $"{b.Title} - {b.Price:N0} ₫"
-                    })
+                var existingSelectedBookIds = await _db.FlashSales
+                    .Where(f => f.Id == id)
+                    .SelectMany(f => f.Books.Select(b => b.Id))
                     .ToListAsync();
+                
+                var allBooks = await _db.Books
+                    .AsNoTracking()
+                    .Where(b => (b.OriginalPrice == null || b.OriginalPrice == 0) && 
+                               (b.FlashSaleId == null || b.FlashSaleId == id))
+                    .ToListAsync();
+                
+                ViewBag.Books = allBooks.Select(b => new SelectListItem
+                {
+                    Value = b.Id.ToString(),
+                    Text = $"{b.Title} - {b.Price:N0} ₫",
+                    Selected = existingSelectedBookIds.Contains(b.Id)
+                }).ToList();
                 return View(flashSale);
             }
 
@@ -413,18 +417,25 @@ public class FlashSaleController : Controller
             }
         }
 
-        // Chỉ lấy sách không có OriginalPrice (không đang sale)
-        ViewBag.Books = await _db.Books
-            .AsNoTracking()
-            .Where(b => b.OriginalPrice == null || b.OriginalPrice == 0)
-            .Select(b => new SelectListItem
-            {
-                Value = b.Id.ToString(),
-                Text = b.OriginalPrice != null && b.OriginalPrice > 0
-                    ? $"{b.Title} - {b.Price:N0} ₫ (Giá gốc: {b.OriginalPrice.Value:N0} ₫)"
-                    : $"{b.Title} - {b.Price:N0} ₫"
-            })
+        // Load book IDs đã được chọn trước
+        var currentSelectedBookIds = await _db.FlashSales
+            .Where(f => f.Id == id)
+            .SelectMany(f => f.Books.Select(b => b.Id))
             .ToListAsync();
+        
+        // Chỉ lấy sách không đang sale và không đang trong flash sale khác (trừ flash sale hiện tại)
+        var availableBooks = await _db.Books
+            .AsNoTracking()
+            .Where(b => (b.OriginalPrice == null || b.OriginalPrice == 0) && 
+                       (b.FlashSaleId == null || b.FlashSaleId == id))
+            .ToListAsync();
+        
+        ViewBag.Books = availableBooks.Select(b => new SelectListItem
+        {
+            Value = b.Id.ToString(),
+            Text = $"{b.Title} - {b.Price:N0} ₫",
+            Selected = currentSelectedBookIds.Contains(b.Id)
+        }).ToList();
 
         return View(flashSale);
     }

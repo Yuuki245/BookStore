@@ -9,14 +9,19 @@
 @* Flash Sale Products Section *@
 @if (Model?.ActiveFlashSale != null && Model.FlashSaleBooks?.Any() == true)
 {
-    <section class="my-3 fade-in section-divider">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-            <h2 class="section-title mb-0">
-                <i class="bi bi-lightning-charge-fill me-2 text-danger"></i>Flash Sale
-            </h2>
-            <a asp-controller="FlashSale" asp-action="Index" class="text-decoration-none fw-semibold text-primary">
-                Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
-            </a>
+    <section class="home-section fade-in section-divider">
+        <div class="section-header">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0">
+                    <span class="section-icon flash-sale-icon">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                    </span>
+                    <span>Flash Sale</span>
+                </h2>
+                <a asp-controller="FlashSale" asp-action="Index" class="section-view-all">
+                    Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
         </div>
 
         <div class="scroll-section">
@@ -27,7 +32,7 @@
                 @foreach (var b in Model.FlashSaleBooks)
                 {
                     ViewData["TagType"] = "FlashSale";
-                    <div>
+                    <div class="book-card-wrapper">
                         <partial name="~/Views/Shared/_BookCard.cshtml" model="b" />
                     </div>
                 }
@@ -39,12 +44,19 @@
     </section>
 }
 
-<section class="my-3 fade-in section-divider">
-    <div class="d-flex justify-content-between align-items-center mb-1">
-        <h2 class="section-title mb-0"><i class="bi bi-fire me-2 text-danger"></i>Sách bán chạy</h2>
-        <a asp-controller="Books" asp-action="Index" class="text-decoration-none fw-semibold text-primary">
-            Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
-        </a>
+<section class="home-section fade-in section-divider">
+    <div class="section-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title mb-0">
+                <span class="section-icon bestseller-icon">
+                    <i class="bi bi-fire"></i>
+                </span>
+                <span>Sách bán chạy</span>
+            </h2>
+            <a asp-controller="Books" asp-action="Index" class="section-view-all">
+                Xem tất cả <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
     </div>
 
     @if (Model?.Bestsellers?.Any() == true)
@@ -57,7 +69,7 @@
                 @foreach (var b in Model.Bestsellers)
                 {
                     ViewData["TagType"] = "Bestseller";
-                    <div>
+                    <div class="book-card-wrapper">
                         <partial name="~/Views/Shared/_BookCard.cshtml" model="b" />
                     </div>
                 }
@@ -69,13 +81,22 @@
     }
     else
     {
-        <div class="text-muted">Chưa có dữ liệu.</div>
+        <div class="empty-section-message">
+            <i class="bi bi-inbox me-2"></i>Chưa có dữ liệu.
+        </div>
     }
 </section>
 
-<section class="my-3 fade-in section-divider">
-    <div class="d-flex justify-content-between align-items-center mb-1">
-        <h2 class="section-title mb-0"><i class="bi bi-tag-fill me-2 text-success"></i>Giảm giá Hôm nay</h2>
+<section class="home-section fade-in section-divider">
+    <div class="section-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title mb-0">
+                <span class="section-icon sale-icon">
+                    <i class="bi bi-tag-fill"></i>
+                </span>
+                <span>Giảm giá Hôm nay</span>
+            </h2>
+        </div>
     </div>
 
     @if (Model?.DailySales?.Any() == true)
@@ -88,7 +109,7 @@
                 @foreach (var b in Model.DailySales)
                 {
                     ViewData["TagType"] = "Sale";
-                    <div>
+                    <div class="book-card-wrapper">
                         <partial name="~/Views/Shared/_BookCard.cshtml" model="b" />
                     </div>
                 }
@@ -100,27 +121,36 @@
     }
     else
     {
-        <div class="text-muted">Chưa có sản phẩm nào được giảm giá.</div>
+        <div class="empty-section-message">
+            <i class="bi bi-inbox me-2"></i>Chưa có sản phẩm nào được giảm giá.
+        </div>
     }
 </section>
 
-<section class="my-3 fade-in section-divider">
-    <div class="p-4 rounded-4" style="background: linear-gradient(135deg, #e6f1ff 0%, #dbe7ff 100%); border:1px solid #dbe7ff">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div class="fw-semibold">
-                <i class="bi bi-gift-fill me-2 text-primary"></i>
-                Người bán đang giảm giá! Tiết kiệm lớn cho lần mua sách tiếp theo của bạn.
+<section class="home-section fade-in section-divider">
+    <div class="promo-banner">
+        <div class="promo-content">
+            <div class="promo-text">
+                <i class="bi bi-gift-fill me-2"></i>
+                <span>Người bán đang giảm giá! Tiết kiệm lớn cho lần mua sách tiếp theo của bạn.</span>
             </div>
-            <a asp-controller="Books" asp-action="Index" class="btn btn-primary">
+            <a asp-controller="Books" asp-action="Index" class="btn btn-primary btn-promo">
                 <i class="bi bi-bag-check me-2"></i>Mua ngay
             </a>
         </div>
     </div>
 </section>
 
-<section class="my-3 fade-in section-divider">
-    <div class="d-flex justify-content-between align-items-center mb-1">
-        <h2 class="section-title mb-0"><i class="bi bi-lightbulb-fill me-2 text-primary"></i>Đề xuất cho bạn</h2>
+<section class="home-section fade-in section-divider">
+    <div class="section-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title mb-0">
+                <span class="section-icon recommend-icon">
+                    <i class="bi bi-lightbulb-fill"></i>
+                </span>
+                <span>Đề xuất cho bạn</span>
+            </h2>
+        </div>
     </div>
 
     @if (Model?.NewReleases?.Any() == true)
@@ -133,7 +163,7 @@
                 @foreach (var b in Model.NewReleases)
                 {
                     ViewData["TagType"] = "Recommend";
-                    <div>
+                    <div class="book-card-wrapper">
                         <partial name="~/Views/Shared/_BookCard.cshtml" model="b" />
                     </div>
                 }
@@ -145,7 +175,9 @@
     }
     else
     {
-        <div class="text-muted">Chưa có dữ liệu.</div>
+        <div class="empty-section-message">
+            <i class="bi bi-inbox me-2"></i>Chưa có dữ liệu.
+        </div>
     }
 </section>
 

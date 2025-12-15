@@ -1,4 +1,5 @@
 @model BookStore.Models.FlashSale
+@using BookStore.Helpers
 
 @if (Model != null)
 {
@@ -53,8 +54,8 @@
 
     <script>
         (function() {
-            // Dùng local time, không cần Z (UTC)
-            const endTime = new Date('@Model.EndTime.ToString("yyyy-MM-ddTHH:mm:ss")');
+            // Dùng thời gian UTC từ server, client tự chuyển múi giờ chính xác
+            const endTime = new Date('@Model.EndTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss\\Z")');
             const countdownElement = document.getElementById('flash-sale-countdown-@Model.Id');
             
             if (!countdownElement) return;

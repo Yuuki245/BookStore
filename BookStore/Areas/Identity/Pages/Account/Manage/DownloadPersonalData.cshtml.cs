@@ -58,7 +58,19 @@ namespace BookStore.Areas.Identity.Pages.Account.Manage
                 personalData.Add($"{l.LoginProvider} external login provider key", l.ProviderKey);
             }
 
-            personalData.Add($"Authenticator Key", await _userManager.GetAuthenticatorKeyAsync(user));
+            // Only get authenticator key if 2FA is enabled
+            try
+            {
+                var authenticatorKey = await _userManager.GetAuthenticatorKeyAsync(user);
+                if (!string.IsNullOrEmpty(authenticatorKey))
+                {
+                    personalData.Add($"Authenticator Key", authenticatorKey);
+                }
+            }
+            catch
+            {
+                // Ignore if authenticator is not set up
+            }
 
             Response.Headers.TryAdd("Content-Disposition", "attachment; filename=PersonalData.json");
             return new FileContentResult(JsonSerializer.SerializeToUtf8Bytes(personalData), "application/json");

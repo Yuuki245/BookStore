@@ -1,4 +1,5 @@
 @model IEnumerable<BookStore.Models.Book>
+@using BookStore.Helpers
 @{
     ViewData["Title"] = "Flash Sale";
     var flashSale = ViewBag.FlashSale as BookStore.Models.FlashSale;
@@ -85,8 +86,8 @@ else
 
     <script>
         (function() {
-            // Dùng local time, không cần Z (UTC)
-            const endTime = new Date('@flashSale.EndTime.ToString("yyyy-MM-ddTHH:mm:ss")');
+            // Dùng thời gian UTC từ server, client tự chuyển múi giờ chính xác
+            const endTime = new Date('@flashSale.EndTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss\\Z")');
             const countdownElement = document.getElementById('flash-sale-countdown');
             
             if (!countdownElement) return;

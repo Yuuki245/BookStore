@@ -119,12 +119,12 @@
                 <form asp-controller="Cart" asp-action="Add" method="post" class="d-flex gap-2 align-items-center">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="bookId" value="@Model.MainBook.Id" />
-                    <div class="d-flex align-items-center gap-1" style="max-width:120px;">
-                        <button type="button" class="btn btn-outline-secondary quantity-decrease-detail" title="Giảm">
+                    <div class="quantity-selector">
+                        <button type="button" class="quantity-btn quantity-decrease-detail" title="Giảm">
                             <i class="bi bi-dash"></i>
                         </button>
-                        <input type="text" name="qty" id="qty-input-detail" value="1" class="form-control text-center" style="max-width:70px; padding: 0.5rem; font-size: 1rem !important; color: #212529 !important; font-weight: 600 !important; background-color: #fff !important; opacity: 1 !important;" data-min="1" data-max="@Model.MainBook.Stock" />
-                        <button type="button" class="btn btn-outline-secondary quantity-increase-detail" title="Tăng">
+                        <input type="text" name="qty" id="qty-input-detail" value="1" class="quantity-input" data-min="1" data-max="@Model.MainBook.Stock" />
+                        <button type="button" class="quantity-btn quantity-increase-detail" title="Tăng">
                             <i class="bi bi-plus"></i>
                         </button>
                     </div>
@@ -165,7 +165,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between">
                             <h6 class="card-title">@(r.User?.UserName ?? "Anonymous")</h6>
-                            <span class="text-muted small">@r.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</span>
+                            <span class="text-muted small">@BookStore.Helpers.TimeHelper.ToVietnamTime(r.CreatedAt).ToString("dd/MM/yyyy")</span>
                         </div>
                         <div class="mb-2">
                             @for (int i = 1; i <= 5; i++)
@@ -192,15 +192,42 @@
                             <input type="hidden" asp-for="NewReview.BookId" value="@Model.MainBook.Id" />
 
                             <div class="mb-3">
-                                <label asp-for="NewReview.Rating" class="form-label">Chọn số sao</label>
-                                <div class="rating-stars">
-                                    <input type="radio" id="star5" asp-for="NewReview.Rating" value="5" /><label for="star5" title="5 sao"><i class="bi bi-star-fill"></i></label>
-                                    <input type="radio" id="star4" asp-for="NewReview.Rating" value="4" /><label for="star4" title="4 sao"><i class="bi bi-star-fill"></i></label>
-                                    <input type="radio" id="star3" asp-for="NewReview.Rating" value="3" /><label for="star3" title="3 sao"><i class="bi bi-star-fill"></i></label>
-                                    <input type="radio" id="star2" asp-for="NewReview.Rating" value="2" /><label for="star2" title="2 sao"><i class="bi bi-star-fill"></i></label>
-                                    <input type="radio" id="star1" asp-for="NewReview.Rating" value="1" /><label for="star1" title="1 sao"><i class="bi bi-star-fill"></i></label>
+                                <label asp-for="NewReview.Rating" class="form-label fw-semibold mb-2">
+                                    <i class="bi bi-star-fill me-1 text-warning"></i>Chọn số sao đánh giá
+                                </label>
+                                <div class="rating-container">
+                                    <div class="rating-stars" id="ratingStars">
+                                        <input type="radio" id="star5" asp-for="NewReview.Rating" value="5" />
+                                        <label for="star5" data-rating="5" title="Xuất sắc - 5 sao">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span class="rating-text">5</span>
+                                        </label>
+                                        <input type="radio" id="star4" asp-for="NewReview.Rating" value="4" />
+                                        <label for="star4" data-rating="4" title="Rất tốt - 4 sao">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span class="rating-text">4</span>
+                                        </label>
+                                        <input type="radio" id="star3" asp-for="NewReview.Rating" value="3" />
+                                        <label for="star3" data-rating="3" title="Tốt - 3 sao">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span class="rating-text">3</span>
+                                        </label>
+                                        <input type="radio" id="star2" asp-for="NewReview.Rating" value="2" />
+                                        <label for="star2" data-rating="2" title="Tạm được - 2 sao">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span class="rating-text">2</span>
+                                        </label>
+                                        <input type="radio" id="star1" asp-for="NewReview.Rating" value="1" />
+                                        <label for="star1" data-rating="1" title="Không hài lòng - 1 sao">
+                                            <i class="bi bi-star-fill"></i>
+                                            <span class="rating-text">1</span>
+                                        </label>
+                                    </div>
+                                    <div class="rating-feedback mt-2">
+                                        <span id="ratingText" class="text-muted small">Di chuột qua các sao để xem mô tả</span>
+                                    </div>
                                 </div>
-                                <span asp-validation-for="NewReview.Rating" class="text-danger"></span>
+                                <span asp-validation-for="NewReview.Rating" class="text-danger d-block mt-1"></span>
                             </div>
                             <div class="mb-3">
                                 <label asp-for="NewReview.Comment" class="form-label">Bình luận (Tùy chọn)</label>
@@ -254,9 +281,201 @@
     </div>
 }
 
+<style>
+    /* Rating Stars Styles */
+    .rating-container {
+        padding: 1rem;
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 152, 0, 0.05) 100%);
+        border-radius: 0.75rem;
+        border: 2px solid rgba(255, 193, 7, 0.2);
+    }
+
+    .rating-stars {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .rating-stars input[type="radio"] {
+        display: none;
+    }
+
+    .rating-stars label {
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        background: white;
+        border: 2px solid #e5e7eb;
+        min-width: 60px;
+        min-height: 70px;
+    }
+
+    .rating-stars label i {
+        font-size: 2rem;
+        color: #d1d5db;
+        transition: all 0.3s ease;
+        margin-bottom: 0.25rem;
+    }
+
+    .rating-stars label .rating-text {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #6b7280;
+        transition: all 0.3s ease;
+    }
+
+    /* Hover effect - highlight stars from right to left */
+    .rating-stars label:hover,
+    .rating-stars label:hover ~ label {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
+        border-color: #fbbf24;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+    }
+
+    .rating-stars label:hover i,
+    .rating-stars label:hover ~ label i {
+        color: #fbbf24;
+        transform: scale(1.1);
+    }
+
+    .rating-stars label:hover .rating-text,
+    .rating-stars label:hover ~ label .rating-text {
+        color: #f59e0b;
+        font-weight: 700;
+    }
+
+    /* Selected state */
+    .rating-stars input[type="radio"]:checked ~ label,
+    .rating-stars input[type="radio"]:checked ~ label ~ label {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.15) 100%);
+        border-color: #f59e0b;
+    }
+
+    .rating-stars input[type="radio"]:checked ~ label i,
+    .rating-stars input[type="radio"]:checked ~ label ~ label i {
+        color: #f59e0b;
+    }
+
+    .rating-stars input[type="radio"]:checked ~ label .rating-text,
+    .rating-stars input[type="radio"]:checked ~ label ~ label .rating-text {
+        color: #f59e0b;
+        font-weight: 700;
+    }
+
+    /* Active selected star */
+    .rating-stars label:has(input[type="radio"]:checked) {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.25) 0%, rgba(255, 152, 0, 0.25) 100%);
+        border-color: #f59e0b;
+        box-shadow: 0 4px 16px rgba(255, 193, 7, 0.3);
+        transform: scale(1.05);
+    }
+
+    .rating-stars label:has(input[type="radio"]:checked) i {
+        color: #f59e0b;
+        transform: scale(1.15);
+    }
+
+    .rating-stars label:has(input[type="radio"]:checked) .rating-text {
+        color: #d97706;
+        font-weight: 800;
+        font-size: 1rem;
+    }
+
+    /* Rating feedback text */
+    .rating-feedback {
+        text-align: center;
+        min-height: 24px;
+    }
+
+    .rating-feedback #ratingText {
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .rating-feedback #ratingText.active {
+        color: #f59e0b;
+        font-weight: 600;
+    }
+
+    /* Responsive */
+    @@media (max-width: 576px) {
+        .rating-stars {
+            gap: 0.25rem;
+        }
+
+        .rating-stars label {
+            min-width: 50px;
+            min-height: 60px;
+            padding: 0.5rem;
+        }
+
+        .rating-stars label i {
+            font-size: 1.5rem;
+        }
+
+        .rating-stars label .rating-text {
+            font-size: 0.75rem;
+        }
+    }
+</style>
+
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Rating stars interaction
+            const ratingStars = document.getElementById('ratingStars');
+            const ratingText = document.getElementById('ratingText');
+            const ratingLabels = ratingStars?.querySelectorAll('label');
+            const ratingInputs = ratingStars?.querySelectorAll('input[type="radio"]');
+
+            if (ratingStars && ratingLabels && ratingInputs) {
+                const ratingMessages = {
+                    5: 'Xuất sắc - Sách rất hay!',
+                    4: 'Rất tốt - Sách hay!',
+                    3: 'Tốt - Sách ổn',
+                    2: 'Tạm được - Có thể cải thiện',
+                    1: 'Không hài lòng - Cần cải thiện nhiều'
+                };
+
+                // Hover effect
+                ratingLabels.forEach(label => {
+                    label.addEventListener('mouseenter', function() {
+                        const rating = this.getAttribute('data-rating');
+                        ratingText.textContent = ratingMessages[rating];
+                        ratingText.classList.add('active');
+                    });
+
+                    label.addEventListener('mouseleave', function() {
+                        const checkedInput = ratingStars.querySelector('input[type="radio"]:checked');
+                        if (checkedInput) {
+                            const rating = checkedInput.value;
+                            ratingText.textContent = ratingMessages[rating];
+                            ratingText.classList.add('active');
+                        } else {
+                            ratingText.textContent = 'Di chuột qua các sao để xem mô tả';
+                            ratingText.classList.remove('active');
+                        }
+                    });
+                });
+
+                // Click effect
+                ratingInputs.forEach(input => {
+                    input.addEventListener('change', function() {
+                        const rating = this.value;
+                        ratingText.textContent = ratingMessages[rating];
+                        ratingText.classList.add('active');
+                    });
+                });
+            }
             // Xử lý mô tả sách
             const container = document.getElementById('descriptionContainer');
             const content = document.getElementById('descriptionContent');

@@ -1,6 +1,7 @@
-﻿@{
+﻿@using BookStore.Helpers
+@{
     ViewData["Title"] = "Dashboard";
-    var now = DateTime.Now.ToString("HH:mm");
+    var now = TimeHelper.GetVietnamTime().ToString("HH:mm");
     var revenue = (decimal)ViewBag.Revenue;
 }
 

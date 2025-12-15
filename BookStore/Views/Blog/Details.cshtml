@@ -6,7 +6,7 @@
 <div class="container" style="max-width: 800px;">
     <h1 class="mb-2">@Model.Title</h1>
     <div class="text-muted mb-3">
-        Đăng bởi @(Model.User?.UserName ?? "Admin") vào @Model.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")
+        Đăng bởi @(Model.User?.UserName ?? "Admin") vào @BookStore.Helpers.TimeHelper.ToVietnamTime(Model.CreatedAt).ToString("dd/MM/yyyy")
     </div>
 
     @if (!string.IsNullOrEmpty(Model.HeaderImageUrl))

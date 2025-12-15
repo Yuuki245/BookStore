@@ -1,6 +1,13 @@
 ﻿@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 @{
-    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+    // Đơn giản hóa: không check external logins để tránh deadlock
+    // Nếu cần, có thể tạo ViewComponent riêng
+    bool hasExternalLogins = false;
+    
+    // Kiểm tra xem user có phải Admin không
+    var user = await UserManager.GetUserAsync(User);
+    bool isAdmin = user != null && await UserManager.IsInRoleAsync(user, "Admin");
 }
 <ul class="nav nav-pills flex-column gap-2">
     <li class="nav-item">
@@ -36,6 +43,19 @@
             <i class="bi bi-database me-2"></i>Dữ liệu cá nhân
         </a>
     </li>
+    @if (!isAdmin)
+    {
+        <li class="nav-item">
+            <a class="nav-link manage-nav-link @ManageNavPages.AddressesNavClass(ViewContext)" id="addresses" asp-page="./Addresses">
+                <i class="bi bi-geo-alt me-2"></i>Địa chỉ giao hàng
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link manage-nav-link @ManageNavPages.PointsNavClass(ViewContext)" id="points" asp-page="./Points">
+                <i class="bi bi-star-fill me-2"></i>Điểm tích lũy
+            </a>
+        </li>
+    }
 </ul>
 
 <style>

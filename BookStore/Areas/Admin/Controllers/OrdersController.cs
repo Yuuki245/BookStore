@@ -78,7 +78,9 @@ public class OrdersController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateStatus(int id, string status)
     {
-        var order = await _db.Orders.FindAsync(id);
+        var order = await _db.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id);
         if (order == null) return NotFound();
         
         // Không cho phép thay đổi trạng thái khi đơn đã bị hủy
@@ -97,6 +99,66 @@ public class OrdersController : Controller
         
         var oldStatus = order.Status;
         order.Status = status;
+
+        // 🔴 FIX: Xử lý khi hủy đơn hàng
+        if (status == "Canceled" && oldStatus != "Canceled")
+        {
+            // Hoàn lại tồn kho nếu đơn đã được xác nhận (đã trừ kho trước đó)
+            if (oldStatus == "Confirmed" || oldStatus == "Shipped")
+            {
+                foreach (var item in order.Items)
+                {
+                    var book = await _db.Books.FindAsync(item.BookId);
+                    if (book != null)
+                    {
+                        book.Stock += item.Quantity; // Hoàn lại tồn kho
+                    }
+                }
+            }
+
+            // Hoàn lại điểm đã sử dụng
+            if (order.PointsUsed > 0)
+            {
+                _db.PointTransactions.Add(new BookStore.Models.PointTransaction
+                {
+                    UserId = order.UserId,
+                    Points = order.PointsUsed, // Số dương để hoàn lại
+                    TransactionType = "Refunded",
+                    Description = $"Hoàn lại {order.PointsUsed} điểm từ đơn hàng #{order.Id} đã hủy",
+                    OrderId = order.Id
+                });
+            }
+
+            // Hoàn lại lượt sử dụng coupon
+            if (!string.IsNullOrEmpty(order.CouponCode))
+            {
+                var coupon = await _db.Coupons.FirstOrDefaultAsync(c => c.Code == order.CouponCode);
+                if (coupon != null && coupon.UsedCount > 0)
+                {
+                    coupon.UsedCount--; // Giảm số lần đã sử dụng
+                }
+            }
+        }
+        
+        // Tích điểm khi đơn hàng hoàn thành (chỉ tích 1 lần, không tích lại nếu đã tích)
+        if (status == "Completed" && oldStatus != "Completed" && order.PointsEarned == 0)
+        {
+            // Tích điểm: 10000đ = 1 điểm (chỉ tích từ tổng tiền cuối cùng sau khi đã trừ tất cả giảm giá)
+            int pointsEarned = (int)(order.TotalAmount / 10000m);
+            if (pointsEarned > 0)
+            {
+                order.PointsEarned = pointsEarned;
+                _db.PointTransactions.Add(new BookStore.Models.PointTransaction
+                {
+                    UserId = order.UserId,
+                    Points = pointsEarned,
+                    TransactionType = "Earned",
+                    Description = $"Tích điểm từ đơn hàng #{order.Id}",
+                    OrderId = order.Id
+                });
+            }
+        }
+        
         await _db.SaveChangesAsync();
 
         // Tạo thông báo cho user khi trạng thái đơn hàng thay đổi

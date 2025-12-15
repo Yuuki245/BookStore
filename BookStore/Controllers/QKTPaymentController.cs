@@ -115,9 +115,8 @@ namespace BookStore.Controllers
             }
             else
             {
-                // Thanh toán thất bại
-                order.Status = "Canceled";
-                await _db.SaveChangesAsync();
+                // Thanh toán thất bại - hủy đơn và hoàn lại điểm/coupon
+                await CancelOrderAndRefund(order);
                 TempData["Error"] = $"Thanh toán thất bại. Đơn hàng #{order.Id} đã bị hủy.";
                 return RedirectToAction("Details", "Orders", new { id = order.Id });
             }
@@ -151,8 +150,7 @@ namespace BookStore.Controllers
                 }
                 else if (result == "failed" && order.Status == "Pending")
                 {
-                    order.Status = "Canceled";
-                    await _db.SaveChangesAsync();
+                    await CancelOrderAndRefund(order);
                     TempData["Error"] = $"Thanh toán thất bại. Đơn hàng #{order.Id} đã bị hủy.";
                 }
             }
@@ -173,13 +171,16 @@ namespace BookStore.Controllers
                 {
                     if (book.Stock < item.Quantity)
                     {
-                        order.Status = "Canceled";
-                        await _db.SaveChangesAsync();
+                        // Không đủ kho - hủy đơn và hoàn lại
+                        await CancelOrderAndRefund(order);
                         return;
                     }
                     book.Stock -= item.Quantity;
                 }
             }
+
+            // Tích điểm sẽ được thực hiện khi đơn hàng hoàn thành (status = "Completed")
+            // Không tích điểm ở đây nữa
 
             await _db.SaveChangesAsync();
 
@@ -215,6 +216,37 @@ namespace BookStore.Controllers
                     );
                 }
             }
+        }
+
+        // 🔴 FIX: Hàm hủy đơn và hoàn lại điểm/coupon
+        private async Task CancelOrderAndRefund(Order order)
+        {
+            order.Status = "Canceled";
+
+            // Hoàn lại điểm đã sử dụng
+            if (order.PointsUsed > 0)
+            {
+                _db.PointTransactions.Add(new BookStore.Models.PointTransaction
+                {
+                    UserId = order.UserId,
+                    Points = order.PointsUsed, // Số dương để hoàn lại
+                    TransactionType = "Refunded",
+                    Description = $"Hoàn lại {order.PointsUsed} điểm từ đơn hàng #{order.Id} đã hủy",
+                    OrderId = order.Id
+                });
+            }
+
+            // Hoàn lại lượt sử dụng coupon
+            if (!string.IsNullOrEmpty(order.CouponCode))
+            {
+                var coupon = await _db.Coupons.FirstOrDefaultAsync(c => c.Code == order.CouponCode);
+                if (coupon != null && coupon.UsedCount > 0)
+                {
+                    coupon.UsedCount--; // Giảm số lần đã sử dụng
+                }
+            }
+
+            await _db.SaveChangesAsync();
         }
     }
 }

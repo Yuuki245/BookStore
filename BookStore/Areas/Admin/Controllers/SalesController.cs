@@ -29,16 +29,16 @@ namespace BookStore.Areas.Admin.Controllers
                 .OrderBy(b => b.Title)
                 .ToListAsync();
 
-            // Tải danh sách sách CHƯA sale để đưa vào dropdown
+            // Tải danh sách sách CHƯA sale và CHƯA trong flash sale để đưa vào dropdown
             var booksNotOnSale = await _db.Books.AsNoTracking()
-                .Where(b => b.OriginalPrice == null) // Chỉ lấy sách chưa sale
+                .Where(b => b.OriginalPrice == null && b.FlashSaleId == null) // Chỉ lấy sách chưa sale và chưa trong flash sale
                 .OrderBy(b => b.Title)
                 .ToListAsync();
 
             ViewBag.BooksList = booksNotOnSale.Select(b => new SelectListItem
             {
                 Value = b.Id.ToString(),
-                Text = $"{b.Title} - {b.Price:N0} ₫ (Giá gốc: {b.Price:N0} ₫)"
+                Text = $"{b.Title} - {b.Price:N0} ₫"
             }).ToList();
 
             return View(saleItems);
@@ -57,9 +57,9 @@ namespace BookStore.Areas.Admin.Controllers
             }
 
             var book = await _db.Books.FindAsync(bookId);
-            if (book == null || book.OriginalPrice != null)
+            if (book == null || book.OriginalPrice != null || book.FlashSaleId != null)
             {
-                TempData["Error"] = "Sách không hợp lệ hoặc đã được sale.";
+                TempData["Error"] = "Sách không hợp lệ, đã được sale hoặc đang trong flash sale.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -106,9 +106,9 @@ namespace BookStore.Areas.Admin.Controllers
             if (maxDiscount > 30) maxDiscount = 30;
             var rand = new Random();
 
-            // 2. Lấy ngẫu nhiên 'count' sách (đang không sale)
+            // 2. Lấy ngẫu nhiên 'count' sách (đang không sale và không trong flash sale)
             var booksToSale = await _db.Books
-                .Where(b => b.OriginalPrice == null)
+                .Where(b => b.OriginalPrice == null && b.FlashSaleId == null)
                 .OrderBy(x => Guid.NewGuid())
                 .Take(count)
                 .ToListAsync();

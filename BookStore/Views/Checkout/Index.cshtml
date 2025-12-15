@@ -67,10 +67,115 @@
                     <input type="hidden" asp-for="CouponCode" id="couponCodeHidden" />
                     @* Hidden input cho PaymentMethod *@
                     <input type="hidden" asp-for="PaymentMethod" id="paymentMethodHidden" value="COD" />
+                    @* Hidden input cho AddressId và PointsToUse *@
+                    <input type="hidden" asp-for="AddressId" id="addressIdHidden" />
+                    <input type="hidden" asp-for="PointsToUse" id="pointsToUseHidden" />
                     @if (ViewData.ModelState.Any(x => x.Value?.Errors?.Count > 0))
                     {
                         @Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
                     }
+
+                    @* Chọn địa chỉ đã lưu *@
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label fw-semibold mb-0">
+                                <i class="bi bi-bookmark-star me-1"></i>Địa chỉ giao hàng
+                            </label>
+                            <a asp-area="" asp-controller="Addresses" asp-action="Index" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-geo-alt me-1"></i>Quản lý địa chỉ
+                            </a>
+                        </div>
+                        @if (Model.SavedAddresses != null && Model.SavedAddresses.Any())
+                        {
+                            var defaultAddress = Model.SavedAddresses.FirstOrDefault(a => a.IsDefault) ?? Model.SavedAddresses.First();
+                            var otherAddresses = Model.SavedAddresses.Where(a => a.Id != defaultAddress.Id).ToList();
+                            
+                            @* Hiển thị địa chỉ mặc định *@
+                            <div class="card border-primary mb-3 default-address-card" style="background: linear-gradient(135deg, rgba(59, 97, 235, 0.05) 0%, rgba(59, 97, 235, 0.02) 100%);">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start justify-content-between">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="badge bg-primary me-2">
+                                                    <i class="bi bi-star-fill me-1"></i>Địa chỉ mặc định
+                                                </span>
+                                            </div>
+                                            <div class="fw-semibold mb-1">
+                                                <i class="bi bi-telephone me-1 text-primary"></i>@defaultAddress.Phone
+                                            </div>
+                                            <div class="text-muted small">
+                                                <i class="bi bi-geo-alt me-1"></i>@defaultAddress.Address
+                                            </div>
+                                        </div>
+                                        <input type="radio" name="selectedAddress" 
+                                               id="address_@defaultAddress.Id" 
+                                               value="@defaultAddress.Id"
+                                               checked
+                                               class="form-check-input mt-1" 
+                                               onchange="selectSavedAddress(@defaultAddress.Id, '@Html.Raw(defaultAddress.Address.Replace("'", "\\'").Replace("\"", "&quot;"))', '@defaultAddress.Phone')" />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            @* Dropdown cho các địa chỉ khác *@
+                            @if (otherAddresses.Any())
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold small mb-2">
+                                        <i class="bi bi-list-ul me-1"></i>Chọn địa chỉ khác
+                                    </label>
+                                    <select class="form-select" id="otherAddressesSelect" onchange="selectOtherAddress(this.value)">
+                                        <option value="">-- Chọn địa chỉ khác --</option>
+                                        @foreach (var addr in otherAddresses)
+                                        {
+                                            <option value="@addr.Id" 
+                                                    data-address="@Html.Raw(addr.Address.Replace("'", "\\'").Replace("\"", "&quot;"))" 
+                                                    data-phone="@addr.Phone">
+                                                @addr.Phone - @addr.Address
+                                            </option>
+                                        }
+                                    </select>
+                                </div>
+                                @* Hidden radio buttons cho các địa chỉ khác *@
+                                @foreach (var addr in otherAddresses)
+                                {
+                                    <input type="radio" name="selectedAddress" 
+                                           id="address_@addr.Id" 
+                                           value="@addr.Id"
+                                           class="d-none" 
+                                           onchange="selectSavedAddress(@addr.Id, '@Html.Raw(addr.Address.Replace("'", "\\'").Replace("\"", "&quot;"))', '@addr.Phone')" />
+                                }
+                            }
+                            
+                            @* Tùy chọn nhập địa chỉ mới *@
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="selectedAddress" 
+                                       id="address_new" 
+                                       value="new"
+                                       onchange="selectNewAddress()" />
+                                <label class="form-check-label" for="address_new">
+                                    <i class="bi bi-plus-circle me-1"></i><strong>Nhập địa chỉ mới</strong>
+                                </label>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-info mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Bạn chưa có địa chỉ nào. <a asp-area="" asp-controller="Addresses" asp-action="Create" target="_blank">Thêm địa chỉ mới</a> để mua hàng nhanh hơn.
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="selectedAddress" 
+                                       id="address_new" 
+                                       value="new"
+                                       checked 
+                                       onchange="selectNewAddress()" />
+                                <label class="form-check-label" for="address_new">
+                                    <i class="bi bi-plus-circle me-1"></i><strong>Nhập địa chỉ mới</strong>
+                                </label>
+                            </div>
+                        }
+                    </div>
 
                     <div class="mb-4">
                         <label asp-for="ShippingAddress" class="form-label fw-semibold">
@@ -210,6 +315,43 @@
                             </span>
                         </div>
 
+                        <!-- Sử dụng điểm tích lũy -->
+                        <div class="mb-3">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="usePointsCheckbox" 
+                                       onchange="togglePointsUsage()"
+                                       @(Model.AvailablePoints < 10 ? "disabled" : "") />
+                                <label class="form-check-label fw-semibold" for="usePointsCheckbox">
+                                    <i class="bi bi-star-fill me-1 text-warning"></i>Sử dụng điểm tích lũy
+                                    <span class="badge bg-warning text-dark ms-2">Bạn có @Model.AvailablePoints điểm</span>
+                                </label>
+                            </div>
+                            @if (Model.AvailablePoints < 10)
+                            {
+                                <div class="alert alert-info mb-2">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    Cần tối thiểu <strong>10 điểm</strong> để sử dụng. Bạn hiện có <strong>@Model.AvailablePoints điểm</strong>.
+                                </div>
+                            }
+                            <div id="pointsInputGroup" style="display: none;">
+                                <div class="input-group">
+                                    <input type="number" id="pointsToUseInput" 
+                                           class="form-control" 
+                                           placeholder="Nhập số điểm (tối thiểu 10)" 
+                                           min="10" 
+                                           max="@Model.AvailablePoints"
+                                           value="10" />
+                                    <button type="button" id="applyPointsBtn" class="btn btn-outline-warning">
+                                        <i class="bi bi-check-circle me-1"></i>Áp dụng
+                                    </button>
+                                </div>
+                                <div class="form-text small">
+                                    <i class="bi bi-info-circle me-1"></i>1 điểm = 1.000₫. Tối thiểu 10 điểm, tối đa @Model.AvailablePoints điểm.
+                                </div>
+                                <div id="pointsMessage" class="mt-2" style="min-height: 24px;"></div>
+                            </div>
+                        </div>
+
                         <!-- Mã giảm giá -->
                         <div class="mb-3">
                             <label class="form-label fw-semibold">
@@ -234,6 +376,13 @@
                                 <span class="fw-bold">- @discountAmount.ToString("N0") ₫</span>
                             </div>
                         }
+
+                        <div id="pointsDiscountRow" class="d-flex justify-content-between mb-2 text-warning" style="display: none;">
+                            <span class="fw-semibold">
+                                <i class="bi bi-star-fill me-1"></i>Giảm giá từ điểm
+                            </span>
+                            <span class="fw-bold" id="pointsDiscountAmount">- 0 ₫</span>
+                        </div>
 
                         <div id="couponDiscountRow" class="d-flex justify-content-between mb-2 text-success" style="display: none;">
                             <span class="fw-semibold">
@@ -342,6 +491,15 @@
             transform: translateY(0);
         }
     }
+
+    .default-address-card {
+        transition: all 0.3s ease;
+    }
+
+    .default-address-card:hover {
+        box-shadow: 0 6px 16px rgba(59, 97, 235, 0.15);
+        transform: translateY(-2px);
+    }
 </style>
 
 @section Scripts {
@@ -394,15 +552,60 @@
             const totalSavings = document.getElementById('totalSavings');
 
             let currentSubtotal = parseFloat('@subtotal.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)');
-            let currentAutoDiscount = parseFloat('@discountAmount.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)');
             let currentCouponDiscount = 0;
+            let currentAutoDiscount = 0;
+            let currentPointsDiscount = 0;
+            let currentPointsToUse = 0;
+            const availablePoints = @Model.AvailablePoints;
+
+            // Hàm tính auto discount dựa trên số tiền còn lại sau coupon
+            function calculateAutoDiscount(remainingAmount) {
+                if (remainingAmount >= 5000000) {
+                    return 500000;
+                } else if (remainingAmount >= 2000000) {
+                    return 100000;
+                } else if (remainingAmount >= 1000000) {
+                    return 70000;
+                } else if (remainingAmount >= 500000) {
+                    return 50000;
+                } else if (remainingAmount >= 200000) {
+                    return 10000;
+                }
+                return 0;
+            }
+
+            // Hàm cập nhật auto discount dựa trên số tiền còn lại sau coupon
+            function updateAutoDiscount() {
+                const remainingAfterCoupon = currentSubtotal - currentCouponDiscount;
+                currentAutoDiscount = calculateAutoDiscount(remainingAfterCoupon);
+                
+                // Không được vượt quá số tiền còn lại
+                if (currentAutoDiscount > remainingAfterCoupon) {
+                    currentAutoDiscount = remainingAfterCoupon;
+                }
+                
+                // Hiển thị auto discount
+                if (autoDiscountRow) {
+                    if (currentAutoDiscount > 0) {
+                        autoDiscountRow.style.display = 'flex';
+                        const discountText = autoDiscountRow.querySelector('span:last-child');
+                        if (discountText) {
+                            discountText.textContent = '- ' + currentAutoDiscount.toLocaleString('vi-VN') + ' ₫';
+                        }
+                    } else {
+                        autoDiscountRow.style.display = 'none';
+                    }
+                }
+            }
 
             function updateTotal() {
                 if (!finalTotal) return;
-                const total = currentSubtotal - currentAutoDiscount - currentCouponDiscount;
+                
+                // Tính theo 3 tầng: subtotal - coupon - auto - points
+                const total = currentSubtotal - currentCouponDiscount - currentAutoDiscount - currentPointsDiscount;
                 finalTotal.textContent = total.toLocaleString('vi-VN') + ' ₫';
                 
-                const totalSavingsValue = currentAutoDiscount + currentCouponDiscount;
+                const totalSavingsValue = currentCouponDiscount + currentAutoDiscount + currentPointsDiscount;
                 if (savingsAlert && totalSavings) {
                     if (totalSavingsValue > 0) {
                         totalSavings.textContent = totalSavingsValue.toLocaleString('vi-VN');
@@ -411,6 +614,185 @@
                         savingsAlert.style.display = 'none';
                     }
                 }
+            }
+
+            // Khởi tạo auto discount ban đầu (không có coupon)
+            updateAutoDiscount();
+
+            // Xử lý chọn địa chỉ đã lưu
+            window.selectSavedAddress = function(addressId, address, phone) {
+                document.getElementById('shippingAddressInput').value = address;
+                document.getElementById('phoneNumberInput').value = phone;
+                document.getElementById('addressIdHidden').value = addressId;
+                // Reset dropdown
+                const otherAddressesSelect = document.getElementById('otherAddressesSelect');
+                if (otherAddressesSelect) {
+                    otherAddressesSelect.value = '';
+                }
+            };
+
+            window.selectOtherAddress = function(addressId) {
+                if (!addressId) return;
+                const select = document.getElementById('otherAddressesSelect');
+                const option = select.options[select.selectedIndex];
+                if (!option) return;
+                
+                let address = option.getAttribute('data-address');
+                // Decode HTML entities
+                address = address.replace(/&quot;/g, '"').replace(/\\'/g, "'");
+                const phone = option.getAttribute('data-phone');
+                
+                // Set radio button
+                const radio = document.getElementById('address_' + addressId);
+                if (radio) {
+                    radio.checked = true;
+                }
+                
+                // Uncheck other radios
+                document.querySelectorAll('input[name="selectedAddress"]').forEach(r => {
+                    if (r.id !== 'address_' + addressId && r.id !== 'address_new') {
+                        r.checked = false;
+                    }
+                });
+                
+                document.getElementById('shippingAddressInput').value = address;
+                document.getElementById('phoneNumberInput').value = phone;
+                document.getElementById('addressIdHidden').value = addressId;
+            };
+
+            window.selectNewAddress = function() {
+                document.getElementById('shippingAddressInput').value = '';
+                document.getElementById('phoneNumberInput').value = '';
+                document.getElementById('addressIdHidden').value = '';
+                // Reset dropdown
+                const otherAddressesSelect = document.getElementById('otherAddressesSelect');
+                if (otherAddressesSelect) {
+                    otherAddressesSelect.value = '';
+                }
+            };
+
+            // Tự động chọn địa chỉ mặc định khi trang load
+            @if (Model.AddressId.HasValue && !string.IsNullOrEmpty(Model.ShippingAddress))
+            {
+                <text>
+                // Điền thông tin địa chỉ mặc định từ model
+                document.getElementById('shippingAddressInput').value = '@Html.Raw(Model.ShippingAddress.Replace("'", "\\'"))';
+                document.getElementById('phoneNumberInput').value = '@Model.PhoneNumber';
+                document.getElementById('addressIdHidden').value = '@Model.AddressId.Value';
+                </text>
+            }
+
+            // Xử lý sử dụng điểm
+            const usePointsCheckbox = document.getElementById('usePointsCheckbox');
+            const pointsInputGroup = document.getElementById('pointsInputGroup');
+            const pointsToUseInput = document.getElementById('pointsToUseInput');
+            const applyPointsBtn = document.getElementById('applyPointsBtn');
+            const pointsMessage = document.getElementById('pointsMessage');
+            const pointsDiscountRow = document.getElementById('pointsDiscountRow');
+            const pointsDiscountAmount = document.getElementById('pointsDiscountAmount');
+            const pointsToUseHidden = document.getElementById('pointsToUseHidden');
+
+            // Hàm bật/tắt sử dụng điểm
+            window.togglePointsUsage = function() {
+                if (usePointsCheckbox && pointsInputGroup) {
+                    if (usePointsCheckbox.checked) {
+                        pointsInputGroup.style.display = 'block';
+                        if (pointsToUseInput) {
+                            pointsToUseInput.value = '10'; // Mặc định 10 điểm
+                            pointsToUseInput.focus();
+                        }
+                    } else {
+                        pointsInputGroup.style.display = 'none';
+                        // Xóa điểm đã áp dụng
+                        currentPointsToUse = 0;
+                        currentPointsDiscount = 0;
+                        if (pointsToUseHidden) {
+                            pointsToUseHidden.value = '0';
+                        }
+                        if (pointsDiscountRow) {
+                            pointsDiscountRow.style.display = 'none';
+                        }
+                        if (pointsMessage) {
+                            pointsMessage.innerHTML = '';
+                            pointsMessage.style.display = 'none';
+                        }
+                        if (pointsToUseInput) {
+                            pointsToUseInput.value = '10';
+                        }
+                        updateTotal();
+                    }
+                }
+            };
+
+            if (applyPointsBtn && pointsToUseInput) {
+                applyPointsBtn.addEventListener('click', function() {
+                    const points = parseInt(pointsToUseInput.value) || 0;
+                    
+                    if (points < 10) {
+                        showPointsMessage('Số điểm tối thiểu là 10 điểm.', 'error');
+                        return;
+                    }
+                    
+                    if (points > availablePoints) {
+                        showPointsMessage(`Bạn chỉ có ${availablePoints} điểm. Vui lòng nhập số điểm hợp lệ.`, 'error');
+                        return;
+                    }
+
+                    // Tính toán giảm giá từ điểm (TẦNG 3: sau khi đã trừ coupon và auto discount)
+                    const remainingAfterAutoDiscount = currentSubtotal - currentCouponDiscount - currentAutoDiscount;
+                    
+                    currentPointsToUse = points;
+                    currentPointsDiscount = points * 1000; // 1 điểm = 1000đ
+                    
+                    // Không được vượt quá số tiền còn lại sau coupon và auto discount
+                    if (currentPointsDiscount > remainingAfterAutoDiscount) {
+                        currentPointsDiscount = remainingAfterAutoDiscount;
+                        currentPointsToUse = Math.floor(remainingAfterAutoDiscount / 1000);
+                        if (currentPointsToUse < 10) {
+                            showPointsMessage('Số tiền còn lại sau giảm giá không đủ để sử dụng điểm (tối thiểu 10.000₫).', 'warning');
+                            currentPointsToUse = 0;
+                            currentPointsDiscount = 0;
+                            if (pointsToUseInput) pointsToUseInput.value = '10';
+                            if (pointsDiscountRow) pointsDiscountRow.style.display = 'none';
+                            if (pointsToUseHidden) pointsToUseHidden.value = '0';
+                            updateTotal();
+                            return;
+                        }
+                        pointsToUseInput.value = currentPointsToUse;
+                    }
+
+                    if (pointsToUseHidden) {
+                        pointsToUseHidden.value = currentPointsToUse;
+                    }
+
+                    if (pointsDiscountRow) pointsDiscountRow.style.display = 'flex';
+                    if (pointsDiscountAmount) pointsDiscountAmount.textContent = '- ' + currentPointsDiscount.toLocaleString('vi-VN') + ' ₫';
+                    
+                    showPointsMessage(`Đã áp dụng ${currentPointsToUse} điểm (giảm ${currentPointsDiscount.toLocaleString('vi-VN')} ₫)`, 'success');
+                    updateTotal();
+                });
+
+                // Cho phép nhấn Enter để áp dụng
+                pointsToUseInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyPointsBtn.click();
+                    }
+                });
+            }
+
+            function showPointsMessage(message, type) {
+                if (!pointsMessage) return;
+                
+                const typeClass = type === 'success' ? 'text-success' : 
+                                 type === 'error' ? 'text-danger' : 
+                                 type === 'warning' ? 'text-warning' : 'text-info';
+                const icon = type === 'success' ? 'bi-check-circle' : 
+                            type === 'error' ? 'bi-x-circle' : 
+                            type === 'warning' ? 'bi-exclamation-triangle' : 'bi-info-circle';
+                
+                pointsMessage.innerHTML = `<div class="${typeClass} small fw-semibold animate-fade-in"><i class="bi ${icon} me-1"></i>${message}</div>`;
+                pointsMessage.style.display = 'block';
             }
 
             function showCouponMessage(message, type) {
@@ -507,23 +889,40 @@
                         }
                         currentCouponDiscount = data.discount || 0;
                         
-                        // Ẩn auto discount nếu coupon discount lớn hơn
-                        if (currentCouponDiscount > currentAutoDiscount) {
-                            if (autoDiscountRow) autoDiscountRow.style.display = 'none';
-                            currentAutoDiscount = 0;
-                        } else {
-                            if (autoDiscountRow) autoDiscountRow.style.display = 'flex';
-                            currentCouponDiscount = 0; // Không dùng coupon nếu auto discount tốt hơn
-                            if (couponCodeHidden) couponCodeHidden.value = '';
-                        }
-
+                        // Hiển thị coupon discount
                         if (currentCouponDiscount > 0) {
                             if (couponDiscountRow) couponDiscountRow.style.display = 'flex';
                             if (couponDiscountAmount) couponDiscountAmount.textContent = '- ' + currentCouponDiscount.toLocaleString('vi-VN') + ' ₫';
                             showCouponMessage(data.message || 'Áp dụng mã giảm giá thành công!', 'success');
                         } else {
                             if (couponDiscountRow) couponDiscountRow.style.display = 'none';
-                            showCouponMessage('Mã giảm giá đã được áp dụng, nhưng giảm giá tự động tốt hơn.', 'info');
+                        }
+
+                        // Tính lại auto discount dựa trên số tiền còn lại sau coupon (TẦNG 2)
+                        updateAutoDiscount();
+
+                        // Nếu có điểm đang dùng, kiểm tra lại xem có vượt quá số tiền còn lại không (TẦNG 3)
+                        if (currentPointsDiscount > 0 && usePointsCheckbox && usePointsCheckbox.checked) {
+                            const remainingAfterAutoDiscount = currentSubtotal - currentCouponDiscount - currentAutoDiscount;
+                            if (currentPointsDiscount > remainingAfterAutoDiscount) {
+                                currentPointsDiscount = remainingAfterAutoDiscount;
+                                currentPointsToUse = Math.floor(remainingAfterAutoDiscount / 1000);
+                                if (currentPointsToUse < 10) {
+                                    // Không đủ để dùng điểm, ẩn discount
+                                    currentPointsToUse = 0;
+                                    currentPointsDiscount = 0;
+                                    if (pointsToUseInput) pointsToUseInput.value = '10';
+                                    if (pointsToUseHidden) pointsToUseHidden.value = '0';
+                                    if (pointsDiscountRow) pointsDiscountRow.style.display = 'none';
+                                    if (pointsMessage) {
+                                        showPointsMessage('Số tiền còn lại sau giảm giá không đủ để sử dụng điểm (tối thiểu 10.000₫).', 'warning');
+                                    }
+                                } else {
+                                    if (pointsToUseInput) pointsToUseInput.value = currentPointsToUse;
+                                    if (pointsToUseHidden) pointsToUseHidden.value = currentPointsToUse;
+                                    if (pointsDiscountAmount) pointsDiscountAmount.textContent = '- ' + currentPointsDiscount.toLocaleString('vi-VN') + ' ₫';
+                                }
+                            }
                         }
 
                         updateTotal();
@@ -533,11 +932,37 @@
                         }
                         currentCouponDiscount = 0;
                         if (couponDiscountRow) couponDiscountRow.style.display = 'none';
-                        if (autoDiscountRow) autoDiscountRow.style.display = 'flex';
                         
-                        const messageType = data.message && data.message.includes('không tồn tại') ? 'error' : 'warning';
-                        showCouponMessage(data.message || 'Mã giảm giá không hợp lệ.', messageType);
-                        updateTotal();
+                        // Tính lại auto discount khi không có coupon (TẦNG 2)
+                        updateAutoDiscount();
+                        
+                        // Nếu có điểm đang dùng, kiểm tra lại
+                        if (currentPointsDiscount > 0 && usePointsCheckbox && usePointsCheckbox.checked) {
+                            const remainingAfterAutoDiscount = currentSubtotal - currentAutoDiscount;
+                            if (currentPointsDiscount > remainingAfterAutoDiscount) {
+                                currentPointsDiscount = remainingAfterAutoDiscount;
+                                currentPointsToUse = Math.floor(remainingAfterAutoDiscount / 1000);
+                            if (currentPointsToUse < 10) {
+                                // Không đủ để dùng điểm, ẩn discount
+                                currentPointsToUse = 0;
+                                currentPointsDiscount = 0;
+                                if (pointsToUseInput) pointsToUseInput.value = '10';
+                                if (pointsToUseHidden) pointsToUseHidden.value = '0';
+                                if (pointsDiscountRow) pointsDiscountRow.style.display = 'none';
+                                if (pointsMessage) {
+                                    showPointsMessage('Số tiền còn lại sau giảm giá không đủ để sử dụng điểm (tối thiểu 10.000₫).', 'warning');
+                                }
+                            } else {
+                                if (pointsToUseInput) pointsToUseInput.value = currentPointsToUse;
+                                if (pointsToUseHidden) pointsToUseHidden.value = currentPointsToUse;
+                                if (pointsDiscountAmount) pointsDiscountAmount.textContent = '- ' + currentPointsDiscount.toLocaleString('vi-VN') + ' ₫';
+                            }
+                        }
+                    }
+                    
+                    const messageType = data.message && data.message.includes('không tồn tại') ? 'error' : 'warning';
+                    showCouponMessage(data.message || 'Mã giảm giá không hợp lệ.', messageType);
+                    updateTotal();
                     }
                 } catch (error) {
                     console.error('Error validating coupon:', error);
@@ -584,9 +1009,21 @@
                         return false;
                     }
                     
+                    // Đảm bảo nếu checkbox không được chọn thì không gửi điểm
+                    if (usePointsCheckbox && !usePointsCheckbox.checked) {
+                        if (pointsToUseHidden) {
+                            pointsToUseHidden.value = '0';
+                        }
+                    }
+                    
                     // Đảm bảo coupon code được gửi đi nếu đã áp dụng
                     if (couponCodeHidden && couponCodeHidden.value) {
                         console.log('Coupon code sẽ được gửi:', couponCodeHidden.value);
+                    }
+                    
+                    // Đảm bảo điểm được gửi đi nếu đã áp dụng
+                    if (pointsToUseHidden && pointsToUseHidden.value) {
+                        console.log('Points to use sẽ được gửi:', pointsToUseHidden.value);
                     }
                 });
             }

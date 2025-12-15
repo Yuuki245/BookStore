@@ -1,13 +1,15 @@
 ﻿@model string
 @{
-    var (bg, statusText) = Model switch
+    var (bgClass, statusText, iconClass) = Model switch
     {
-        "Pending" => ("secondary", "Chờ xử lý"),
-        "Confirmed" => ("primary", "Đã xác nhận"),
-        "Shipped" => ("info", "Đang giao hàng"),
-        "Completed" => ("success", "Hoàn thành"),
-        "Canceled" => ("danger", "Đã hủy"),
-        _ => ("secondary", Model)
+        "Pending" => ("status-badge-pending", "Chờ xử lý", "bi-clock-history"),
+        "Confirmed" => ("status-badge-confirmed", "Đã xác nhận", "bi-check-circle"),
+        "Shipped" => ("status-badge-shipped", "Đang giao hàng", "bi-truck"),
+        "Completed" => ("status-badge-completed", "Hoàn thành", "bi-check2-circle"),
+        "Canceled" => ("status-badge-canceled", "Đã hủy", "bi-x-circle"),
+        _ => ("status-badge-unknown", Model ?? "N/A", "bi-question-circle")
     };
 }
-<span class="badge text-bg-@bg">@statusText</span>
+<span class="status-badge @bgClass">
+    <i class="bi @iconClass me-1"></i>@statusText
+</span>

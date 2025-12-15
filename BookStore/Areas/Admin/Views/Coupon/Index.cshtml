@@ -1,4 +1,5 @@
 @model IEnumerable<BookStore.Models.Coupon>
+@using BookStore.Helpers
 @{
     ViewData["Title"] = "Quản lý Mã giảm giá";
 }
@@ -46,7 +47,9 @@ else
                 <tbody>
                     @foreach (var coupon in Model)
                     {
-                        var now = DateTime.Now;
+                        var now = TimeHelper.GetVietnamTime();
+                        var startDate = TimeHelper.ToVietnamTime(coupon.StartDate);
+                        var endDate = TimeHelper.ToVietnamTime(coupon.EndDate);
                         var isValid = coupon.IsValid;
                         <tr>
                             <td>
@@ -88,8 +91,8 @@ else
                             </td>
                             <td>
                                 <div class="small">
-                                    <div><strong>Bắt đầu:</strong> @coupon.StartDate.ToString("dd/MM/yyyy")</div>
-                                    <div><strong>Kết thúc:</strong> @coupon.EndDate.ToString("dd/MM/yyyy")</div>
+                                    <div><strong>Bắt đầu:</strong> @startDate.ToString("dd/MM/yyyy HH:mm")</div>
+                                    <div><strong>Kết thúc:</strong> @endDate.ToString("dd/MM/yyyy HH:mm")</div>
                                 </div>
                             </td>
                             <td>

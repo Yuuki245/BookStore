@@ -404,8 +404,8 @@ a {
     display: flex;
     flex-wrap: nowrap;
     overflow-x: auto;
-    gap: 0.75rem;
-    padding: 0;
+    gap: 1.25rem;
+    padding: 0.5rem 0;
     /* Ẩn thanh cuộn nhưng vẫn cuộn được */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
@@ -427,33 +427,48 @@ a {
     contain: layout style paint;
 }
 
+/* Book Card Wrapper - Tăng spacing giữa các card */
+.book-card-wrapper {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    contain: layout style paint;
+}
+
 /* Responsive breakpoints tối ưu */
 @media (min-width: 992px) {
-    .scroll-x > * {
+    .scroll-x > *,
+    .book-card-wrapper {
         width: 240px;
         min-width: 240px;
     }
 }
 
 @media (max-width: 991.98px) {
-    .scroll-x > * {
+    .scroll-x {
+        gap: 1rem;
+    }
+    
+    .scroll-x > *,
+    .book-card-wrapper {
         width: 48%;
         min-width: 48%;
     }
 }
 
 @media (max-width: 575.98px) {
-    .scroll-x > * {
+    .scroll-x {
+        gap: 0.75rem;
+        padding: 0.25rem 0;
+    }
+    
+    .scroll-x > *,
+    .book-card-wrapper {
         width: 80%;
         min-width: 80%;
     }
     
     .scroll-section {
         padding: 0 10px;
-    }
-    
-    .section-title {
-        font-size: 1.5rem;
     }
 }
 
@@ -539,32 +554,174 @@ a {
     color: #fff;
 }
 
-/* Utilities */
-.section-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    letter-spacing: .2px;
-    line-height: 1.2;
-    margin: 0;
-}
-
-@media (max-width: 575.98px) {
-    .section-title {
-        font-size: 1.5rem;
-    }
-}
-
 /* Section Divider - Đường kẻ phân cách giữa các section */
 .section-divider {
     border-top: 1px solid #e5e7eb;
-    margin-top: 2rem;
-    padding-top: 0;
+    margin-top: 3rem;
+    padding-top: 2.5rem;
 }
 
 .section-divider:first-of-type {
     border-top: none;
     margin-top: 0;
     padding-top: 0;
+}
+
+/* ===== Home Section Styling ===== */
+.home-section {
+    margin-bottom: 3rem;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: .2px;
+    line-height: 1.2;
+    margin: 0;
+    color: #1f2937;
+}
+
+.section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.flash-sale-icon {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.bestseller-icon {
+    background: linear-gradient(135deg, #ffbc00 0%, #ff9f00 100%);
+    color: #1f2937;
+    box-shadow: 0 4px 15px rgba(255, 188, 0, 0.3);
+}
+
+.sale-icon {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.recommend-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.section-view-all {
+    color: var(--brand);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.section-view-all:hover {
+    color: white;
+    background: var(--brand);
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.empty-section-message {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6b7280;
+    font-size: 1rem;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 2px dashed #e5e7eb;
+}
+
+.promo-banner {
+    background: linear-gradient(135deg, #e6f1ff 0%, #dbe7ff 100%);
+    border: 1px solid #dbe7ff;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+    transition: all 0.3s ease;
+}
+
+.promo-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.15);
+}
+
+.promo-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.promo-text {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 250px;
+}
+
+.promo-text i {
+    font-size: 1.5rem;
+    color: var(--brand);
+}
+
+.btn-promo {
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-promo:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 575.98px) {
+    .section-title {
+        font-size: 1.5rem;
+    }
+    
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.25rem;
+    }
+    
+    .promo-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .promo-text {
+        justify-content: center;
+    }
 }
 
 .badge-pill {
@@ -801,7 +958,7 @@ header.scrolled {
 .scroll-section {
     position: relative;
     padding: 0 50px;
-    margin: 0;
+    margin: 1rem 0;
     contain: layout;
 }
 
@@ -1096,46 +1253,293 @@ header.scrolled {
     overflow-wrap: break-word;
 }
 
-/* Role badge styling - nổi bật hơn */
-.role-badge {
+/* ===== Role Badge Styling - Enhanced ===== */
+.role-badge,
+.role-badge-enhanced,
+.badge.role-badge-enhanced {
+    border: none !important;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
     font-weight: 600;
-    font-size: 0.8rem;
-    padding: 0.5rem 0.875rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: none !important;
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
-.role-badge:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.role-badge:hover,
+.role-badge-enhanced:hover,
+.badge.role-badge-enhanced:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
 }
 
-/* Màu cụ thể cho từng role để nổi bật hơn */
-.role-badge.text-bg-danger {
-    background-color: #dc3545 !important;
-    color: #ffffff !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
+/* Admin Role Badge - Red Gradient */
+.role-badge.text-bg-danger,
+.role-badge-admin,
+.role-badge-enhanced.role-badge-admin,
+.badge.role-badge-enhanced.role-badge-admin {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
 }
 
-.role-badge.text-bg-primary {
-    background-color: #0d6efd !important;
-    color: #ffffff !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
+.role-badge.text-bg-danger:hover,
+.role-badge-admin:hover,
+.role-badge-enhanced.role-badge-admin:hover,
+.badge.role-badge-enhanced.role-badge-admin:hover {
+    opacity: 0.9;
 }
 
-.role-badge.text-bg-secondary {
-    background-color: #6c757d !important;
-    color: #ffffff !important;
-    border-color: rgba(255, 255, 255, 0.4) !important;
+/* Customer Role Badge - Blue Gradient */
+.role-badge.text-bg-primary,
+.role-badge-customer,
+.role-badge-enhanced.role-badge-customer,
+.badge.role-badge-enhanced.role-badge-customer {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+    color: white !important;
 }
 
-.role-badge.text-bg-light {
-    background-color: #f8f9fa !important;
+.role-badge.text-bg-primary:hover,
+.role-badge-customer:hover,
+.role-badge-enhanced.role-badge-customer:hover,
+.badge.role-badge-enhanced.role-badge-customer:hover {
+    opacity: 0.9;
+}
+
+/* Other Roles Badge - Gray Gradient */
+.role-badge.text-bg-secondary,
+.role-badge-other,
+.role-badge-enhanced.role-badge-other,
+.badge.role-badge-enhanced.role-badge-other {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+    color: white !important;
+}
+
+.role-badge.text-bg-secondary:hover,
+.role-badge-other:hover,
+.role-badge-enhanced.role-badge-other:hover,
+.badge.role-badge-enhanced.role-badge-other:hover {
+    opacity: 0.9;
+}
+
+/* No Role Badge - Light Gray */
+.role-badge.text-bg-light,
+.role-badge-no-role {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
     color: #6c757d !important;
-    border-color: #dee2e6 !important;
+    border: none !important;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+}
+
+.role-badge.text-bg-light:hover,
+.role-badge-no-role:hover {
+    opacity: 0.9;
+}
+
+/* Icon styling trong badge - Đảm bảo icon có màu đúng */
+.role-badge i,
+.role-badge-enhanced i,
+.badge.role-badge-enhanced i {
+    font-size: 0.9rem;
+    opacity: 1;
+    color: inherit !important;
+}
+
+/* Đảm bảo text và icon trong badge có màu trắng trên background gradient */
+.role-badge-enhanced.role-badge-admin,
+.role-badge-enhanced.role-badge-customer,
+.role-badge-enhanced.role-badge-other,
+.badge.role-badge-enhanced.role-badge-admin,
+.badge.role-badge-enhanced.role-badge-customer,
+.badge.role-badge-enhanced.role-badge-other {
+    color: #ffffff !important;
+}
+
+.role-badge-enhanced.role-badge-admin *,
+.role-badge-enhanced.role-badge-customer *,
+.role-badge-enhanced.role-badge-other *,
+.badge.role-badge-enhanced.role-badge-admin *,
+.badge.role-badge-enhanced.role-badge-customer *,
+.badge.role-badge-enhanced.role-badge-other * {
+    color: #ffffff !important;
+}
+
+/* Responsive cho role badges */
+@media (max-width: 575.98px) {
+    .role-badge,
+    .role-badge-enhanced {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.75rem;
+    }
+    
+    .role-badge i,
+    .role-badge-enhanced i {
+        font-size: 0.8rem;
+    }
+}
+
+/* ===== Order Status Badge Styles - Dùng chung cho cả user và admin ===== */
+.status-badge {
+    border: none !important;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: none !important;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.status-badge-pending {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
+    color: white !important;
+}
+
+.status-badge-confirmed {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%) !important;
+    color: white !important;
+}
+
+.status-badge-shipped {
+    background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
+    color: white !important;
+}
+
+.status-badge-completed {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%) !important;
+    color: white !important;
+}
+
+.status-badge-canceled {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
+}
+
+.status-badge-unknown {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
+    color: #6c757d !important;
+}
+
+.status-badge:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+/* ===== Quantity Selector - Modern Design ===== */
+.quantity-selector {
+    display: inline-flex;
+    align-items: center;
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0.25rem;
+    gap: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.quantity-selector:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.quantity-selector .quantity-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #4b5563;
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.quantity-selector .quantity-btn:hover {
+    background: #e5e7eb;
+    color: #1f2937;
+    transform: scale(1.1);
+}
+
+.quantity-selector .quantity-btn:active {
+    transform: scale(0.95);
+    background: #d1d5db;
+}
+
+.quantity-selector .quantity-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.quantity-selector .quantity-btn i {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.quantity-selector .quantity-input {
+    width: 60px;
+    min-width: 60px;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    padding: 0.5rem 0.25rem;
+    margin: 0;
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.quantity-selector .quantity-input::-webkit-outer-spin-button,
+.quantity-selector .quantity-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.quantity-selector .quantity-input:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 6px;
+}
+
+/* Responsive cho quantity selector */
+@media (max-width: 575.98px) {
+    .quantity-selector {
+        border-radius: 10px;
+        padding: 0.2rem;
+    }
+    
+    .quantity-selector .quantity-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        font-size: 1.1rem;
+    }
+    
+    .quantity-selector .quantity-input {
+        width: 50px;
+        min-width: 50px;
+        font-size: 0.9rem;
+        padding: 0.4rem 0.2rem;
+    }
 }
 
 /* Tối ưu badge */

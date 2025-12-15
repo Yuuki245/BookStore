@@ -36,5 +36,8 @@ public class Order
     [Range(0, 1000000)]
     public decimal DiscountAmount { get; set; } = 0; // Số tiền giảm giá từ coupon
 
+    public int PointsUsed { get; set; } = 0; // Số điểm đã sử dụng trong đơn hàng này
+    public int PointsEarned { get; set; } = 0; // Số điểm tích lũy từ đơn hàng này
+
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
 }

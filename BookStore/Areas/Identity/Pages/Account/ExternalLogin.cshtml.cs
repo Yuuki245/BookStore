@@ -4,6 +4,7 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -25,6 +26,7 @@ namespace BookStore.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IUserStore<IdentityUser> _userStore;
         private readonly IUserEmailStore<IdentityUser> _emailStore;
         private readonly IEmailSender _emailSender;
@@ -33,12 +35,14 @@ namespace BookStore.Areas.Identity.Pages.Account
         public ExternalLoginModel(
             SignInManager<IdentityUser> signInManager,
             UserManager<IdentityUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             IUserStore<IdentityUser> userStore,
             ILogger<ExternalLoginModel> logger,
             IEmailSender emailSender)
         {
             _signInManager = signInManager;
             _userManager = userManager;
+            _roleManager = roleManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _logger = logger;
@@ -163,6 +167,25 @@ namespace BookStore.Areas.Identity.Pages.Account
                     if (result.Succeeded)
                     {
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+
+                        // Đảm bảo role "Customer" tồn tại
+                        if (!await _roleManager.RoleExistsAsync("Customer"))
+                        {
+                            await _roleManager.CreateAsync(new IdentityRole("Customer"));
+                            _logger.LogInformation("Created Customer role.");
+                        }
+
+                        // Gán role "Customer" cho user mới đăng ký
+                        var roleResult = await _userManager.AddToRoleAsync(user, "Customer");
+                        if (roleResult.Succeeded)
+                        {
+                            _logger.LogInformation("Assigned Customer role to new user from external login.");
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to assign Customer role to new user: {Errors}", 
+                                string.Join(", ", roleResult.Errors.Select(e => e.Description)));
+                        }
 
                         var userId = await _userManager.GetUserIdAsync(user);
                         var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

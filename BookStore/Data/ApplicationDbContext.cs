@@ -19,6 +19,8 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<FlashSale> FlashSales => Set<FlashSale>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<Address> Addresses => Set<Address>();
+    public DbSet<PointTransaction> PointTransactions => Set<PointTransaction>();
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -115,5 +117,28 @@ public class ApplicationDbContext : IdentityDbContext
             .WithMany()
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Address - User (n-1)
+        builder.Entity<Address>()
+            .HasOne(a => a.User)
+            .WithMany()
+            .HasForeignKey(a => a.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<Address>().HasIndex(a => a.UserId);
+        builder.Entity<Address>().HasIndex(a => new { a.UserId, a.IsDefault });
+
+        // PointTransaction - User (n-1)
+        builder.Entity<PointTransaction>()
+            .HasOne(p => p.User)
+            .WithMany()
+            .HasForeignKey(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+        builder.Entity<PointTransaction>().HasIndex(p => p.UserId);
+        builder.Entity<PointTransaction>().HasIndex(p => p.OrderId);
+        builder.Entity<PointTransaction>()
+            .HasOne(p => p.Order)
+            .WithMany()
+            .HasForeignKey(p => p.OrderId)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

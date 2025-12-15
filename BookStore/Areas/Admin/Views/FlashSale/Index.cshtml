@@ -1,4 +1,5 @@
 @model IEnumerable<BookStore.Models.FlashSale>
+@using BookStore.Helpers
 @{
     ViewData["Title"] = "Quản lý Flash Sale";
 }
@@ -63,9 +64,9 @@ else
                 <tbody>
                     @foreach (var sale in Model)
                     {
-                        var now = DateTime.Now; // Dùng local time để so sánh
-                        var startTime = sale.StartTime.Kind == DateTimeKind.Utc ? sale.StartTime.ToLocalTime() : sale.StartTime;
-                        var endTime = sale.EndTime.Kind == DateTimeKind.Utc ? sale.EndTime.ToLocalTime() : sale.EndTime;
+                        var now = TimeHelper.GetVietnamTime(); // Múi giờ VN
+                        var startTime = TimeHelper.ToVietnamTime(sale.StartTime);
+                        var endTime = TimeHelper.ToVietnamTime(sale.EndTime);
                         <tr>
                             <td>
                                 <div class="fw-semibold">@sale.Title</div>

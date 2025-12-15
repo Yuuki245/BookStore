@@ -30,6 +30,22 @@
             font-size: 1.1rem; /* Hơi to hơn một chút */
         }
 
+        /* Header icons - đồng bộ kích cỡ và hiệu ứng hover */
+        .navbar-nav .nav-link i.bi {
+            font-size: 1.25rem;
+            transition: transform 0.3s ease, color 0.3s ease;
+            display: inline-block;
+        }
+        
+        .navbar-nav .nav-link:hover i.bi {
+            transform: scale(1.15);
+            color: var(--brand, #3b61eb);
+        }
+        
+        .navbar-nav .nav-link:active i.bi {
+            transform: scale(1.05);
+        }
+
         @@media print {
             /* Ẩn Header, Footer, và Mega Menu */
             body > header,

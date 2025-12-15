@@ -29,6 +29,15 @@ public class CheckoutController : Controller
         _qktPaymentService = qktPaymentService;
     }
 
+    // Helper method để tính số điểm hiện có của user
+    private async Task<int> GetUserAvailablePointsAsync(string userId)
+    {
+        var totalPoints = await _db.PointTransactions
+            .Where(pt => pt.UserId == userId)
+            .SumAsync(pt => pt.Points);
+        return totalPoints;
+    }
+
     [HttpGet]
     public async Task<IActionResult> Index()
     {
@@ -80,9 +89,45 @@ public class CheckoutController : Controller
             items = allItems;
         }
 
+        // Load địa chỉ đã lưu và điểm tích lũy
+        var userId = user?.Id ?? string.Empty;
+        var savedAddresses = await _db.Addresses
+            .AsNoTracking()
+            .Where(a => a.UserId == userId)
+            .OrderByDescending(a => a.IsDefault)
+            .ThenByDescending(a => a.CreatedAt)
+            .Select(a => new AddressOption
+            {
+                Id = a.Id,
+                Address = a.StreetAddress,
+                Phone = a.PhoneNumber,
+                IsDefault = a.IsDefault
+            })
+            .ToListAsync();
+
+        var availablePoints = await GetUserAvailablePointsAsync(userId);
+
+        // Tự động chọn địa chỉ mặc định nếu có
+        var defaultAddress = savedAddresses.FirstOrDefault(a => a.IsDefault);
+        int? defaultAddressId = null;
+        string defaultShippingAddress = "";
+        string defaultPhoneNumber = "";
+        
+        if (defaultAddress != null)
+        {
+            defaultAddressId = defaultAddress.Id;
+            defaultShippingAddress = defaultAddress.Address;
+            defaultPhoneNumber = defaultAddress.Phone;
+        }
+
         var vm = new CheckoutVM
         {
-            Items = items
+            Items = items,
+            SavedAddresses = savedAddresses,
+            AvailablePoints = availablePoints,
+            AddressId = defaultAddressId,
+            ShippingAddress = defaultShippingAddress,
+            PhoneNumber = defaultPhoneNumber
         };
         return View(vm);
     }
@@ -109,6 +154,36 @@ public class CheckoutController : Controller
         {
             ModelState.AddModelError(string.Empty, "Tài khoản Admin không thể mua hàng.");
             return null;
+        }
+
+        // Xử lý địa chỉ giao hàng
+        string shippingAddress = vm.ShippingAddress?.Trim() ?? string.Empty;
+        string phoneNumber = vm.PhoneNumber?.Trim() ?? string.Empty;
+
+        // Nếu có chọn địa chỉ đã lưu, lấy thông tin từ đó
+        if (vm.AddressId.HasValue && vm.AddressId.Value > 0)
+        {
+            var savedAddress = await _db.Addresses
+                .FirstOrDefaultAsync(a => a.Id == vm.AddressId.Value && a.UserId == user.Id);
+            if (savedAddress != null)
+            {
+                shippingAddress = savedAddress.StreetAddress;
+                phoneNumber = savedAddress.PhoneNumber;
+            }
+            else
+            {
+                ModelState.AddModelError("AddressId", "Địa chỉ đã chọn không tồn tại.");
+            }
+        }
+
+        // Validate địa chỉ và số điện thoại
+        if (string.IsNullOrWhiteSpace(shippingAddress))
+        {
+            ModelState.AddModelError("ShippingAddress", "Vui lòng nhập địa chỉ giao hàng.");
+        }
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            ModelState.AddModelError("PhoneNumber", "Vui lòng nhập số điện thoại.");
         }
 
         // Kiểm tra tồn kho
@@ -141,14 +216,37 @@ public class CheckoutController : Controller
             }
         }
 
+        // Xử lý sử dụng điểm (tối thiểu 10 điểm)
+        int pointsToUse = vm.PointsToUse;
+        decimal pointsDiscount = 0;
+        int availablePoints = await GetUserAvailablePointsAsync(user.Id);
+
+        if (pointsToUse > 0)
+        {
+            if (pointsToUse < 10)
+            {
+                ModelState.AddModelError("PointsToUse", "Số điểm sử dụng tối thiểu là 10 điểm.");
+            }
+            else if (pointsToUse > availablePoints)
+            {
+                ModelState.AddModelError("PointsToUse", $"Bạn chỉ có {availablePoints} điểm. Vui lòng nhập số điểm hợp lệ.");
+            }
+            else
+            {
+                // 1 điểm = 1000đ
+                pointsDiscount = pointsToUse * 1000m;
+            }
+        }
+
         // Tạo order
         var order = new Order
         {
             UserId = user.Id,
-            ShippingAddress = (vm.ShippingAddress ?? string.Empty).Trim(),
-            PhoneNumber = (vm.PhoneNumber ?? string.Empty).Trim(),
+            ShippingAddress = shippingAddress,
+            PhoneNumber = phoneNumber,
             CreatedAt = DateTime.UtcNow,
-            Status = "Pending" // 🟢 LUÔN LÀ PENDING
+            Status = "Pending", // 🟢 LUÔN LÀ PENDING
+            PointsUsed = pointsToUse
         };
         _db.Orders.Add(order);
         await _db.SaveChangesAsync(); // 🟢 Lưu để lấy OrderId
@@ -174,45 +272,25 @@ public class CheckoutController : Controller
                 subtotal += unitPrice * it.Quantity;
             }
 
-        // Áp dụng logic giảm giá tự động (theo tổng tiền)
-        decimal autoDiscountAmount = 0;
-        if (subtotal >= 5000000)
-        {
-            autoDiscountAmount = 500000;
-        }
-        else if (subtotal >= 2000000)
-        {
-            autoDiscountAmount = 100000;
-        }
-        else if (subtotal >= 1000000)
-        {
-            autoDiscountAmount = 70000;
-        }
-        else if (subtotal >= 500000)
-        {
-            autoDiscountAmount = 50000;
-        }
-        else if (subtotal >= 200000)
-        {
-            autoDiscountAmount = 10000;
-        }
+        // ========== HỆ THỐNG 3 TẦNG GIẢM GIÁ ==========
+        // Tầng 1: Áp dụng mã giảm giá (coupon) trước
+        // Tầng 2: Áp dụng giảm giá tự động trên số tiền còn lại sau tầng 1
+        // Tầng 3: Áp dụng điểm tích lũy trên số tiền còn lại sau tầng 2
 
-        // Áp dụng coupon nếu có
         decimal couponDiscount = 0;
         Coupon? appliedCoupon = null;
-        string? appliedCouponCode = null; // Lưu coupon code đã được áp dụng
+        string? appliedCouponCode = null;
         
+        // TẦNG 1: Áp dụng coupon nếu có
         if (!string.IsNullOrWhiteSpace(vm.CouponCode))
         {
             var couponCode = vm.CouponCode.Trim().ToUpper();
-            // Lấy coupon từ database (KHÔNG dùng IsValid vì là computed property, không thể dùng trong LINQ)
             appliedCoupon = await _db.Coupons
                 .FirstOrDefaultAsync(c => c.Code == couponCode);
 
             if (appliedCoupon != null)
             {
-                // Kiểm tra tính hợp lệ của coupon (kiểm tra từng điều kiện riêng)
-                var now = TimeHelper.GetVietnamTime(); // Dùng VN time (GMT+7)
+                var now = TimeHelper.GetVietnamTime();
                 var startDate = TimeHelper.ToVietnamTime(appliedCoupon.StartDate);
                 var endDate = TimeHelper.ToVietnamTime(appliedCoupon.EndDate);
                 bool isValid = appliedCoupon.IsActive &&
@@ -222,7 +300,6 @@ public class CheckoutController : Controller
 
                 if (!isValid)
                 {
-                    // Coupon không hợp lệ - trả về thông báo lỗi cụ thể
                     if (!appliedCoupon.IsActive)
                     {
                         ModelState.AddModelError("CouponCode", "Mã giảm giá đã bị tắt.");
@@ -242,7 +319,7 @@ public class CheckoutController : Controller
                 }
                 else
                 {
-                    // Kiểm tra số lần sử dụng của user cho mã này
+                    // Kiểm tra số lần sử dụng của user
                     if (appliedCoupon.MaxUsagePerUser.HasValue)
                     {
                         var userUsageCount = await _db.Orders
@@ -258,15 +335,16 @@ public class CheckoutController : Controller
                         }
                     }
 
-                    // Coupon hợp lệ, kiểm tra đơn hàng tối thiểu
+                    // Kiểm tra đơn hàng tối thiểu
                     if (isValid && appliedCoupon.MinOrderAmount.HasValue && subtotal < appliedCoupon.MinOrderAmount.Value)
                     {
                         ModelState.AddModelError("CouponCode", $"Đơn hàng tối thiểu để áp dụng mã này là {appliedCoupon.MinOrderAmount.Value:N0} ₫");
                         isValid = false;
                     }
+                    
                     if (isValid)
                     {
-                        // Tính toán giảm giá từ coupon
+                        // Tính giảm giá từ coupon trên subtotal
                         if (appliedCoupon.DiscountType == "Percentage")
                         {
                             couponDiscount = subtotal * (appliedCoupon.DiscountValue / 100m);
@@ -286,21 +364,8 @@ public class CheckoutController : Controller
                             couponDiscount = subtotal;
                         }
 
-                        // Lấy discount lớn hơn giữa auto discount và coupon discount
-                        if (couponDiscount > autoDiscountAmount)
-                        {
-                            autoDiscountAmount = 0; // Chỉ dùng coupon
-                            appliedCouponCode = appliedCoupon.Code; // Lưu coupon code để set sau
-                            
-                            // Tăng số lần sử dụng
-                            appliedCoupon.UsedCount++;
-                        }
-                        else
-                        {
-                            // Dùng auto discount thay vì coupon - không lưu coupon code
-                            couponDiscount = 0;
-                            appliedCouponCode = null; // Không dùng coupon
-                        }
+                        appliedCouponCode = appliedCoupon.Code;
+                        appliedCoupon.UsedCount++; // Tăng số lần sử dụng
                     }
                 }
             }
@@ -310,36 +375,96 @@ public class CheckoutController : Controller
             }
         }
 
-        // Nếu có lỗi coupon, bỏ qua coupon nhưng vẫn cho phép đặt hàng
-        // (User có thể muốn đặt hàng mà không dùng coupon nếu coupon không hợp lệ)
+        // Nếu có lỗi coupon, bỏ qua coupon
         if (ModelState.ContainsKey("CouponCode") && ModelState["CouponCode"]!.Errors.Count > 0)
         {
-            // Xóa coupon discount và coupon code nếu có lỗi
             couponDiscount = 0;
-            appliedCouponCode = null; // Không lưu coupon code nếu có lỗi
+            appliedCouponCode = null;
         }
 
-        decimal finalTotal = subtotal - autoDiscountAmount - couponDiscount;
+        // Tính số tiền còn lại sau tầng 1 (coupon)
+        decimal remainingAfterCoupon = subtotal - couponDiscount;
+        if (remainingAfterCoupon < 0) remainingAfterCoupon = 0;
+
+        // TẦNG 2: Áp dụng giảm giá tự động trên số tiền còn lại sau coupon
+        decimal autoDiscountAmount = 0;
+        if (remainingAfterCoupon >= 5000000)
+        {
+            autoDiscountAmount = 500000;
+        }
+        else if (remainingAfterCoupon >= 2000000)
+        {
+            autoDiscountAmount = 100000;
+        }
+        else if (remainingAfterCoupon >= 1000000)
+        {
+            autoDiscountAmount = 70000;
+        }
+        else if (remainingAfterCoupon >= 500000)
+        {
+            autoDiscountAmount = 50000;
+        }
+        else if (remainingAfterCoupon >= 200000)
+        {
+            autoDiscountAmount = 10000;
+        }
+
+        // Auto discount không được vượt quá số tiền còn lại
+        if (autoDiscountAmount > remainingAfterCoupon)
+        {
+            autoDiscountAmount = remainingAfterCoupon;
+        }
+
+        // Tính số tiền còn lại sau tầng 2 (coupon + auto discount)
+        decimal remainingAfterAutoDiscount = remainingAfterCoupon - autoDiscountAmount;
+        if (remainingAfterAutoDiscount < 0) remainingAfterAutoDiscount = 0;
+
+        // TẦNG 3: Áp dụng điểm tích lũy trên số tiền còn lại sau tầng 2
+        // Nếu có lỗi điểm, bỏ qua điểm
+        if (ModelState.ContainsKey("PointsToUse") && ModelState["PointsToUse"]!.Errors.Count > 0)
+        {
+            pointsDiscount = 0;
+            pointsToUse = 0;
+            order.PointsUsed = 0;
+        }
+
+        // Points discount không được vượt quá số tiền còn lại sau auto discount
+        if (pointsDiscount > remainingAfterAutoDiscount)
+        {
+            pointsDiscount = remainingAfterAutoDiscount;
+            // Điều chỉnh lại số điểm sử dụng
+            pointsToUse = (int)Math.Floor(pointsDiscount / 1000m);
+            if (pointsToUse < 10)
+            {
+                pointsDiscount = 0;
+                pointsToUse = 0;
+                order.PointsUsed = 0;
+            }
+        }
+
+        // Tính tổng cuối cùng: subtotal - couponDiscount - autoDiscountAmount - pointsDiscount
+        decimal finalTotal = remainingAfterAutoDiscount - pointsDiscount;
         if (finalTotal < 0) finalTotal = 0;
+
+        // Nếu dùng điểm, trừ điểm ngay
+        if (pointsToUse > 0 && pointsDiscount > 0)
+        {
+            _db.PointTransactions.Add(new PointTransaction
+            {
+                UserId = user.Id,
+                Points = -pointsToUse, // Số âm vì là sử dụng điểm
+                TransactionType = "Used",
+                Description = $"Sử dụng {pointsToUse} điểm cho đơn hàng",
+                OrderId = order.Id
+            });
+        }
 
         order.TotalAmount = finalTotal;
         
-        // Set DiscountAmount và CouponCode - ưu tiên coupon nếu có, nếu không thì dùng auto discount
-        if (couponDiscount > 0 && !string.IsNullOrEmpty(appliedCouponCode))
-        {
-            order.DiscountAmount = couponDiscount;
-            order.CouponCode = appliedCouponCode; // Set coupon code khi dùng coupon
-        }
-        else if (autoDiscountAmount > 0)
-        {
-            order.DiscountAmount = autoDiscountAmount;
-            order.CouponCode = null; // Không có CouponCode vì dùng auto discount
-        }
-        else
-        {
-            order.DiscountAmount = 0;
-            order.CouponCode = null;
-        }
+        // Lưu tổng discount (coupon + auto discount + points)
+        // Lưu CouponCode nếu có sử dụng coupon
+        order.DiscountAmount = couponDiscount + autoDiscountAmount + pointsDiscount;
+        order.CouponCode = appliedCouponCode; // Lưu coupon code nếu có, null nếu không có
 
         await _db.SaveChangesAsync(); // Lưu tổng tiền và coupon usage
 
@@ -416,8 +541,32 @@ public class CheckoutController : Controller
                     // Kiểm tra lại tồn kho trước khi trừ (tránh race condition)
                     if (book.Stock < item.Quantity)
                     {
-                        // Nếu không đủ kho, hủy đơn và hoàn lại
+                        // 🔴 FIX: Nếu không đủ kho, hủy đơn và hoàn lại điểm/coupon
                         order.Status = "Canceled";
+                        
+                        // Hoàn lại điểm đã sử dụng
+                        if (order.PointsUsed > 0)
+                        {
+                            _db.PointTransactions.Add(new PointTransaction
+                            {
+                                UserId = user.Id,
+                                Points = order.PointsUsed,
+                                TransactionType = "Refunded",
+                                Description = $"Hoàn lại {order.PointsUsed} điểm - Đơn hàng #{order.Id} hủy do hết hàng",
+                                OrderId = order.Id
+                            });
+                        }
+
+                        // Hoàn lại lượt sử dụng coupon
+                        if (!string.IsNullOrEmpty(order.CouponCode))
+                        {
+                            var usedCoupon = await _db.Coupons.FirstOrDefaultAsync(c => c.Code == order.CouponCode);
+                            if (usedCoupon != null && usedCoupon.UsedCount > 0)
+                            {
+                                usedCoupon.UsedCount--;
+                            }
+                        }
+
                         await _db.SaveChangesAsync();
                         TempData["Error"] = $"Sách '{book.Title}' không đủ tồn kho. Đơn hàng đã bị hủy.";
                         return RedirectToAction("Index", "Cart");
@@ -427,6 +576,10 @@ public class CheckoutController : Controller
             }
 
             order.Status = "Confirmed"; // 🟢 COD thì xác nhận luôn
+            
+            // Tích điểm sẽ được thực hiện khi đơn hàng hoàn thành (status = "Completed")
+            // Không tích điểm ở đây nữa
+
             await _db.SaveChangesAsync();
 
             // 3. Xóa các item đã thanh toán khỏi giỏ hàng (chỉ xóa các item trong order)

@@ -1,0 +1,118 @@
+@page
+@model AddressesModel
+@{
+    ViewData["Title"] = "Địa chỉ giao hàng";
+    ViewData["ActivePage"] = ManageNavPages.Addresses;
+}
+
+<div class="manage-page-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="fw-bold mb-2">
+                <i class="bi bi-geo-alt-fill me-2 text-primary"></i>@ViewData["Title"]
+            </h3>
+            <p class="text-muted mb-0">Quản lý địa chỉ giao hàng của bạn</p>
+        </div>
+        <a asp-area="" asp-controller="Addresses" asp-action="Create" asp-route-returnUrl="/Identity/Account/Manage/Addresses" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Thêm địa chỉ mới
+        </a>
+    </div>
+</div>
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+@if (!Model.Addresses.Any())
+{
+    <div class="card text-center py-5">
+        <div class="card-body">
+            <i class="bi bi-inbox fs-1 text-muted mb-3"></i>
+            <h5 class="text-muted">Chưa có địa chỉ nào</h5>
+            <p class="text-muted">Thêm địa chỉ để mua hàng nhanh hơn</p>
+            <a asp-area="" asp-controller="Addresses" asp-action="Create" asp-route-returnUrl="/Identity/Account/Manage/Addresses" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i>Thêm địa chỉ đầu tiên
+            </a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var address in Model.Addresses)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 @(address.IsDefault ? "border-primary" : "")">
+                    <div class="card-body">
+                        @if (address.IsDefault)
+                        {
+                            <span class="badge bg-primary mb-2">
+                                <i class="bi bi-star-fill me-1"></i>Mặc định
+                            </span>
+                        }
+                        <p class="card-text text-muted small mb-2">
+                            <i class="bi bi-telephone me-1"></i><strong>@address.PhoneNumber</strong>
+                        </p>
+                        <p class="card-text small">@address.StreetAddress</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-top p-3">
+                        <div class="d-flex flex-column gap-2">
+                            <a asp-area="" asp-controller="Addresses" asp-action="Edit" asp-route-id="@address.Id" asp-route-returnUrl="/Identity/Account/Manage/Addresses" class="btn btn-sm btn-primary address-action-btn">
+                                <i class="bi bi-pencil me-1"></i>Sửa
+                            </a>
+                            @if (!address.IsDefault)
+                            {
+                                <form asp-area="" asp-controller="Addresses" asp-action="SetDefault" asp-route-id="@address.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="returnUrl" value="/Identity/Account/Manage/Addresses" />
+                                    <button type="submit" class="btn btn-sm btn-warning w-100 address-action-btn">
+                                        <i class="bi bi-star-fill me-1"></i>Đặt mặc định
+                                    </button>
+                                </form>
+                            }
+                            <form asp-area="" asp-controller="Addresses" asp-action="Delete" asp-route-id="@address.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Bạn có chắc muốn xóa địa chỉ này?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="returnUrl" value="/Identity/Account/Manage/Addresses" />
+                                <button type="submit" class="btn btn-sm btn-danger w-100 address-action-btn">
+                                    <i class="bi bi-trash me-1"></i>Xóa
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .manage-page-header {
+        border-bottom: 2px solid var(--bg-secondary);
+        padding-bottom: 1rem;
+    }
+
+    .address-action-btn {
+        transition: all 0.3s ease;
+        font-weight: 500;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .address-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .address-action-btn:active {
+        transform: translateY(0);
+    }
+    
+    .card.border-primary {
+        box-shadow: 0 4px 12px rgba(59, 97, 235, 0.1);
+    }
+    
+    .card:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease;
+    }
+</style>
+

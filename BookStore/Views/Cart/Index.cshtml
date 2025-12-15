@@ -95,28 +95,25 @@ else
                                         </td>
                                         <td class="text-end">@it.UnitPrice.ToString("N0") ₫</td>
                                         <td>
-                                            <div class="d-flex justify-content-center align-items-center gap-1">
+                                            <div class="d-flex justify-content-center align-items-center">
                                                 <form asp-action="Update" method="post" class="d-inline quantity-form" data-book-id="@it.BookId">
                                                     @Html.AntiForgeryToken()
                                                     <input type="hidden" name="bookId" value="@it.BookId" />
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary quantity-decrease" title="Giảm">
-                                                        <i class="bi bi-dash"></i>
-                                                    </button>
-                                                </form>
-                                                <input type="number" 
-                                                       name="qty" 
-                                                       value="@it.Quantity" 
-                                                       min="1" 
-                                                       class="form-control form-control-sm text-center quantity-input" 
-                                                       style="width: 60px; padding: 0.25rem;"
-                                                       data-book-id="@it.BookId"
-                                                       data-original-value="@it.Quantity" />
-                                                <form asp-action="Update" method="post" class="d-inline quantity-form" data-book-id="@it.BookId">
-                                                    @Html.AntiForgeryToken()
-                                                    <input type="hidden" name="bookId" value="@it.BookId" />
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary quantity-increase" title="Tăng">
-                                                        <i class="bi bi-plus"></i>
-                                                    </button>
+                                                    <div class="quantity-selector">
+                                                        <button type="button" class="quantity-btn quantity-decrease" title="Giảm">
+                                                            <i class="bi bi-dash"></i>
+                                                        </button>
+                                                        <input type="number" 
+                                                               name="qty" 
+                                                               value="@it.Quantity" 
+                                                               min="1" 
+                                                               class="quantity-input" 
+                                                               data-book-id="@it.BookId"
+                                                               data-original-value="@it.Quantity" />
+                                                        <button type="button" class="quantity-btn quantity-increase" title="Tăng">
+                                                            <i class="bi bi-plus"></i>
+                                                        </button>
+                                                    </div>
                                                 </form>
                                             </div>
                                         </td>
