@@ -1,4 +1,4 @@
-📚 QKT Book - Ứng dụng Bán sách Thương mại Điện tử (E-commerce)
+<img width="700" height="100" alt="📚_QKT_Book_-_Ứng_dụng_Bán_sách_Thương_mại_Điện_tử_(E-commerce)" src="https://github.com/user-attachments/assets/301c3c50-2c32-470a-8862-2c98cb416342" />
 
 🌐 WEBSITE CHÍNH THỨC
 
